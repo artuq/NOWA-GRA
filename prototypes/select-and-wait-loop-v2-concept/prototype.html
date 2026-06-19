@@ -1,0 +1,304 @@
+<!-- PROTOTYPE - NOT FOR PRODUCTION -->
+<!-- Question: Do 6+ actions plus milestone unlocks (functional + celebratory) create a retention hook on top of the confirmed select-and-wait core? -->
+<!-- Date: 2026-06-19 -->
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Król Cringe'u — prototyp v2</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    margin: 0;
+  }
+  h1 { font-size: 1.4em; margin-bottom: 4px; }
+  #resources {
+    display: flex;
+    gap: 20px;
+    margin: 16px 0;
+    font-size: 1.1em;
+  }
+  .res { background: #2a2a40; padding: 8px 14px; border-radius: 8px; }
+  #cycles { color: #888; margin-bottom: 10px; }
+  #next-milestone { color: #aaa; margin-bottom: 20px; font-size: 0.9em; }
+  .action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 340px;
+  }
+  .action-btn {
+    background: #3a3a5a;
+    border: none;
+    color: #eee;
+    padding: 18px;
+    font-size: 1.1em;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+  }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .action-btn:hover:not(:disabled) { background: #4a4a70; }
+  .action-btn.locked {
+    background: #25253a;
+    color: #666;
+    cursor: not-allowed;
+  }
+  .action-sub { font-size: 0.8em; color: #aaa; margin-top: 4px; }
+  .action-btn.new-unlock {
+    animation: pulse 1s ease-in-out 3;
+    border: 2px solid #ffd166;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0px #ffd166; }
+    50% { box-shadow: 0 0 18px #ffd166; }
+  }
+  #running-panel { width: 340px; margin-top: 24px; text-align: center; }
+  #progress-track {
+    background: #2a2a40;
+    border-radius: 8px;
+    height: 22px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  #progress-fill {
+    background: #6ad17a;
+    height: 100%;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  #flash {
+    width: 340px;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 1.1em;
+    min-height: 1.5em;
+    color: #6ad17a;
+    transition: opacity 0.3s;
+  }
+  #milestone-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+  #milestone-card {
+    background: #2a2a40;
+    border: 3px solid #ffd166;
+    border-radius: 16px;
+    padding: 36px 48px;
+    text-align: center;
+    animation: pop 0.4s ease-out;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  #milestone-card h2 { color: #ffd166; margin: 0 0 8px 0; }
+  #milestone-card button {
+    margin-top: 16px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: #ffd166;
+    color: #1a1a2e;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  /* simple confetti */
+  .confetti {
+    position: absolute;
+    width: 8px; height: 8px;
+    top: -10px;
+    opacity: 0.9;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(360deg); opacity: 0.2; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Król Cringe'u — prototyp v2 (z kamieniami milowymi)</h1>
+<div id="cycles">Ukończone cykle: <span id="cycle-count">0</span></div>
+<div id="next-milestone">Następny kamień milowy: <span id="next-milestone-val">25</span> Zasięgów</div>
+
+<div id="resources">
+  <div class="res">Zasięgi: <span id="res-zasiegi">0</span></div>
+  <div class="res">Cringe: <span id="res-cringe">0</span></div>
+</div>
+
+<div class="action-list" id="action-list"></div>
+
+<div id="running-panel" style="display:none;">
+  <div id="running-label">Trwa: ...</div>
+  <div id="progress-track"><div id="progress-fill"></div></div>
+</div>
+
+<div id="flash"></div>
+
+<div id="milestone-overlay">
+  <div id="milestone-card">
+    <h2>🎉 Kamień milowy!</h2>
+    <p id="milestone-text"></p>
+    <button onclick="closeMilestone()">Dalej!</button>
+  </div>
+</div>
+
+<script>
+// PROTOTYPE - NOT FOR PRODUCTION
+// Question: do 6+ actions + functional milestone unlocks create a retention hook?
+
+const BASE_ACTIONS = [
+  { id: 'vlog', name: 'Nagraj vloga', sub: '6s — +3 Zasięgi', duration: 6000, reward: { zasiegi: 3, cringe: 0 } },
+  { id: 'drama', name: 'Zrób dramę', sub: '12s — +8 Zasięgi, +5 Cringe', duration: 12000, reward: { zasiegi: 8, cringe: 5 } },
+  { id: 'apology', name: 'Przeproś w internecie', sub: '4s — +1 Zasięgi, -2 Cringe', duration: 4000, reward: { zasiegi: 1, cringe: -2 } },
+];
+
+const MILESTONES = [
+  { threshold: 25, unlock: { id: 'sponsor', name: 'Załap sponsora', sub: '10s — +15 Zasięgi, +3 Cringe', duration: 10000, reward: { zasiegi: 15, cringe: 3 } }, text: 'Odblokowano: Załap sponsora!' },
+  { threshold: 75, unlock: { id: 'expose', name: 'Zrób exposé na kogoś', sub: '16s — +25 Zasięgi, +10 Cringe', duration: 16000, reward: { zasiegi: 25, cringe: 10 } }, text: 'Odblokowano: Zrób exposé na kogoś!' },
+  { threshold: 150, unlock: { id: 'livestream', name: 'Poprowadź 24h livestream', sub: '20s — +40 Zasięgi, +15 Cringe', duration: 20000, reward: { zasiegi: 40, cringe: 15 } }, text: 'Odblokowano: Poprowadź 24h livestream!' },
+];
+
+let unlockedActions = [...BASE_ACTIONS];
+let nextMilestoneIndex = 0;
+let resources = { zasiegi: 0, cringe: 0 };
+let cyclesCompleted = 0;
+let running = null;
+let justUnlockedId = null;
+
+const actionListEl = document.getElementById('action-list');
+const runningPanelEl = document.getElementById('running-panel');
+const runningLabelEl = document.getElementById('running-label');
+const progressFillEl = document.getElementById('progress-fill');
+const flashEl = document.getElementById('flash');
+const milestoneOverlay = document.getElementById('milestone-overlay');
+const milestoneText = document.getElementById('milestone-text');
+const nextMilestoneVal = document.getElementById('next-milestone-val');
+
+function renderActions() {
+  actionListEl.innerHTML = '';
+  unlockedActions.forEach(action => {
+    const btn = document.createElement('button');
+    btn.className = 'action-btn' + (action.id === justUnlockedId ? ' new-unlock' : '');
+    btn.disabled = !!running;
+    btn.innerHTML = `${action.name}<div class="action-sub">${action.sub}</div>`;
+    btn.onclick = () => startAction(action);
+    actionListEl.appendChild(btn);
+  });
+  // show next locked action preview
+  if (nextMilestoneIndex < MILESTONES.length) {
+    const m = MILESTONES[nextMilestoneIndex];
+    const lockedBtn = document.createElement('button');
+    lockedBtn.className = 'action-btn locked';
+    lockedBtn.disabled = true;
+    lockedBtn.innerHTML = `🔒 ${m.unlock.name}<div class="action-sub">Odblokuj przy ${m.threshold} Zasięgach</div>`;
+    actionListEl.appendChild(lockedBtn);
+    nextMilestoneVal.textContent = m.threshold;
+  } else {
+    nextMilestoneVal.textContent = '— wszystko odblokowane';
+  }
+}
+
+function startAction(action) {
+  if (running) return;
+  running = { action, startTime: performance.now() };
+  runningPanelEl.style.display = 'block';
+  runningLabelEl.textContent = `Trwa: ${action.name}`;
+  justUnlockedId = null;
+  renderActions();
+}
+
+function finishAction() {
+  const { action } = running;
+  resources.zasiegi += action.reward.zasiegi;
+  resources.cringe = Math.max(0, resources.cringe + action.reward.cringe);
+  cyclesCompleted += 1;
+  running = null;
+  runningPanelEl.style.display = 'none';
+  progressFillEl.style.width = '0%';
+  updateResourceDisplay();
+  flashComplete(action);
+  checkMilestone();
+  renderActions();
+}
+
+function checkMilestone() {
+  if (nextMilestoneIndex < MILESTONES.length) {
+    const m = MILESTONES[nextMilestoneIndex];
+    if (resources.zasiegi >= m.threshold) {
+      unlockedActions.push(m.unlock);
+      justUnlockedId = m.unlock.id;
+      nextMilestoneIndex += 1;
+      showMilestone(m.text);
+    }
+  }
+}
+
+function showMilestone(text) {
+  milestoneText.textContent = text;
+  milestoneOverlay.style.display = 'flex';
+  spawnConfetti();
+}
+
+function closeMilestone() {
+  milestoneOverlay.style.display = 'none';
+  renderActions();
+}
+
+function spawnConfetti() {
+  const colors = ['#ffd166', '#6ad17a', '#5aa9e6', '#ef6f6c'];
+  for (let i = 0; i < 24; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3200);
+  }
+}
+
+function updateResourceDisplay() {
+  document.getElementById('res-zasiegi').textContent = resources.zasiegi;
+  document.getElementById('res-cringe').textContent = resources.cringe;
+  document.getElementById('cycle-count').textContent = cyclesCompleted;
+}
+
+function flashComplete(action) {
+  flashEl.style.opacity = '1';
+  flashEl.textContent = `✓ Zakończono: ${action.name}!`;
+  setTimeout(() => { flashEl.style.opacity = '0'; }, 1400);
+}
+
+function tick() {
+  if (running) {
+    const elapsed = performance.now() - running.startTime;
+    const pct = Math.min(100, (elapsed / running.action.duration) * 100);
+    progressFillEl.style.width = pct + '%';
+    if (elapsed >= running.action.duration) {
+      finishAction();
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+renderActions();
+updateResourceDisplay();
+requestAnimationFrame(tick);
+</script>
+
+</body>
+</html>

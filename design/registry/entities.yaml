@@ -1,0 +1,302 @@
+# Entity Registry
+# Cross-system source of truth for named entities, items, formulas, and constants.
+# Values here are locked — GDDs must not silently redefine them.
+# Updated by /design-system after each GDD's Phase 5b validation step.
+
+resources:
+  - name: Zasięgi
+    type: primary_currency
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/card-content-database.md]
+
+  - name: Cringe
+    type: risk_buffer
+    range: [0, 100]
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/card-content-database.md]
+
+  - name: Hatersi
+    type: passive_generator
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: Morale
+    type: effectiveness_modifier
+    range: [0, 100]
+    bands:
+      high: { range: [70, 100], multiplier: 1.00 }
+      normal: { range: [40, 69], multiplier: 0.90 }
+      low: { range: [15, 39], multiplier: 0.75 }
+      critical: { range: [0, 14], multiplier: 0.50 }
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/card-content-database.md]
+
+  - name: Sponsorzy
+    type: placeholder_currency
+    note: "No consumption sink yet — pending Team/Staff Management GDD (Alpha)"
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/card-content-database.md]
+
+cards:
+  - name: exposed_friend
+    type: risky_safe_card
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: sponsor_offer_shady
+    type: risky_safe_card
+    note: "Sponsorzy-qualifying card"
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: hater_callout
+    type: risky_safe_card
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: staged_drama
+    type: risky_safe_card
+    note: "Sets milestone card.staged_drama.chosen_risky"
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: competitor_drama
+    type: risky_safe_card
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: leaked_dm
+    type: risky_safe_card
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: cancel_threat
+    type: risky_safe_card
+    note: "Sets milestone card.cancel_threat.apologized"
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: apology_tour
+    type: risky_safe_card
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: fan_in_trouble
+    type: neutral_card
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: brand_deal_choice
+    type: neutral_card
+    note: "Sponsorzy-qualifying card"
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: algorithm_hack
+    type: neutral_card
+    note: "Sets milestone card.algorithm_hack.saved (no consumer yet)"
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+  - name: burnout_warning
+    type: neutral_card
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+
+counters:
+  - name: risky_choices_count
+    type: pattern_counter
+    note: "Monotonically increasing, never decremented — Pillar 2"
+    source: design/gdd/history-flag-system.md
+    referenced_by: [design/gdd/card-content-database.md, design/gdd/decision-card-system.md]
+
+  - name: safe_choices_count
+    type: pattern_counter
+    note: "Monotonically increasing, never decremented — Pillar 2"
+    source: design/gdd/history-flag-system.md
+    referenced_by: [design/gdd/card-content-database.md, design/gdd/decision-card-system.md]
+
+  - name: sponsor_betrayals_count
+    type: pattern_counter
+    note: "Example counter — not yet consumed by any GDD"
+    source: design/gdd/history-flag-system.md
+    referenced_by: []
+
+formulas:
+  - name: resolve_path_eligibility
+    expression: "Path Resolution Algorithm — filters registered_paths by threshold_min, returns highest counter if margin met, else null"
+    variables: [counters, registered_paths, margin]
+    output_range: "{path_name, null}"
+    source: design/gdd/history-flag-system.md
+    referenced_by: []
+
+  - name: haters_growth_rate
+    expression: "H_rate(C) = H_base + (C / 100)^H_exp × H_max_add"
+    variables: [C, H_base, H_exp, H_max_add, "Δt"]
+    output_range: "[H_base, H_base + H_max_add] Hatersi/min"
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: morale_drain_rate
+    expression: "M_drain(N) = M_drain_per_hater × max(0, N - N_buffer)^M_drain_exp"
+    variables: [N, N_buffer, M_drain_per_hater, M_drain_exp, "Δt"]
+    output_range: "0 at N<=N_buffer; unbounded beyond"
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: action_effectiveness_multiplier
+    expression: "Mult(M) — piecewise lookup on Morale bands"
+    variables: [M]
+    output_range: "{0.50, 0.75, 0.90, 1.00}"
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: passive_zasiegi_income
+    expression: "Z_passive(N, Δt) = N × Z_per_hater × Mult(M) × (Δt / 60)"
+    variables: [N, Z_per_hater, "Mult(M)", "Δt"]
+    output_range: ">= 0, unbounded upward"
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: cringe_delta_from_actions
+    expression: "ΔCringe = clamp(C + Cringe_delta_action, 0, 100) - C"
+    variables: [C, Cringe_delta_action]
+    output_range: "[0, 100] clamped"
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/action-system.md]
+
+  - name: final_zasiegi_reward
+    expression: "final_zasiegi_reward = base_zasiegi × Mult(M)"
+    variables: [base_zasiegi, "Mult(M)"]
+    output_range: "4-value discrete output per action (0.5x/0.75x/0.9x/1.0x of base)"
+    source: design/gdd/action-system.md
+    referenced_by: []
+
+  - name: card_selection_weight
+    expression: "weight(card) = base_weight + (current_Cringe / 100) × intensity(card)"
+    variables: [base_weight, current_Cringe, "intensity(card)"]
+    output_range: "[10, 45] given current locked content"
+    source: design/gdd/decision-card-system.md
+    referenced_by: []
+
+constants:
+  - name: H_base
+    value: 0.02
+    safe_range: [0.0, 0.05]
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: H_exp
+    value: 2.0
+    safe_range: [1.5, 2.5]
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: H_max_add
+    value: 1.0
+    safe_range: [0.5, 2.0]
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: N_buffer
+    value: 3
+    safe_range: [2, 5]
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: M_drain_per_hater
+    value: 0.15
+    safe_range: [0.05, 0.3]
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: M_drain_exp
+    value: 1.3
+    safe_range: [1.1, 1.6]
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: Z_per_hater
+    value: 0.2
+    safe_range: [0.1, 0.5]
+    source: design/gdd/resource-system.md
+    referenced_by: []
+
+  - name: cringe_delta_ceiling
+    value: 20
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/action-system.md]
+
+  - name: cringe_delta_floor
+    value: -15
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/action-system.md]
+
+  - name: sponsorzy_per_qualifying_card
+    value: "1-3 (random int, placeholder)"
+    source: design/gdd/resource-system.md
+    referenced_by: [design/gdd/card-content-database.md]
+
+  - name: sponsorzy_qualifying_cards
+    value: "sponsor_offer_shady, brand_deal_choice only"
+    note: "Resolves Resource System's open question on what 'qualifying card' means"
+    source: design/gdd/card-content-database.md
+    referenced_by: []
+
+  - name: risky_safe_zasiegi_ratio
+    value: "1.4x-1.8x"
+    note: "Risky option's Zasięgi delta vs safe option's, per card; must stay synced with Action System's reward table"
+    source: design/gdd/card-content-database.md
+    referenced_by: [design/gdd/action-system.md]
+
+  - name: card_cringe_delta_band
+    value: "-18 to +35"
+    note: "Card-level Cringe delta, larger than action-level (-15/+20) — narrative beats land harder than a tap"
+    source: design/gdd/card-content-database.md
+    referenced_by: [design/gdd/decision-card-system.md]
+
+  - name: action_durations
+    value: "6s / 9s / 4s (Nagraj vloga / Zrób dramę / Przeproś w internecie)"
+    note: "Drama tuned from original 12s to 9s to avoid tying Zasięgi/s with the neutral baseline"
+    source: design/gdd/action-system.md
+    referenced_by: []
+
+  - name: action_zasiegi_base
+    value: "5 / 10 / 6"
+    note: "Base Zasięgi per action, before Morale multiplier"
+    source: design/gdd/action-system.md
+    referenced_by: []
+
+  - name: action_cringe_delta
+    value: "+2 / +20 / -15"
+    note: "Per-action Cringe delta; drama and apology sit at Resource System's registered ceiling/floor"
+    source: design/gdd/action-system.md
+    referenced_by: []
+
+  - name: action_morale_delta
+    value: "0 / -3 / +5"
+    source: design/gdd/action-system.md
+    referenced_by: []
+
+  - name: base_weight
+    value: 10
+    safe_range: [5, 20]
+    note: "Flat weight floor in Decision Card System's card_selection_weight formula"
+    source: design/gdd/decision-card-system.md
+    referenced_by: []
+
+  - name: decision_card_cooldown
+    value: "2 completed actions"
+    safe_range: "1-5 completed actions"
+    source: design/gdd/decision-card-system.md
+    referenced_by: []
+
+  - name: margin
+    value: 2
+    safe_range: [1, 4]
+    note: "Tie-break threshold in Path Resolution Algorithm"
+    source: design/gdd/history-flag-system.md
+    referenced_by: []
+
+  - name: threshold_min_pato_streamer
+    value: 5
+    counter: risky_choices_count
+    safe_range: [3, 10]
+    source: design/gdd/history-flag-system.md
+    referenced_by: []
+
+  - name: threshold_min_guru_celebryta
+    value: 5
+    counter: safe_choices_count
+    safe_range: [3, 10]
+    source: design/gdd/history-flag-system.md
+    referenced_by: []
