@@ -2,27 +2,29 @@
 
 ## Opis projektu
 
-„NOWA GRA!” to koncept mobilnej gry idle/incremental tycoon z narracyjnymi kartami decyzji. Gracz buduje imperium contentowe od małego pubu do internetu, a każda decyzja moralna wpływa na jego ścieżkę jako celebrytę lub patoinfluencera.
+„NOWA GRA!” to projekt mobilnej gry idle/incremental tycoon z narracyjnymi kartami decyzji.
+Gracz buduje imperium contentowe od małego pubu do internetowej marki, a decyzje moralne wpływają na jego rozwój jako influencera.
 
-Projekt bazuje na idei „select-and-wait”, gdzie gracz wybiera akcje trwające w czasie, zamiast powtarzalnie klikać. Offline progress jest traktowany jako kluczowy element rozgrywki, a satyra ma być przekazywana przez mechanikę gry, nie przez wykłady.
+Projekt opiera się na mechanice „select-and-wait”, w której gracz wybiera działania trwające w czasie, zamiast powtarzalnie klikać. Offline progress jest traktowany jako kluczowy element rozgrywki. Satyra ma być wyrażana poprzez mechanikę i konsekwencje wyborów, a nie przez moralizujące komunikaty.
 
-## Kluczowe elementy
+## Główne założenia
 
-- gatunek: idle/incremental tycoon z elementami narracyjnymi
-- platforma docelowa: mobile (Android, później iOS)
-- styl rozgrywki: wybór akcji + karty decyzji moralnych
-- główne systemy: zasoby, akcje, karty decyzji, mechanika offline, system flag historii
-- ton: satyryczny, inspirowany internetową kulturą influencerów i patologią social media
+- gatunek: idle/incremental tycoon + narracyjne karty decyzji
+- platforma: mobile (Android, później iOS)
+- rozgrywka: wybieranie akcji, zarządzanie zasobami, karty decyzji moralnych
+- kluczowe mechaniki: system zasobów, akcje trwające w czasie, oficjalny offline progress, system flag historii, ścieżki klas influencera
+- ton: satyra na internetową kulturę influencerów, patoinfluencję i hazard w social media
 
 ## Zawartość repozytorium
 
-- `CLAUDE.md` — architektura agentowa i zasady współpracy
-- `design/gdd/` — dokumenty koncepcyjne i systemowe
-- `docs/engine-reference/godot/` — notatki o Godot 4.6.3 i dobre praktyki
-- `production/` — zapisy sesji, stan produkcji i dzienniki
-- `prototypes/` — prototypy koncepcyjne z raportami
+- `CLAUDE.md` — architektura agentowa, zasady współpracy i dokumentacja procesowa
+- `design/gdd/` — dokumenty game design dla systemów takich jak akcje, zasoby, karty decyzji i flagi historii
+- `design/registry/` — dane projektowe, np. `entities.yaml`
+- `docs/engine-reference/godot/` — notatki i najlepsze praktyki dla Godot 4.6.3
+- `production/` — sesyjne logi, stan produkcji i dzienniki
+- `prototypes/` — prototypy koncepcyjne i raporty z testów
 
-## Struktura
+## Struktura plików
 
 - `CLAUDE.md`
 - `design/gdd/`
@@ -32,25 +34,23 @@ Projekt bazuje na idei „select-and-wait”, gdzie gracz wybiera akcje trwając
 - `production/session-state/`
 - `prototypes/`
 
-## Technologia
+## Technologie i narzędzia
 
-Projekt zakłada użycie:
+- silnik: Godot 4.6.3
+- język: GDScript
+- system budowania: SCons + Godot Export Templates
 
-- silnika: Godot 4.6.3
-- języka: GDScript
-- systemu build: SCons + Godot Export Templates
+## Obecny status
 
-## Status
+Repozytorium jest w fazie projektowej i koncepcyjnej. Zawiera dokumentację, analizę systemów i prototypy, ale nie ma jeszcze pełnej implementacji gry.
 
-Repozytorium jest obecnie w fazie projektowej i prototypowej. Zawiera głównie dokumentację, analizę koncepcji i prototypy, a nie pełną implementację gry.
+## Planowane kolejne kroki
 
-## Następne kroki
+- dopracowanie MVP z podstawową pętlą akcji i offline progress
+- opracowanie systemu kart decyzji oraz systemu flag historii
+- przygotowanie prototypu w Godot oraz przetestowanie mechanik
+- sprawdzenie, czy satyra jest odczytywana poprzez mechanikę, a nie opis
 
-- rozwinięcie MVP z podstawową pętlą akcji i offline progress
-- zaprojektowanie systemu kart decyzji i flag historii
-- przygotowanie pierwszego prototypu w Godot
-- testowanie mechanik satyrycznej narracji bez moralizowania
+## Informacja
 
-## Uwaga
-
-README dodane lokalnie i wypchnięte do zdalnego repozytorium GitHub. Nie zostały zmienione żadne inne pliki.
+Ten plik README został zaktualizowany lokalnie i wypchnięty do zdalnego repozytorium GitHub. Nie zmieniono żadnych innych plików projektu.
