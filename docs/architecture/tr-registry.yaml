@@ -1,0 +1,106 @@
+# Technical Requirements Registry
+# Stable IDs for GDD technical requirements, persisted across architecture-review runs.
+# Never renumber or delete entries — mark status: deprecated if a requirement is removed.
+last_updated: 2026-06-20
+version: 1
+
+requirements:
+  - id: TR-res-001
+    system: resource-system
+    gdd: design/gdd/resource-system.md
+    requirement: Resource mutations must be traceable to their trigger; formulas shared between live play and offline
+    adr: [ADR-0001, ADR-0006]
+    status: covered
+
+  - id: TR-hist-001
+    system: history-flag-system
+    gdd: design/gdd/history-flag-system.md
+    requirement: Flag log plus pattern counters, owned by a single Autoload
+    adr: [ADR-0001]
+    status: covered
+
+  - id: TR-save-001
+    system: save-persistence-system
+    gdd: design/gdd/save-persistence-system.md
+    requirement: Autoload-owned save file I/O with mark_dirty/save_now/load_save interface
+    adr: [ADR-0001, ADR-0002]
+    status: covered
+
+  - id: TR-save-002
+    system: save-persistence-system
+    gdd: design/gdd/save-persistence-system.md
+    requirement: Atomic write via temp-file write then rename, surviving process kill
+    adr: [ADR-0002]
+    status: covered
+
+  - id: TR-save-003
+    system: save-persistence-system
+    gdd: design/gdd/save-persistence-system.md
+    requirement: schema_version field with corruption/mismatch first-session fallback
+    adr: [ADR-0002]
+    status: covered
+
+  - id: TR-off-001
+    system: offline-progress-system
+    gdd: design/gdd/offline-progress-system.md
+    requirement: Stepped 1-minute simulation loop, capped at 1440 iterations (24h)
+    adr: [ADR-0006]
+    status: covered
+
+  - id: TR-off-002
+    system: offline-progress-system
+    gdd: design/gdd/offline-progress-system.md
+    requirement: Launch-time init sequencing (load, restore, simulate, conditional report)
+    adr: [ADR-0003]
+    status: covered
+
+  - id: TR-act-001
+    system: action-system
+    gdd: design/gdd/action-system.md
+    requirement: Single Timer with single-concurrency enforcement, 3 actions 4-9s
+    adr: [ADR-0004]
+    status: covered
+
+  - id: TR-dcs-001
+    system: decision-card-system
+    gdd: design/gdd/decision-card-system.md
+    requirement: Weighted-random card pick scaled by current Cringe (card_selection_weight)
+    adr: [ADR-0005]
+    status: covered
+
+  - id: TR-dcs-002
+    system: decision-card-system
+    gdd: design/gdd/decision-card-system.md
+    requirement: Cooldown counted in completed actions (not time), default 2
+    adr: [ADR-0005]
+    status: covered
+
+  - id: TR-onb-001
+    system: onboarding-tutorial
+    gdd: design/gdd/onboarding-tutorial.md
+    requirement: Decision Card suppression (Phase 1) and force-cooldown-zero (Phase 1->2)
+    adr: [ADR-0001, ADR-0003, ADR-0005]
+    status: covered
+
+  - id: TR-aui-001
+    system: action-ui
+    gdd: design/gdd/action-ui.md
+    requirement: Progress bar updates every frame via cheap poll, not throttled
+    adr: [ADR-0004]
+    status: partial
+
+  - id: TR-cui-001
+    system: card-ui
+    gdd: design/gdd/card-ui.md
+    requirement: Swipe/drag modal card presentation with commitment threshold
+    adr: []
+    status: gap
+    note: Deferred by architecture.md — straightforward Control-node pattern, low risk
+
+  - id: TR-ors-001
+    system: offline-report-screen
+    gdd: design/gdd/offline-report-screen.md
+    requirement: Offline simulation result presentation screen with dismiss gesture
+    adr: []
+    status: gap
+    note: Deferred by architecture.md — straightforward Control-node pattern, low risk

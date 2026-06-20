@@ -124,28 +124,28 @@ formulas:
     variables: [C, H_base, H_exp, H_max_add, "Δt"]
     output_range: "[H_base, H_base + H_max_add] Hatersi/min"
     source: design/gdd/resource-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/offline-progress-system.md]
 
   - name: morale_drain_rate
     expression: "M_drain(N) = M_drain_per_hater × max(0, N - N_buffer)^M_drain_exp"
     variables: [N, N_buffer, M_drain_per_hater, M_drain_exp, "Δt"]
     output_range: "0 at N<=N_buffer; unbounded beyond"
     source: design/gdd/resource-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/offline-progress-system.md]
 
   - name: action_effectiveness_multiplier
     expression: "Mult(M) — piecewise lookup on Morale bands"
     variables: [M]
     output_range: "{0.50, 0.75, 0.90, 1.00}"
     source: design/gdd/resource-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/offline-progress-system.md]
 
   - name: passive_zasiegi_income
     expression: "Z_passive(N, Δt) = N × Z_per_hater × Mult(M) × (Δt / 60)"
     variables: [N, Z_per_hater, "Mult(M)", "Δt"]
     output_range: ">= 0, unbounded upward"
     source: design/gdd/resource-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/offline-progress-system.md]
 
   - name: cringe_delta_from_actions
     expression: "ΔCringe = clamp(C + Cringe_delta_action, 0, 100) - C"
@@ -166,6 +166,13 @@ formulas:
     variables: [base_weight, current_Cringe, "intensity(card)"]
     output_range: "[10, 45] given current locked content"
     source: design/gdd/decision-card-system.md
+    referenced_by: []
+
+  - name: simulate_offline
+    expression: "Stepped 1-minute simulation of Hatersi growth, Morale drain, and passive Zasięgi income over a capped offline Δt"
+    variables: ["Δt_seconds", Cringe_fixed, H0, M0]
+    output_range: "{final_H, final_M, total_Z_gained, capped}"
+    source: design/gdd/offline-progress-system.md
     referenced_by: []
 
 constants:
@@ -248,24 +255,24 @@ constants:
     value: "6s / 9s / 4s (Nagraj vloga / Zrób dramę / Przeproś w internecie)"
     note: "Drama tuned from original 12s to 9s to avoid tying Zasięgi/s with the neutral baseline"
     source: design/gdd/action-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/action-ui.md]
 
   - name: action_zasiegi_base
     value: "5 / 10 / 6"
     note: "Base Zasięgi per action, before Morale multiplier"
     source: design/gdd/action-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/action-ui.md]
 
   - name: action_cringe_delta
     value: "+2 / +20 / -15"
     note: "Per-action Cringe delta; drama and apology sit at Resource System's registered ceiling/floor"
     source: design/gdd/action-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/action-ui.md]
 
   - name: action_morale_delta
     value: "0 / -3 / +5"
     source: design/gdd/action-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/action-ui.md]
 
   - name: base_weight
     value: 10
@@ -278,6 +285,84 @@ constants:
     value: "2 completed actions"
     safe_range: "1-5 completed actions"
     source: design/gdd/decision-card-system.md
+    referenced_by: []
+
+  - name: save_debounce_interval_sec
+    value: 2
+    safe_range: [1, 5]
+    note: "Trailing-edge debounce window for autosave coalescing"
+    source: design/gdd/save-persistence-system.md
+    referenced_by: []
+
+  - name: schema_version
+    value: 1
+    note: "Save file schema version; increment only when schema changes, never decrement"
+    source: design/gdd/save-persistence-system.md
+    referenced_by: []
+
+  - name: MAX_OFFLINE_CAP_SECONDS
+    value: 86400
+    safe_range: [43200, 259200]
+    note: "24h offline simulation cap"
+    source: design/gdd/offline-progress-system.md
+    referenced_by: []
+
+  - name: OFFLINE_STEP_SECONDS
+    value: 60
+    note: "Fixed 1-minute simulation step — do not change without re-profiling"
+    source: design/gdd/offline-progress-system.md
+    referenced_by: []
+
+  - name: action_ui_number_format
+    value: "<1000 plain, 1000-999999 'X.XK', >=1000000 'X.XM', round-half-up"
+    source: design/gdd/action-ui.md
+    referenced_by: []
+
+  - name: commit_threshold_ratio
+    value: 0.30
+    safe_range: [0.20, 0.50]
+    source: design/gdd/card-ui.md
+    referenced_by: []
+
+  - name: flick_velocity_threshold
+    value: "800 px/s"
+    safe_range: "500-1200 px/s"
+    source: design/gdd/card-ui.md
+    referenced_by: []
+
+  - name: max_tilt_degrees
+    value: 12
+    safe_range: [8, 15]
+    note: "Degrees, card drag rotation"
+    source: design/gdd/card-ui.md
+    referenced_by: []
+
+  - name: MIN_REPORT_THRESHOLD_SECONDS
+    value: 300
+    safe_range: [60, 900]
+    note: "Minimum offline Δt before Offline Report Screen appears; revised up from 60s after systems-designer review"
+    source: design/gdd/offline-report-screen.md
+    referenced_by: []
+
+  - name: card_drag_rotation
+    expression: "rotation_degrees = clamp(drag_x / half_screen_width, -1.0, 1.0) × max_tilt_degrees"
+    variables: [drag_x, half_screen_width, max_tilt_degrees]
+    output_range: "[-max_tilt_degrees, +max_tilt_degrees]"
+    source: design/gdd/card-ui.md
+    referenced_by: []
+
+  - name: card_commitment_check
+    expression: "is_committed = (abs(drag_x_at_release) >= commit_threshold_ratio × screen_width) OR (abs(release_velocity) >= flick_velocity_threshold)"
+    variables: [drag_x_at_release, commit_threshold_ratio, screen_width, release_velocity, flick_velocity_threshold]
+    output_range: "{true, false}"
+    source: design/gdd/card-ui.md
+    referenced_by: []
+
+  - name: format_duration
+    expression: "format_duration(Δt) = pick largest unit U in {hours, minutes} where Δt >= U.seconds, floor, render 'N unit(s)'"
+    variables: ["Δt", U, N]
+    output_range: "bounded string, max '24 hours' (no days tier)"
+    source: design/gdd/offline-report-screen.md
     referenced_by: []
 
   - name: margin

@@ -19,15 +19,15 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 |---|-------------|----------|----------|--------|------------|------------|
 | 1 | Resource System | Economy | MVP | Designed | design/gdd/resource-system.md | — |
 | 2 | History Flag System | Narrative | MVP | Designed | design/gdd/history-flag-system.md | — |
-| 3 | Save/Persistence System (inferred) | Persistence | MVP | Not Started | — | — |
+| 3 | Save/Persistence System (inferred) | Persistence | MVP | Designed | design/gdd/save-persistence-system.md | — |
 | 4 | Card Content Database (inferred) | Narrative | MVP | Designed | design/gdd/card-content-database.md | — |
 | 5 | Action System | Gameplay | MVP | Designed | design/gdd/action-system.md | Resource System |
 | 6 | Decision Card System | Narrative | MVP | Designed | design/gdd/decision-card-system.md | Card Content Database, History Flag System, Resource System |
-| 7 | Offline Progress System | Core | MVP | Not Started | — | Resource System, Save/Persistence System |
-| 8 | Action UI (inferred) | UI | MVP | Not Started | — | Action System |
-| 9 | Card UI (inferred) | UI | MVP | Not Started | — | Decision Card System |
-| 10 | Offline Report Screen (inferred) | UI | MVP | Not Started | — | Offline Progress System |
-| 11 | Onboarding/Tutorial (inferred) | Meta | MVP | Not Started | — | Action System, Decision Card System |
+| 7 | Offline Progress System | Core | MVP | Designed | design/gdd/offline-progress-system.md | Resource System, Save/Persistence System |
+| 8 | Action UI (inferred) | UI | MVP | Designed | design/gdd/action-ui.md | Action System |
+| 9 | Card UI (inferred) | UI | MVP | Designed | design/gdd/card-ui.md | Decision Card System |
+| 10 | Offline Report Screen (inferred) | UI | MVP | Designed | design/gdd/offline-report-screen.md | Offline Progress System |
+| 11 | Onboarding/Tutorial (inferred) | Meta | MVP | Designed | design/gdd/onboarding-tutorial.md | Action System, Decision Card System |
 | 12 | Class Path System | Progression | Vertical Slice | Not Started | — | History Flag System, Decision Card System |
 | 13 | Juice/Feedback System (inferred) | Audio | Vertical Slice | Not Started | — | Action System, Decision Card System |
 | 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | Not Started | — | Action UI, Card UI, Offline Report Screen |
@@ -149,10 +149,10 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 18 |
-| Design docs started | 5 |
+| Design docs started | 11 |
 | Design docs reviewed | 0 |
 | Design docs approved | 0 |
-| MVP systems designed | 5/11 |
+| MVP systems designed | 11/11 |
 | Vertical Slice systems designed | 0/3 |
 
 ---

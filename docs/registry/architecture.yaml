@@ -1,0 +1,140 @@
+# Architecture Registry
+# Locked architectural stances established by ADRs. Subsequent ADRs must not contradict
+# these without explicitly superseding the originating ADR.
+
+state_ownership:
+  - state: "5 currencies (Zasięgi, Cringe, Hatersi, Morale, Sponsorzy)"
+    owner: ResourceManager
+    interface: "get_resource(name), apply_delta(deltas)"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - state: "flag log, pattern counters"
+    owner: HistoryFlagManager
+    interface: "record_choice(), resolve_path()"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - state: "active action state, timer"
+    owner: ActionSystem
+    interface: "start_action(action_id) -> bool"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - state: "save file I/O, debounce timer"
+    owner: SaveSystem
+    interface: "mark_dirty(), save_now(), load_save()"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - state: "offline simulation result"
+    owner: OfflineProgressSystem
+    interface: "simulate_offline(elapsed_seconds) -> Dictionary"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - state: "static card content table (12 cards)"
+    owner: CardContentDatabase
+    interface: "get_card(id), get_all_cards()"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - state: "cooldown counter, presented-card state"
+    owner: DecisionCardSystem
+    interface: "present_next_card(), resolve_choice(option)"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+interfaces:
+  - name: force_cooldown_zero
+    signature: "force_cooldown_zero() -> void"
+    type: method
+    owner: DecisionCardSystem
+    note: "Called only by OnboardingGate at Phase1->2 transition; ownership-clear direct write"
+    source: docs/architecture/adr-0005-decision-card-weighting-cooldown.md
+    referenced_by: []
+
+  - name: get_progress
+    signature: "get_progress() -> float"
+    type: method
+    owner: ActionSystem
+    note: "Polled every frame by Action UI; returns 0.0-1.0; guards divide-by-zero when idle"
+    source: docs/architecture/adr-0004-action-system-timer-concurrency.md
+    referenced_by: []
+
+  - name: action_completed
+    signature: "action_completed(action_id: String, payload: Dictionary)"
+    type: signal
+    emitter: ActionSystem
+    subscribers: [OnboardingGate, DecisionCardSystem]
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+api_decisions:
+  - decision: "ResourceFormulas (res://src/core/resource_formulas.gd, class_name ResourceFormulas) is a stateless static-method utility class shared between live-play (ActionSystem) and offline simulation (OfflineProgressSystem) call sites"
+    rationale: "Guarantees online/offline formula consistency by construction — one implementation, two call sites, no risk of drift"
+    source: docs/architecture/adr-0006-offline-simulation-loop.md
+    referenced_by: []
+
+  - decision: "simulate_offline() implemented as a single synchronous while loop, max 1440 iterations (60s steps, 24h cap), no threading/async"
+    rationale: "Confirmed sub-millisecond cost even at worst case; matches architecture.md Principle 1 (no threading anywhere)"
+    source: docs/architecture/adr-0006-offline-simulation-loop.md
+    referenced_by: []
+
+  - decision: "Decision Card cooldown is an integer counter decremented on ActionSystem.action_completed, NOT a Timer — counts completed actions, not elapsed time"
+    rationale: "decision-card-system.md specifies cooldown in action-count units; a Timer would require inaccurate time-translation"
+    source: docs/architecture/adr-0005-decision-card-weighting-cooldown.md
+    referenced_by: []
+
+  - decision: "Each Autoload owning gameplay RNG instantiates its own RandomNumberGenerator member (not global randf()/randi()), with a test-only set_seed() hook for deterministic unit tests"
+    rationale: "Global RNG functions share state across all systems, making any one system's randomness non-reproducible in isolation; per-system RNG instances satisfy coding-standards.md's test determinism rule"
+    source: docs/architecture/adr-0005-decision-card-weighting-cooldown.md
+    referenced_by: []
+
+  - decision: "Single Timer node (child of ActionSystem Autoload) + current_action_id StringName field for single-concurrency enforcement"
+    rationale: "Minimal code, uses Godot's built-in Timer correctly; current_action_id != empty guard is the only entry point check needed"
+    source: docs/architecture/adr-0004-action-system-timer-concurrency.md
+    referenced_by: []
+
+  - decision: "Dedicated Boot scene (boot.tscn) as Project Main Scene, runs BootController._ready() to load save, restore module state, run offline simulation, then change_scene_to_file() to Offline Report or Main scene"
+    rationale: "Keeps launch-only sequencing out of the main gameplay scene's _ready(); natural fit for the Offline Report conditional branch"
+    source: docs/architecture/adr-0003-scene-management-boot-order.md
+    referenced_by: []
+
+  - decision: "Every module owning persisted state must implement restore_state(data: Dictionary) -> void, called by BootController in ADR-0001's dependency order"
+    rationale: "Single traceable place for 'what happens at launch'; missing restore_state() calls should be flagged by /architecture-review's traceability check when new modules are added"
+    source: docs/architecture/adr-0003-scene-management-boot-order.md
+    referenced_by: []
+
+  - decision: "JSON save format, written to user://save.tmp then atomically renamed to user://save.json via DirAccess.rename_absolute()"
+    rationale: "Human-readable for solo-dev debugging; atomic rename protects against partial-write corruption on process kill; Android user:// is private internal storage (real POSIX filesystem), not scoped storage, so rename is genuinely atomic"
+    source: docs/architecture/adr-0002-save-file-format-atomic-write.md
+    referenced_by: []
+
+  - decision: "schema_version field in save data, increment-only, mismatch triggers first-session fallback"
+    rationale: "Simple migration path without strict schema validation overhead at this project's save-data complexity"
+    source: docs/architecture/adr-0002-save-file-format-atomic-write.md
+    referenced_by: []
+
+  - decision: "Autoload singletons for all Core/Foundation modules"
+    rationale: "Idiomatic Godot 4.6.3 pattern; matches project scale (7 modules, fully known dependency graph)"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - decision: "Direct calls for ownership-clear writes; signals for multi-subscriber events"
+    rationale: "Avoids both over-coupling (Alternative B) and unnecessary indirection (Alternative A, central EventBus)"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+forbidden_patterns:
+  - pattern: "Adding instance vars or @export fields to ResourceFormulas"
+    reason: "Must remain stateless — shared by two independent call sites (live play and offline simulation); any state would silently leak across unrelated contexts"
+    source: docs/architecture/adr-0006-offline-simulation-loop.md
+
+  - pattern: "Central EventBus autoload (string-keyed event dispatch)"
+    reason: "Solves a decoupling problem this project's scale doesn't have; loses static-typing safety of GDScript's typed signals"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+
+  - pattern: "Subscribing to a signal without a declared dependency in architecture.md's Module Ownership table"
+    reason: "Connecting 'just in case' breaks traceability — update the Module Ownership table first if a new dependency is needed"
+    source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
