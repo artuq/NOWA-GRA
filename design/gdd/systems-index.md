@@ -29,7 +29,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | 10 | Offline Report Screen (inferred) | UI | MVP | Designed | design/gdd/offline-report-screen.md | Offline Progress System |
 | 11 | Onboarding/Tutorial (inferred) | Meta | MVP | Designed | design/gdd/onboarding-tutorial.md | Action System, Decision Card System |
 | 12 | Class Path System | Progression | Vertical Slice | Not Started | — | History Flag System, Decision Card System |
-| 13 | Juice/Feedback System (inferred) | Audio | Vertical Slice | Not Started | — | Action System, Decision Card System |
+| 13 | Juice/Feedback System (inferred) | Audio | Vertical Slice | Designed | design/gdd/juice-feedback-system.md | Action System, Decision Card System |
 | 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | Not Started | — | Action UI, Card UI, Offline Report Screen |
 | 15 | Team/Staff Management | Economy | Alpha | Not Started | — | Resource System, Offline Progress System |
 | 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Not Started | — | Team/Staff Management |
@@ -149,11 +149,11 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 18 |
-| Design docs started | 11 |
+| Design docs started | 12 |
 | Design docs reviewed | 0 |
 | Design docs approved | 0 |
 | MVP systems designed | 11/11 |
-| Vertical Slice systems designed | 0/3 |
+| Vertical Slice systems designed | 1/3 |
 
 ---
 

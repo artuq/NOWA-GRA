@@ -157,6 +157,19 @@ Postęp offline musi być tak satysfakcjonujący i czytelny jak aktywna sesja �
 
 **Non-game inspirations**: Kultura patoinfluencerów i internetowych "callout" kryzysów, mechaniki hazardowe w grach free-to-play (loot boxy, "kasyno sponsorów"), formaty kart decyzji w stylu Reigns.
 
+### Reference Game Findings (2026-06-20)
+
+Zastosowano jednolitą listę pytań playtestowych (`production/playtests/playtest-question-guide.md`) do nagrań z 4 gier referencyjnych, mimo że pytania były pisane pod mechanikę naszej gry (swipe + karty). Wynik: tylko Reigns dostał werdykt PROCEED — pozostałe trzy dostały PIVOT, bo mechanicznie/tematycznie nie pokrywają się z naszą grą. To jest informacja, nie porażka metody — pokazuje precyzyjnie, **który element każdej gry faktycznie przenosi się na nasz projekt, a który nie**.
+
+| Reference | Verdict na nasze pytania | Co realnie potwierdza/zmienia w naszym projekcie |
+|---|---|---|
+| **Reigns** | PROCEED | Najbliższy mechanicznie i tonalnie. Potwierdza fundament: swipe + narracyjny payoff działa, onboarding przez sam gest (brak tutoriala), brak potrzeby precyzyjnego dotyku. **Nowy wniosek**: Reigns ma stałe napięcie 4 wskaźników frakcji przez całą rozgrywkę z realną stawką (śmierć władcy) — u nas Cringe/Morale/Hatersi robią coś podobnego, ale **nie mamy zdefiniowanej realnej stawki "przegranej"/zakończenia ery**, analogicznej do śmierci władcy. Otwarte pytanie do rozważenia przy projektowaniu Prestige/Checkpoint System (Alpha tier). |
+| **Melvor Idle** | PIVOT (mechanicznie/tematycznie niezgodny) | Number-go-up + zablokowane sloty **działają jako hook niezależnie od tematu** — potwierdza decyzję o lockowanych Action Grid slotach. **Ostrzeżenie**: gęstość UI tej gry byłaby blokerem na dotyku — potwierdza naszą decyzję o oszczędnym UI (3 akcje, nie dziesiątki zakładek). |
+| **Idle Research: Endless Tycoon** | PIVOT (mechanicznie/tematycznie niezgodny) | Potwierdza number-go-up jako solidny, niezależny hook. **Ostrzeżenie**: przy bardzo dużych liczbach (e50, e100) recenzent zgłosił, że liczby zmieniają się w "szum w tle", nieczytelny postęp — flaguje potrzebę monitorowania, czy nasz K/M format (`action_ui_number_format`) wystarcza na długą rozgrywkę, czy potrzeba dalszych jednostek (M, potem co?). |
+| **Beggar's Life** | PIVOT (tematycznie niezgodny — to symulator bezdomności, nie satyra na influencerów) | Ton "mozolnego, przytłaczającego" postępu (nie triumfalnego) jest bliżej naszej satyry niż heroiczna fantazja Melvora — wzmacnia decyzję, że King of Cringe nie powinien czuć się jak czyste heroiczne wbijanie poziomów. Mechanizm "chcę zobaczyć jak źle/absurdalnie to się potoczy" zadziałał tam dobrze — to ten sam mechanizm, na którym stoi nasza eskalacja Cringe; potwierdza potencjał, warunkowany dobrym pisaniem treści kart. |
+
+**Metodologiczny wniosek na przyszłość**: przy kolejnych badaniach referencyjnych, jeśli gry referencyjne różnią się mechanicznie (nie wszystkie mają karty/swipe), warto przygotować pytania uniwersalne na poziomie *hooka* (np. "czy chciałeś zrobić jeszcze jedno", nie "czy karta Cię zaskoczyła") — część pytań z tej rundy nie miała zastosowania do 3 z 4 gier i dała odpowiedzi typu "to pytanie nie ma zastosowania", co jest poprawne, ale mniej informacyjne niż mogłoby być.
+
 ---
 
 ## Target Player Profile
@@ -207,6 +220,7 @@ Postęp offline musi być tak satysfakcjonujący i czytelny jak aktywna sesja �
 ### Open Questions
 - Jak dokładnie system flagów historii determinuje dostępność ścieżek klas? — wymaga prototypu/dokumentu systemowego.
 - Jaki jest model monetyzacji, który nie zaprzecza satyrze na hazard? — do rozstrzygnięcia przed `/design-system` ekonomii.
+- **Czy potrzebujemy "realnej stawki" analogicznej do śmierci władcy w Reigns?** (z Reference Game Findings, 2026-06-20) — gra ma świadomą decyzję anty-porażkową (konsekwencje odroczone, nigdy blokujące na stałe), ale Reigns pokazuje, że ciągłe napięcie 4 wskaźników z realną stawką jest mocnym hookiem. Nie chcemy kopiować permadeath, ale **Prestige/Checkpoint System (Alpha tier)** może być naturalnym miejscem na "koniec ery"/transformację bez game-over. *Owner: `/design-system "Prestige/Checkpoint System"` po zakończeniu Vertical Slice tier, zgodnie z `systems-index.md`'s kolejnością. Target: Alpha.*
 
 ---
 

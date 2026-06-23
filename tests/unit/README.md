@@ -1,9 +1,7 @@
 # Unit Tests
 
-`resource_system/resource_formulas_test.gd` is an example test confirming the
-test naming/structure convention and GdUnit4 syntax — it targets
-`res://src/core/resource_formulas.gd`, which is specified by ADR-0006 but not
-yet implemented (no `src/` code exists yet; this is Technical Setup, not
-Production). This test will fail/error until that file is written — that's
-expected. Treat it as a template for the first real unit test once
-implementation begins, not as a currently-passing test.
+The original placeholder test (`resource_system/resource_formulas_test.gd`,
+created during `/test-setup` before any `src/` code existed) has been removed
+— superseded by the real test at `resource_system/haters_growth_rate_test.gd`,
+written alongside Story 002's actual `ResourceFormulas.haters_growth_rate()`
+implementation.

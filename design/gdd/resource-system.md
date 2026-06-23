@@ -97,7 +97,7 @@ Rdzeń (nagrody z akcji) jest zawsze przewidywalny i niezmienny — to "nieuczci
 | Elapsed time | Δt | float (s) | ≥0 | — |
 
 **Output Range:** 0 at N≤3; unbounded growth beyond, self-limiting via Critical-band multiplier feedback.
-**Example:** M_drain_per_hater=0.15, N_buffer=3: N=2 → 0%/min (free); N=10 → 0.15×7^1.3≈1.85%/min; N=25 → 0.15×22^1.3≈7.3%/min.
+**Example:** M_drain_per_hater=0.15, N_buffer=3: N=2 → 0%/min (free); N=10 → 0.15×7^1.3≈1.88%/min; N=25 → 0.15×22^1.3≈8.34%/min. (Corrected 2026-06-23 — original worked examples here had an arithmetic error, caught during Story 003's implementation; the formula and constants were always correct, only this prose example was wrong.)
 
 ---
 
@@ -217,7 +217,7 @@ Resource System is pure infrastructure — it has no screen of its own. Requirem
 
 - **GIVEN** an action in progress with defined Zasięgi/Cringe/Morale deltas, **WHEN** the action completes, **THEN** all three values update by exactly their defined deltas, with no partial write before completion.
 - **GIVEN** Cringe=10 vs Cringe=80 in two identical states, **WHEN** 10 minutes elapse, **THEN** the Cringe=80 state produces Hatersi growth per `H_rate(80)=0.02+0.64×1.0=0.66/min` (≈6.6 over 10 min), vs Cringe=10's `H_rate(10)=0.03/min` (≈0.3 over 10 min) — strictly greater growth at higher Cringe.
-- **GIVEN** Hatersi=10, **WHEN** 1 minute of drain elapses, **THEN** Morale decreases by `0.15×(10-3)^1.3≈1.85%` (Formula B, buffer of 3 subtracted before escalation).
+- **GIVEN** Hatersi=10, **WHEN** 1 minute of drain elapses, **THEN** Morale decreases by `0.15×(10-3)^1.3≈1.88%` (Formula B, buffer of 3 subtracted before escalation). (Corrected 2026-06-23 — see Formula B's worked example note.)
 - **GIVEN** Morale=35% (Low band, 15-39%), **WHEN** the player completes an action with a 25 Zasięgi base reward, **THEN** effective reward = 25×0.75=18.75 → round-half-up → 19 Zasięgi.
 - **GIVEN** Hatersi=10, Morale=80% (Mult=1.0), **WHEN** 10 minutes elapse with no player action, **THEN** Zasięgi increases by exactly `10×0.2×1.0×10=20` (Formula D).
 - **GIVEN** Cringe=95, **WHEN** an action with nominal ΔCringe=+20 completes, **THEN** actual increase = `clamp(115,0,100)-95=5`, not 20 (natural clamp behavior, not a separate curve).

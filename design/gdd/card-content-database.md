@@ -36,6 +36,12 @@ option:
   resource_deltas: Dict[string, int]    # e.g. { Zasięgi: +10, Cringe: +15 }
   counter_increments: Dict[string, int] # e.g. { risky_choices_count: 1 }
   milestone_to_set: string?     # optional, e.g. "card.exposed_friend.chosen_risky"
+  resolution_reaction: string?  # added by juice-feedback-system.md — short text shown in place
+                                 # of the card's question text for payoff_duration() seconds after
+                                 # resolution; optional (missing = skip the payoff state, per that
+                                 # GDD's Edge Cases). Tone: flat, observational "algorithm logic
+                                 # report" — never moralizing, regardless of which option's reaction
+                                 # this is (per the no-valence-coding anti-pillar).
 ```
 
 **Rules:**
@@ -83,6 +89,19 @@ option:
 | `burnout_warning` | B (spread into small actions) | — | — | +10 | — |
 
 **Resolved open question (from Resource System GDD): "qualifying card" for Sponsorzy.** Only `sponsor_offer_shady` and `brand_deal_choice` qualify — the only 2 of 12 cards whose premise is directly a sponsor/brand offer. Rule for future cards: "qualifying" = the card's premise is a sponsor/brand/monetization offer, not just "any risky choice."
+
+**Resolution reactions (`resolution_reaction` field, added by `juice-feedback-system.md`) — written for the 3 cards currently used in the vertical slice. Remaining 9 cards' reactions are an Open Question.**
+
+| Card | Option | Resolution Reaction |
+|---|---|---|
+| `sponsor_offer_shady` | A (risky: accept) | "Sponsorship logged. 3 viewers asked if the product works. 0 received an answer." |
+| `sponsor_offer_shady` | B (safe: decline) | "Offer declined. The algorithm notes this and moves on without comment." |
+| `hater_callout` | A (risky: hit back) | "Response posted. Engagement up. So is the thread length." |
+| `hater_callout` | B (safe: ignore) | "No response posted. The video is still trending without you in it." |
+| `fan_in_trouble` | A (help on stream) | "Clip posted. 40,000 people watched a private moment become public." |
+| `fan_in_trouble` | B (help privately) | "Message sent. No one else will ever know this happened." |
+
+Tone note: every reaction reports a fact or a number, never a judgment — this is the GDD-level enforcement of `juice-feedback-system.md`'s no-valence-coding rule applied to written content, not just sensory effects.
 
 ### States and Transitions
 
@@ -218,3 +237,4 @@ Cards are the only modal screen in MVP besides the HUD — warrants a dedicated 
 - **Which future card will query the `card.algorithm_hack.saved` milestone?** — forward hook with no consumer in MVP. *Owner: future Vertical Slice/Alpha cards. Target: once the card pool grows.*
 - **Swipe "commitment threshold"** — implementation detail deferred to `/ux-design`. *Owner: UX spec. Target: before Pre-Production.*
 - **Team/equipment upgrade cards** — out of scope for this GDD and for MVP; owned by **Team/Staff Management System** (Alpha tier per `systems-index.md`). No MVP card references team/equipment upgrades. Noted here only as a forward pointer, not duplicated. *Owner: Team/Staff Management GDD. Target: Alpha tier.*
+- **`resolution_reaction` content for the remaining 9 cards** — written for `sponsor_offer_shady`, `hater_callout`, `fan_in_trouble` only (the 3 used in the vertical slice). The other 9 (`exposed_friend`, `staged_drama`, `competitor_drama`, `leaked_dm`, `cancel_threat`, `apology_tour`, `brand_deal_choice`, `algorithm_hack`, `burnout_warning`) still need reactions before they can use `juice-feedback-system.md`'s payoff state. *Owner: narrative-director/writer. Target: before the next `/vertical-slice` re-run if those cards enter scope, otherwise before full Production content pass.*

@@ -1,0 +1,13 @@
+# Godot 4.x
+.godot/
+*.translation
+export_presets.cfg
+
+# GdUnit4 test reports (regenerated on every run)
+reports/
+
+# macOS
+.DS_Store
+
+# Agent working memory (scratch, not a project deliverable)
+.claude/agent-memory/
