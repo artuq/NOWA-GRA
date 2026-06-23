@@ -1,12 +1,12 @@
 # Story 001: ActionSystem Core — Timer, Single-Concurrency & Progress
 
 > **Epic**: Action System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (3-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**: (set by /dev-story when implementation begins)
+> **Last Updated**: 2026-06-24
 
 ## Context
 
@@ -31,6 +31,7 @@
 *From GDD `design/gdd/action-system.md` (State transitions, Single-concurrency rule, get_progress validation), scoped to this story:*
 
 - [ ] GIVEN `idle` (`current_action_id == &""`), WHEN `start_action(id)` is called for a known action, THEN it returns `true`, `current_action_id` becomes `id`, and the `Timer` starts with that action's duration.
+- [ ] GIVEN `idle`, WHEN `start_action(id)` is called for an `id` not present in `ACTION_DURATIONS`, THEN it returns `false`, `current_action_id` remains `&""`, and the `Timer` is not started or mutated (no crash from indexing a missing key).
 - [ ] GIVEN an action is `running`, WHEN `start_action(any_id)` is called again (same or different), THEN it returns `false`, `current_action_id` is unchanged, and the running `Timer` is not restarted or interrupted.
 - [ ] GIVEN `running`, WHEN the `Timer`'s duration elapses, THEN `_on_action_timeout()` runs, `current_action_id` resets to `&""`, and `action_completed` is emitted exactly once carrying the completed `action_id`.
 - [ ] GIVEN `idle` (`current_action_id == &""`), WHEN `get_progress()` is called, THEN it returns exactly `0.0` (divide-by-zero guard — no `Timer` access that could divide by a zero `wait_time`).
@@ -58,6 +59,8 @@ func _ready() -> void:
 func start_action(action_id: StringName) -> bool:
     if current_action_id != &"":
         return false  # single-concurrency: reject if one is already running
+    if not ACTION_DURATIONS.has(action_id):
+        return false  # unknown action_id: reject, no Timer mutation, no crash
     current_action_id = action_id
     _timer.wait_time = ACTION_DURATIONS[action_id]
     _timer.start()
@@ -93,7 +96,10 @@ func get_progress() -> float:
   - Given: fresh ActionSystem, `current_action_id == &""`
   - When: `start_action(&"nagraj_vloga")`
   - Then: returns `true`; `current_action_id == &"nagraj_vloga"`; `_timer.wait_time == 6.0`; timer is running
-  - Edge: unknown `action_id` not in `ACTION_DURATIONS` — define behavior (reject/error); test it
+- **AC-1b (unknown action_id rejected)**:
+  - Given: fresh ActionSystem, `current_action_id == &""`
+  - When: `start_action(&"does_not_exist")`
+  - Then: returns `false`; `current_action_id` remains `&""`; `_timer` is not started (no crash from indexing a missing key)
 - **AC-2 (single-concurrency rejection)**:
   - Given: an action is running (`current_action_id != &""`)
   - When: `start_action(&"zrob_drame")` (and separately, `start_action` with the SAME id)
@@ -124,7 +130,7 @@ func get_progress() -> float:
 **Required evidence**:
 - `tests/unit/action_system/action_system_timer_concurrency_test.gd` — must exist and pass
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created and passing — `tests/unit/action_system/action_system_timer_concurrency_test.gd`, 8/8 passing (verified via `addons/gdUnit4/runtest.sh`, 2026-06-23)
 
 ---
 
@@ -132,3 +138,12 @@ func get_progress() -> float:
 
 - Depends on: ADR-0001 (ActionSystem Autoload interface) and ADR-0003 (boot order) — both Accepted. No story dependency (this is the Action System epic's first story).
 - Unlocks: Story 002 (reward resolution extends `_on_action_timeout()`).
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 7/7 passing (none deferred)
+**Deviations**: 2 advisory, already logged in `docs/tech-debt-register.md` — (1) `Timer.time_left` is read-only in Godot 4.6.x, AC-5's test drives the real Timer for ~0.6s instead of setting `time_left` directly; (2) `GdUnitSignalAssert.is_count()` doesn't exist in real GdUnit4 v6.2.0-rc1, signal-count test uses a manual counter callable instead.
+**Test Evidence**: Logic — `tests/unit/action_system/action_system_timer_concurrency_test.gd`, 8/8 passing (full regression 63/63 passing)
+**Code Review**: Complete — `/code-review` APPROVED; LP-CODE-REVIEW gate APPROVE; QL-TEST-COVERAGE gate ADEQUATE

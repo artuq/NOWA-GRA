@@ -551,6 +551,68 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
   locally" fiction for 1-1/1-2/1-3 was the sprint's biggest risk); and commit the work.
 - Retro action items: #1 commit sprint-1 (High), #2 no test evidence without a run
   log (High), #3 doc-sync PL→EN resource keys tech-debt#1 (Med), #4 cross-call lint (Low).
-- NEXT: recommend committing sprint 1 first (we are on `main` — branch first per
-  repo guidance). Then optional /team-qa sign-off, then plan sprint 2 = Action
-  System epic (next production system, ADR-0004, depends on now-done Resource System).
+- DONE: committed sprint 1. Branch `feat/resource-system-epic`, commit 02205e4.
+  Captured the Resource System epic + the whole previously-uncommitted project
+  foundation (GDDs, architecture, control-manifest, vertical-slice prototype,
+  sprint/qa/smoke/retro artifacts, project.godot, GdUnit4 addon). Excluded:
+  .DS_Store (untracked + gitignored), .claude/agent-memory/ (gitignored as scratch).
+  Working tree now CLEAN. Retro Action Item #1 DONE.
+- DoD now 8/9: only /team-qa sign-off remains. Branch NOT yet merged to main
+  (solo dev — merge when ready; we are on the feature branch).
+- DONE: /team-qa sprint cycle complete (qa-lead spawned on model:opus to dodge
+  sonnet 500s — worked). Manual QA phases skipped (backend-only, zero Visual/UI
+  stories). VERDICT: APPROVED. Report: production/qa/qa-signoff-sprint-1-2026-06-23.md.
+  This closes the LAST DoD item — Sprint 1 DoD now 9/9.
+- Sign-off honestly captured: process finding (pre-harness evidence claims for
+  1-1/1-2/1-3, remediated) + roadmap item (playable-build expectation → sprint 2).
+- NEXT OPTIONS: (a) merge feat/resource-system-epic → main; (b) plan sprint 2 =
+  Action System epic (ADR-0004 single-concurrency, depends on now-done Resource
+  System; prototype's action_system.gd is the reference).
+
+<!-- QA RUN: 2026-06-23 | Sprint: 1 | Verdict: APPROVED | Report: production/qa/qa-signoff-sprint-1-2026-06-23.md -->
+
+## Session Extract — Sprint 2 planned + CrazyGames Q 2026-06-23 (CLEAN HANDOFF)
+- Sprint 1 FULLY CLOSED (DoD 9/9, APPROVED) and committed.
+- Sprint 2 PLANNED: production/sprints/sprint-2.md + sprint-status.yaml (now sprint 2).
+  2 stories, both ready-for-dev, producer PR-SPRINT = REALISTIC. Dates 06-23→06-27.
+  - 2-1: ActionSystem Core — Timer, single-concurrency, get_progress (Logic, ~0.5d)
+    → production/epics/action-system/story-001-action-core-timer-concurrency.md
+  - 2-2: Action Reward Resolution & Morale Scaling (Integration, ~0.5d, deps 2-1)
+    → production/epics/action-system/story-002-reward-resolution-morale-scaling.md
+- ADR-0004 was AMENDED (2026-06-23): _on_action_timeout() code sample corrected to
+  scale Reach + apply_delta + emit final deltas (was emitting raw base). Story 002
+  embeds the corrected version. Stays Accepted.
+- Git: branch feat/resource-system-epic, 3 commits (02205e4 RS epic, 4a8dcff QA
+  signoff, a435ddb sprint-2 plan). Working tree clean except ephemeral active.md.
+  Branch NOT merged to main yet.
+- CrazyGames question ANSWERED: feasible + good fit (Godot 4 officially supported).
+  Requires Compatibility renderer (not Forward+/Mobile) for web, crazysdk-godot-4
+  addon, compressed builds. Logged as a ROADMAP FLAG in tech-debt-register.md —
+  decide via ADR when the rendering/UI layer is reached. Backend is renderer-agnostic
+  so nothing built so far is affected.
+- INFRA: sonnet-model 500s on subagent spawn persisted through this session;
+  workaround = spawn ccgs agents with model:opus (used for ALL gates today, worked).
+- NEXT SESSION STARTS HERE: run /qa-plan sprint (sprint 2) to define test specs for
+  2-1/2-2, THEN /story-readiness story-001 → /dev-story story-001. (qa-plan is the
+  one missing DoD prerequisite before implementation.)
+
+<!-- QA-PLAN: 2026-06-23 | System: sprint-2 (action-system) | Plan written: production/qa/qa-plan-sprint-2-2026-06-23.md -->
+
+## Session Extract — /dev-story continuation 2026-06-23
+- Story: production/epics/action-system/story-001-action-core-timer-concurrency.md — ActionSystem Core
+- Tests run for real: tests/unit/action_system/action_system_timer_concurrency_test.gd — 8/8 PASSING
+- Full regression: 63/63 unit tests passing (55 Resource System + 8 Action System), exit code 0
+- Real bugs found and fixed in the test file (logged in docs/tech-debt-register.md):
+  1. Timer.time_left is read-only in Godot 4.6.x — cannot set directly. Rewrote AC-5 test to drive
+     the real Timer with a short bounded duration (0.6s) + await create_timer().timeout instead.
+  2. GdUnitSignalAssert has no is_count() method — rewrote signal-count test using a connected
+     counter callable (must use Array, not int, since GDScript lambdas capture locals by value).
+- Story Test Evidence section marked [x] Created and passing.
+- Next: /code-review src/core/action_system.gd tests/unit/action_system/action_system_timer_concurrency_test.gd production/epics/action-system/story-001-action-core-timer-concurrency.md
+  then /story-done production/epics/action-system/story-001-action-core-timer-concurrency.md
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/action-system/story-001-action-core-timer-concurrency.md — ActionSystem Core
+- Tech debt logged: None (2 advisory deviations already logged 2026-06-23)
+- Next recommended: Story 002 (Action Reward Resolution & Morale Scaling) — production/epics/action-system/story-002-reward-resolution-morale-scaling.md

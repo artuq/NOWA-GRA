@@ -18,18 +18,19 @@ goal: "Implement the Action System backend (ActionSystem Autoload — single-Tim
 start: "2026-06-23"
 end: "2026-06-27"
 generated: "2026-06-23"
-updated: "2026-06-23"
+updated: "2026-06-24"
+# 2-1 marked done (story-done 2026-06-24)
 
 stories:
   - id: "2-1"
     name: "ActionSystem Core — Timer, Single-Concurrency & Progress"
     file: "production/epics/action-system/story-001-action-core-timer-concurrency.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"
 
   - id: "2-2"
     name: "Action Reward Resolution & Morale Scaling"
