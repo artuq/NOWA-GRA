@@ -4,7 +4,14 @@
 > **GDD**: design/gdd/action-system.md
 > **Architecture Module**: ActionSystem
 > **Status**: Ready
-> **Stories**: Not yet created — run `/create-stories action-system`
+> **Stories**: 2 stories created (2026-06-23)
+
+## Stories
+
+| # | Story | Type | Status | ADR |
+|---|-------|------|--------|-----|
+| 001 | ActionSystem Core — Timer, Single-Concurrency & Progress | Logic | Ready | ADR-0004 |
+| 002 | Action Reward Resolution & Morale Scaling | Integration | Ready | ADR-0004 + ADR-0001 |
 
 ## Overview
 
@@ -37,4 +44,4 @@ This epic is complete when:
 
 ## Next Step
 
-Run `/create-stories action-system` to break this epic into implementable stories.
+Stories created. Run `/story-readiness production/epics/action-system/story-001-action-core-timer-concurrency.md` then `/dev-story` to begin implementation. Work 001 before 002 (002 extends 001's `_on_action_timeout()`).

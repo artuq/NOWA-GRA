@@ -8,81 +8,35 @@
 #   review         ↔  In Review
 #   done           ↔  Complete
 #   blocked        ↔  Blocked
+#
+# Sprint 1 (Resource System) is fully closed — record preserved in
+# production/sprints/sprint-1.md, retro-sprint-1-2026-06-23.md, and
+# qa-signoff-sprint-1-2026-06-23.md. All 7 stories marked Complete in their files.
 
-sprint: 1
-goal: "Implement Resource System's core mutation mechanism and all 5 formulas (A-E) in src/, with passing unit tests for every story."
+sprint: 2
+goal: "Implement the Action System backend (ActionSystem Autoload — single-Timer concurrency + Morale-scaled reward resolution) in src/, with passing unit + integration tests."
 start: "2026-06-23"
-end: "2026-07-04"
-generated: "2026-06-20"
-updated: "2026-06-23"  # ALL 7 stories done (6/6 must-have + 1/1 should-have). Sprint 1 scope complete.
+end: "2026-06-27"
+generated: "2026-06-23"
+updated: "2026-06-23"
 
 stories:
-  - id: "1-1"
-    name: "Core Resource Mutation & Clamping"
-    file: "production/epics/resource-system/story-001-core-resource-mutation.md"
+  - id: "2-1"
+    name: "ActionSystem Core — Timer, Single-Concurrency & Progress"
+    file: "production/epics/action-system/story-001-action-core-timer-concurrency.md"
     priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 1
-    blocker: ""
-    completed: "2026-06-23"
-
-  - id: "1-2"
-    name: "Hatersi Passive Growth Rate (Formula A)"
-    file: "production/epics/resource-system/story-002-haters-growth-rate.md"
-    priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-06-23"
+    completed: ""
 
-  - id: "1-3"
-    name: "Morale Drain Rate (Formula B)"
-    file: "production/epics/resource-system/story-003-morale-drain-rate.md"
+  - id: "2-2"
+    name: "Action Reward Resolution & Morale Scaling"
+    file: "production/epics/action-system/story-002-reward-resolution-morale-scaling.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: "2026-06-23"
-
-  - id: "1-4"
-    name: "Action Effectiveness Multiplier Lookup (Formula C)"
-    file: "production/epics/resource-system/story-004-effectiveness-multiplier.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-06-23"
-
-  - id: "1-5"
-    name: "Passive Zasięgi/Reach Income (Formula D)"
-    file: "production/epics/resource-system/story-005-passive-income.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-06-23"
-
-  - id: "1-6"
-    name: "Cringe Delta Clamping (Formula E)"
-    file: "production/epics/resource-system/story-006-cringe-clamping.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-06-23"
-
-  - id: "1-7"
-    name: "Sponsorzy/Sponsors Acquisition (Placeholder)"
-    file: "production/epics/resource-system/story-007-sponsors-acquisition.md"
-    priority: should-have
-    status: done
-    owner: ""
-    estimate_days: 0.25
-    blocker: ""
-    completed: "2026-06-23"
+    completed: ""

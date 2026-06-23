@@ -70,10 +70,26 @@ func get_progress() -> float:
 
 func _on_action_timeout() -> void:
     var completed_id := current_action_id
-    var rewards := ACTION_REWARDS[completed_id]
+    var base_rewards := ACTION_REWARDS[completed_id]
     current_action_id = &""
-    action_completed.emit(completed_id, rewards)
+
+    # Read current Morale, scale the Reach reward (Formula C), per action-system.md:
+    # "reads the current Morale multiplier to scale the final Zasięgi (Reach) reward"
+    var morale := ResourceManager.get_resource(&"Morale")
+    var multiplier := ResourceFormulas.action_effectiveness_multiplier(morale)
+    var scaled_reach := roundf(base_rewards[&"Reach"] * multiplier)  # round-half-away-from-zero (Godot roundf); rounding is the call site's job per Resource System Story 1-4, not ResourceFormulas
+
+    var deltas: Dictionary[StringName, float] = {
+        &"Reach": scaled_reach,
+        &"Cringe": base_rewards[&"Cringe"],
+        &"Morale": base_rewards[&"Morale"],
+    }
+    ResourceManager.apply_delta(deltas)  # direct call, ownership-clear write — ADR-0001 pattern; ResourceManager clamps Cringe/Morale to [0,100]
+
+    action_completed.emit(completed_id, deltas)  # notification only, per ADR-0001; carries the FINAL applied deltas, not raw base rewards
 ```
+
+> **Correction (2026-06-23):** The original code sample above (pre-Resource-System-implementation) emitted `ACTION_REWARDS[completed_id]` raw as `action_completed`'s payload and showed no write to `ResourceManager` and no Morale-multiplier scaling. This was flagged by `qa-lead` during `/create-stories` for the Action System and confirmed against `action-system.md` (Action System must scale Reach by the Formula C multiplier and write deltas before notifying) and ADR-0001 (resource mutation is a direct call from the owning module, signals are notification-only). The sample is corrected above to call the real, now-built `ResourceFormulas.action_effectiveness_multiplier()` and `ResourceManager.apply_delta()` APIs and to emit the final applied deltas. This is a code-sample correction within the existing Accepted decision — the Timer/`current_action_id` concurrency mechanism this ADR decides is unaffected and unchanged.
 
 `get_progress()` is polled by Action UI every frame via `_process()` — this is cheap (a single division) and matches the existing requirement that the progress bar update every frame without a dedicated signal-per-frame mechanism, which `Timer` doesn't offer natively anyway.
 
@@ -85,7 +101,7 @@ Timer.timeout -> ActionSystem._on_action_timeout() -> emits action_completed
 ```
 
 ### Key Interfaces
-Unchanged from ADR-0001: `start_action(action_id: StringName) -> bool`, `signal action_completed(action_id: StringName, rewards: Dictionary)`. This ADR adds `get_progress() -> float` (new, not previously specified) and `current_action_id: StringName` as the persisted-state field for `restore_state()` (per ADR-0003) — though resuming a mid-flight action across app restarts is explicitly out of scope (see Edge Cases below).
+`start_action(action_id: StringName) -> bool` is unchanged from ADR-0001. `signal action_completed(action_id: StringName, rewards: Dictionary)` keeps its ADR-0001 signature, but as of the 2026-06-23 correction the `rewards` payload it carries is the **final applied deltas** (post-Morale-scaling, the same `Dictionary[StringName, float]` passed to `ResourceManager.apply_delta()`), not the raw `ACTION_REWARDS` base values — subscribers (`OnboardingGate`, `DecisionCardSystem`) only need `action_id` per their documented use, so this payload change does not affect them. This ADR adds `get_progress() -> float` (new, not previously specified) and `current_action_id: StringName` as the persisted-state field for `restore_state()` (per ADR-0003) — though resuming a mid-flight action across app restarts is explicitly out of scope (see Edge Cases below).
 
 ## Alternatives Considered
 
