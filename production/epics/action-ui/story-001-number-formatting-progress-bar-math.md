@@ -61,6 +61,8 @@ Create a new static utility class, `res://src/ui/action_ui_formatting.gd`, `clas
 
 This story produces no scene, no Control node, no visual output — it is purely the two static functions plus their test file. Stories 002-004 call these functions from their respective Control scripts.
 
+**Performance**: O(1) pure arithmetic/string formatting, negligible even called every frame from Story 004's `_process()` loop — no profiling required at this scale.
+
 ---
 
 ## Out of Scope
