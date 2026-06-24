@@ -60,11 +60,11 @@ stories:
     name: "Save/Persistence System — Debounce/Coalescing & Lifecycle Flush (Story 002)"
     file: "production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md"
     priority: must-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"
 
   - id: "3-4"
     name: "Doc-sync: Polish→English resource keys"

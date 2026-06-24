@@ -1,7 +1,7 @@
 # Story 002: Debounce/Coalescing & Mobile Lifecycle Flush
 
 > **Epic**: Save/Persistence System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Integration
 > **Estimate**: S (2-3h)
@@ -145,3 +145,12 @@ func _notification(what: int) -> void:
 
 - Depends on: Story 001 (Core Save/Load) must be DONE; this story calls Story 001's `save_now()` on a timer.
 - Unlocks: None within this epic. Downstream: Offline Progress System (will eventually trigger saves too, once it exists).
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 6/6 passing (none deferred)
+**Deviations**: 1 advisory, logged as tech debt — ADR-0002's Key Interfaces section specifies a `save_flushed` signal on successful save; the implementation omits it. Only matters once a future consumer (e.g., a "saving..." UI indicator) needs it.
+**Test Evidence**: Integration — `tests/integration/save_persistence_system/save_debounce_test.gd`, 8/8 passing (full regression 111/111 passing)
+**Code Review**: Complete — `/code-review` APPROVED; LP-CODE-REVIEW gate APPROVE; QL-TEST-COVERAGE gate ADEQUATE

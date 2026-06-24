@@ -3,7 +3,7 @@
 > **Layer**: Foundation
 > **GDD**: design/gdd/save-persistence-system.md
 > **Architecture Module**: SaveSystem
-> **Status**: Ready
+> **Status**: Complete
 > **Stories**: 2 stories created — see table below
 
 ## Overview
@@ -44,11 +44,11 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | Core Save/Load — State Transitions, Atomic Write & Schema Fallback | Integration | Ready | ADR-0002, ADR-0001 |
-| 002 | Debounce/Coalescing & Mobile Lifecycle Flush | Integration | Ready | ADR-0002, ADR-0001 |
+| 001 | Core Save/Load — State Transitions, Atomic Write & Schema Fallback | Integration | Complete | ADR-0002, ADR-0001 |
+| 002 | Debounce/Coalescing & Mobile Lifecycle Flush | Integration | Complete | ADR-0002, ADR-0001 |
 
 **Scope note**: Story 001's round-trip is scoped to `ResourceManager` + `HistoryFlagManager` only — Decision Card System doesn't exist yet, so `decision_card_state` is written as a fixed placeholder, not round-trip tested. A follow-up story will extend this once that epic is built.
 
 ## Next Step
 
-Run `/story-readiness production/epics/save-persistence-system/story-001-core-save-load.md` then `/dev-story` to begin implementation.
+Epic complete. Offline Progress System and Decision Card System can now build on `SaveSystem`'s boot/save mechanics.

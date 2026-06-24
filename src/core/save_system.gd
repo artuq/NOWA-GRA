@@ -14,20 +14,30 @@
 ## order (after `HistoryFlagManager`, before `ActionSystem` — `CardContentDatabase`
 ## doesn't exist yet, so its canonical slot is simply skipped).
 ##
-## Story 002 (debounce/coalescing, mobile lifecycle flush) is out of scope
-## here — this module only provides the `save_now()`/`load_save()` mechanics
-## Story 002 will trigger on a timer. `decision_card_state` is written as a
-## fixed empty placeholder — Decision Card System doesn't exist yet, so that
-## round-trip is not implemented or tested here.
+## Story 002 (TR-save-001's debounce/coalescing extension): `mark_dirty()`
+## starts/restarts a 2s trailing-edge debounce `Timer`; when it fires,
+## `save_now()` runs. A mobile lifecycle signal (`NOTIFICATION_APPLICATION_PAUSED`)
+## bypasses the remaining debounce window and calls `save_now()` immediately
+## if a save is pending — never lose progress to a routine backgrounding
+## event. `decision_card_state` is written as a fixed empty placeholder —
+## Decision Card System doesn't exist yet, so that round-trip is not
+## implemented or tested here.
 ##
 ## Usage example:
 ##   SaveSystem.save_now()
+##   SaveSystem.mark_dirty()  # debounced — fires save_now() ~2s later
 ##   var data: Dictionary = SaveSystem.load_save()
 extends Node
 
 const SAVE_PATH: String = "user://save.json"
 const TEMP_PATH: String = "user://save.tmp"
 const SCHEMA_VERSION: int = 1
+
+## Trailing-edge debounce interval (Tuning Knob: `save_debounce_interval_sec`,
+## safe range 1-5 per `save-persistence-system.md`). `mark_dirty()` restarts
+## a `Timer` of this duration on every call; the save only fires after this
+## many seconds with no further calls.
+const _DEBOUNCE_INTERVAL_SEC: float = 2.0
 
 ## State machine per the GDD: `UNINITIALIZED` only at construction, before
 ## `_ready()` runs `load_save()` + `restore_state()` on every peer module and
@@ -41,6 +51,8 @@ enum State { UNINITIALIZED, LOADING, READY, SAVING }
 ## (e.g. `ActionSystem.current_action_id`).
 var state: State = State.UNINITIALIZED
 
+var _debounce_timer: Timer
+
 
 func _ready() -> void:
 	state = State.LOADING
@@ -48,6 +60,38 @@ func _ready() -> void:
 	ResourceManager.restore_state(data.get("resources", {}))
 	HistoryFlagManager.restore_state(data.get("history_flags", {}))
 	state = State.READY
+
+	_debounce_timer = Timer.new()
+	_debounce_timer.one_shot = true
+	_debounce_timer.wait_time = _DEBOUNCE_INTERVAL_SEC
+	_debounce_timer.timeout.connect(save_now)
+	add_child(_debounce_timer)
+
+
+## Marks game state dirty, starting (or restarting) the [constant
+## _DEBOUNCE_INTERVAL_SEC]-second trailing-edge debounce timer. Calling this
+## again before the timer fires restarts the countdown from the full
+## duration — multiple calls within one window coalesce into exactly one
+## `save_now()`, timed from the *latest* call, reflecting whatever state was
+## current at that latest call.
+##
+## Example:
+##   SaveSystem.mark_dirty()
+func mark_dirty() -> void:
+	_debounce_timer.stop()
+	_debounce_timer.start()
+
+
+## Godot lifecycle notification handler. On `NOTIFICATION_APPLICATION_PAUSED`
+## (OS backgrounding/suspension signal), if a debounced save is pending
+## (timer running), it fires immediately via `save_now()`, bypassing the
+## remaining debounce window. Backgrounding with no save pending is a no-op
+## — never triggers a spurious write.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED:
+		if _debounce_timer != null and not _debounce_timer.is_stopped():
+			_debounce_timer.stop()
+			save_now()
 
 
 ## Writes a full snapshot of all peer modules' state to disk atomically:

@@ -672,3 +672,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/save-persistence-system/story-001-core-save-load.md — Core Save/Load
 - Tech debt logged: None
 - Next recommended: Story 002 (Debounce/Coalescing & Mobile Lifecycle Flush) — production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md — Debounce/Coalescing & Mobile Lifecycle Flush
+- Files changed: src/core/save_system.gd (added mark_dirty(), _debounce_timer, _notification() lifecycle flush)
+- Test written: tests/integration/save_persistence_system/save_debounce_test.gd (7 functions covering 6 ACs, AC-6 split into main+edge-case; 7/7 passing, full suite 110/110, re-run for timing-flakiness confirmation)
+- Blockers: None. Implemented directly (same subagent-trust pattern as Stories 001/002 of History Flag and Story 001 of Save/Persistence).
+- Next: /code-review src/core/save_system.gd tests/integration/save_persistence_system/save_debounce_test.gd production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md — Debounce/Coalescing & Mobile Lifecycle Flush
+- Tech debt logged: 1 item (missing save_flushed signal per ADR-0002, no consumer needs it yet)
+- Next recommended: None — Sprint 3 (History Flag System + Save/Persistence System) Must Have stories complete. Run sprint close-out sequence.
