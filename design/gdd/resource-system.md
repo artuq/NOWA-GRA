@@ -25,13 +25,22 @@ Gracz bezpośrednio widzi i rozumie każdy zasób (Zasięgi rosną, Cringe się 
 
 **Zasoby (5):**
 
-| Zasób | Rola | Generowany przez | Konsekwencja |
-|---|---|---|---|
-| **Zasięgi** | Główna waluta progresji, napędza kamienie milowe (potwierdzone w prototypie v2) | Akcje podstawowe, Hatersi (passive), Decision Cards | Brak bezpośredniej kary — to "uczciwa" liczba z Pillar 1 |
-| **Cringe** | Bufor ryzyka — rośnie z ryzykownych akcji ("Zrób dramę"), opada wolno z bezpiecznych ("Przeproś w internecie") | Akcje, Decision Cards | Napędza tempo przyrostu Hatersów (pośrednio) ORAZ przesuwa pulę kart decyzji w stronę ryzykownych wariantów (Decision Card System) |
-| **Hatersi** | Generator darmowych Zasięgów w tle, ale drenuje Morale | Pośrednio z poziomu Cringe (tempo przyrostu = f(Cringe)) | Każdy Haters drenuje Morale proporcjonalnie do swojej liczby |
-| **Morale** | Modyfikator efektywności wszystkich akcji | Bazowo pełne; regenerowane przez "Przeproś w internecie" | Niskie Morale = mnożnik efektywności akcji < 1.0 (patrz Formuły) |
-| **Sponsorzy** | Waluta ekonomii zespołu — pełna mechanika należy do Team/Staff Management (Alpha), tu tylko zdefiniowana jako istniejący zasób | Decision Cards (nagrody sponsorskie), przyszłe Team/Staff Management | Brak konsekwencji w MVP — placeholder na przyszłe sprzężenie |
+> **Resolved 2026-06-24 (Sprint 5, 5-1):** the column below shows the code's
+> actual `StringName` key (`src/core/resource_manager.gd`) alongside the
+> Polish display term used throughout this document's prose. Three of these
+> previously drifted — `Zasięgi`/`Hatersi`/`Sponsorzy` were the original
+> placeholder names; the locked code keys are `Reach`/`Haters`/`Sponsors`.
+> Only this table and `design/registry/entities.yaml` are updated here — the
+> narrative prose elsewhere in this document still uses the Polish terms and
+> is unaffected (translating it is out of scope for this tech-debt fix).
+
+| Code Key | Zasób (PL) | Rola | Generowany przez | Konsekwencja |
+|---|---|---|---|---|
+| **Reach** | Zasięgi | Główna waluta progresji, napędza kamienie milowe (potwierdzone w prototypie v2) | Akcje podstawowe, Hatersi (passive), Decision Cards | Brak bezpośredniej kary — to "uczciwa" liczba z Pillar 1 |
+| **Cringe** | Cringe | Bufor ryzyka — rośnie z ryzykownych akcji ("Zrób dramę"), opada wolno z bezpiecznych ("Przeproś w internecie") | Akcje, Decision Cards | Napędza tempo przyrostu Hatersów (pośrednio) ORAZ przesuwa pulę kart decyzji w stronę ryzykownych wariantów (Decision Card System) |
+| **Haters** | Hatersi | Generator darmowych Zasięgów w tle, ale drenuje Morale | Pośrednio z poziomu Cringe (tempo przyrostu = f(Cringe)) | Każdy Haters drenuje Morale proporcjonalnie do swojej liczby |
+| **Morale** | Morale | Modyfikator efektywności wszystkich akcji | Bazowo pełne; regenerowane przez "Przeproś w internecie" | Niskie Morale = mnożnik efektywności akcji < 1.0 (patrz Formuły) |
+| **Sponsors** | Sponsorzy | Waluta ekonomii zespołu — pełna mechanika należy do Team/Staff Management (Alpha), tu tylko zdefiniowana jako istniejący zasób | Decision Cards (nagrody sponsorskie), przyszłe Team/Staff Management | Brak konsekwencji w MVP — placeholder na przyszłe sprzężenie |
 
 **Łańcuch konsekwencji (Pillar 1 w praktyce):**
 

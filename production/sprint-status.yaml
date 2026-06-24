@@ -42,11 +42,11 @@ stories:
     name: "Doc-sync: Polish→English resource keys (carried over 3x from 3-4/4-3)"
     file: ""
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.25
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"
 
   - id: "5-2"
     name: "Offline Progress System — Stepped Offline Simulation (Story 001)"

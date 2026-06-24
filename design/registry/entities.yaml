@@ -4,7 +4,16 @@
 # Updated by /design-system after each GDD's Phase 5b validation step.
 
 resources:
-  - name: Zasięgi
+  # name: is the binding identifier -- must match ResourceManager's actual
+  # StringName keys (src/core/resource_manager.gd) exactly. display_name_pl:
+  # is the Polish term used in narrative GDD prose -- not an identifier,
+  # never referenced programmatically. Resolved 2026-06-24 (Sprint 5, 5-1):
+  # name: fields previously held the Polish placeholder term (Zasięgi/
+  # Hatersi/Sponsorzy) instead of the English key code actually locked in
+  # during the Resource System epic -- this is the key-drift risk flagged
+  # as tech debt during Card Content Database's code review.
+  - name: Reach
+    display_name_pl: Zasięgi
     type: primary_currency
     source: design/gdd/resource-system.md
     referenced_by: [design/gdd/card-content-database.md]
@@ -15,7 +24,8 @@ resources:
     source: design/gdd/resource-system.md
     referenced_by: [design/gdd/card-content-database.md]
 
-  - name: Hatersi
+  - name: Haters
+    display_name_pl: Hatersi
     type: passive_generator
     source: design/gdd/resource-system.md
     referenced_by: []
@@ -31,7 +41,8 @@ resources:
     source: design/gdd/resource-system.md
     referenced_by: [design/gdd/card-content-database.md, design/gdd/juice-feedback-system.md]
 
-  - name: Sponsorzy
+  - name: Sponsors
+    display_name_pl: Sponsorzy
     type: placeholder_currency
     note: "No consumption sink yet — pending Team/Staff Management GDD (Alpha)"
     source: design/gdd/resource-system.md
@@ -44,7 +55,7 @@ cards:
     referenced_by: []
   - name: sponsor_offer_shady
     type: risky_safe_card
-    note: "Sponsorzy-qualifying card"
+    note: "Sponsors-qualifying card"
     source: design/gdd/card-content-database.md
     referenced_by: []
   - name: hater_callout
@@ -79,7 +90,7 @@ cards:
     referenced_by: []
   - name: brand_deal_choice
     type: neutral_card
-    note: "Sponsorzy-qualifying card"
+    note: "Sponsors-qualifying card"
     source: design/gdd/card-content-database.md
     referenced_by: []
   - name: algorithm_hack
