@@ -38,18 +38,25 @@ func _on_resource_changed(name: StringName, new_value: float, _old_value: float)
 	_update_label(name, new_value)
 
 
+## Fixed a real readability defect (caught by user testing the actual scene,
+## 2026-06-25): bare formatted numbers with no identifying label are
+## unreadable when shown side by side ("19 20 0 Critical 0" -- no way to
+## tell which value is which resource). Each label now shows its English
+## display name as a prefix -- the game's UI language is English (per user
+## correction 2026-06-25); the existing Polish action/card content elsewhere
+## in the project is a separate, deliberate follow-up, not addressed here.
 func _update_label(name: StringName, value: float) -> void:
 	match name:
 		&"Reach":
-			_reach_label.text = ActionUIFormatting.format_number(value)
+			_reach_label.text = "Reach: %s" % ActionUIFormatting.format_number(value)
 		&"Cringe":
-			_cringe_label.text = ActionUIFormatting.format_number(value)
+			_cringe_label.text = "Cringe: %s" % ActionUIFormatting.format_number(value)
 		&"Haters":
-			_haters_label.text = ActionUIFormatting.format_number(value)
+			_haters_label.text = "Haters: %s" % ActionUIFormatting.format_number(value)
 		&"Morale":
-			_morale_label.text = _morale_band_label(value)
+			_morale_label.text = "Morale: %s" % _morale_band_label(value)
 		&"Sponsors":
-			_sponsors_label.text = ActionUIFormatting.format_number(value)
+			_sponsors_label.text = "Sponsors: %s" % ActionUIFormatting.format_number(value)
 
 
 ## Maps a raw Morale value to its band label, per resource-system.md's

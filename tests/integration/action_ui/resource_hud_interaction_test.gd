@@ -40,11 +40,11 @@ func test_resource_hud_displays_all_five_resources_on_load() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/resource_hud.tscn")
 	var hud: Node = runner.scene()
 
-	assert_str((hud.find_child("ReachLabel") as Label).text).is_equal("28.4K")
-	assert_str((hud.find_child("CringeLabel") as Label).text).is_equal("50")
-	assert_str((hud.find_child("HatersLabel") as Label).text).is_equal("12")
-	assert_str((hud.find_child("MoraleLabel") as Label).text).is_equal("High")
-	assert_str((hud.find_child("SponsorsLabel") as Label).text).is_equal("3")
+	assert_str((hud.find_child("ReachLabel") as Label).text).is_equal("Reach: 28.4K")
+	assert_str((hud.find_child("CringeLabel") as Label).text).is_equal("Cringe: 50")
+	assert_str((hud.find_child("HatersLabel") as Label).text).is_equal("Haters: 12")
+	assert_str((hud.find_child("MoraleLabel") as Label).text).is_equal("Morale: High")
+	assert_str((hud.find_child("SponsorsLabel") as Label).text).is_equal("Sponsors: 3")
 
 ## AC: Morale shows a band label, not raw percentage -- all 4 bands,
 ## including the inclusive-lower-bound boundaries (exactly 70, 40, 15).
@@ -54,14 +54,14 @@ func test_resource_hud_morale_band_label_at_all_boundaries() -> void:
 	var morale_label: Label = hud.find_child("MoraleLabel") as Label
 
 	var cases: Array[Array] = [
-		[90.0, "High"],
-		[70.0, "High"],
-		[69.0, "Normal"],
-		[40.0, "Normal"],
-		[39.0, "Low"],
-		[15.0, "Low"],
-		[14.0, "Critical"],
-		[0.0, "Critical"],
+		[90.0, "Morale: High"],
+		[70.0, "Morale: High"],
+		[69.0, "Morale: Normal"],
+		[40.0, "Morale: Normal"],
+		[39.0, "Morale: Low"],
+		[15.0, "Morale: Low"],
+		[14.0, "Morale: Critical"],
+		[0.0, "Morale: Critical"],
 	]
 	for case: Array in cases:
 		var target_morale: float = case[0]
