@@ -739,3 +739,6 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/decision-card-system/story-003-presentation-resolution.md — Card Presentation & Resolution
 - Tech debt logged: 3 items (ADR-0005 doubly stale, _card_intensity() schema coupling, accumulating test-only seams)
 - Next recommended: None — Decision Card System epic is now fully Complete (all 3 stories closed). Sprint 4's remaining item is 4-3 (doc-sync tech debt, Nice to Have, carried over twice now).
+
+<!-- QA-PLAN: 2026-06-24 | System: sprint-4 | Plan written: production/qa/qa-plan-sprint-4-2026-06-24.md -->
+<!-- QA RUN: 2026-06-24 | Sprint: sprint-4 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-4-2026-06-24.md -->
