@@ -66,6 +66,8 @@ Locked-slot threshold display: read `unlock_threshold` per slot. If `null`, rend
 
 **Real touch-target verification required**: set each button's `custom_minimum_size` explicitly (do not rely on theme defaults) and verify the resulting hit area against `technical-preferences.md`'s touch requirement before marking this story done — this was flagged as an open, unverified item by ADR-0007's engine specialist review.
 
+**Performance**: event-driven only (button `pressed` signals + the `action_completed` connection) — no `_process()` work in this zone, per ADR-0007's decision that `RunningActionOverlay` is the sole `_process()`-using zone.
+
 ---
 
 ## Out of Scope
