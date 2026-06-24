@@ -87,8 +87,7 @@ func _check_pool(cards_override: Variant = null) -> void:
 		_actions_until_check = COOLDOWN_ACTIONS
 		state = State.COOLDOWN
 		return
-	state = State.PRESENTING
-	# Story 002 takes over from here: weighted-pick from `pool`.
+	present_next_card(pool)
 
 
 ## [param cards_override] threads through to the same test-only seam
@@ -162,3 +161,62 @@ func _weighted_pick(pool: Array[Dictionary]) -> Dictionary:
 		if roll <= cumulative:
 			return pool[i]
 	return pool[-1]  # float-rounding fallback, never reached in practice
+
+
+## The currently presented card, or `{}` if none. Public-ish via the
+## `Dictionary` return shape (no getter restriction) so tests/Card UI can
+## inspect what's being shown.
+var _presented_card: Dictionary = {}
+
+
+## Selects a card from [param pool] (via [method _weighted_pick], Story 002)
+## and advances to `PRESENTING`. Called by [method _check_pool] once it has
+## a non-empty pool — single-concurrency is implicit (only one card is ever
+## presented at a time, since [method _check_pool] itself only runs from
+## `COOLDOWN`).
+func present_next_card(pool: Array[Dictionary]) -> void:
+	_presented_card = _weighted_pick(pool)
+	state = State.PRESENTING
+
+
+## Called when the player chooses an option ([param option_index]: `0` or
+## `1`, matching the card schema's exactly-2-options contract). Card UI
+## (undesigned) will eventually call this; for now it's the public seam
+## tests drive directly.
+##
+## No-ops (no mutation, no state change) if called while `state != PRESENTING`
+## — guards against a double-tap/double-call before Card UI disables its own
+## input on first choice (this project targets touch-only mobile input per
+## technical-preferences.md, where double-tap is a realistic input pattern,
+## not a hypothetical). Without this guard, a second call would crash on
+## `_presented_card["options"][option_index]` against an already-cleared `{}`.
+##
+## Resolution order is architecturally locked (ADR-0005): `resource_deltas`
+## applied to `ResourceManager` strictly BEFORE `counter_increments`/
+## `milestone_to_set` applied to `HistoryFlagManager` — never reversed or
+## interleaved. Sequential GDScript statements (no `await`) guarantee this
+## ordering structurally, not just by convention.
+func resolve_choice(option_index: int) -> void:
+	if state != State.PRESENTING:
+		return  # no card presented, or already resolving/resolved — no-op, not a crash
+	state = State.RESOLVING
+	var option: Dictionary = _presented_card["options"][option_index]
+
+	# option["resource_deltas"] is an untyped Dictionary at runtime (card data
+	# is stored as plain Dictionary literals, even when nested inside a typed
+	# Array[Dictionary] — Godot does not propagate element typing into nested
+	# literals). ResourceManager.apply_delta() requires a typed
+	# Dictionary[StringName, float], so an explicit conversion is required —
+	# same class of fix as Story 001/002's Array(...) typed-conversion calls.
+	var resource_deltas: Dictionary[StringName, float] = Dictionary(option["resource_deltas"], TYPE_STRING_NAME, "", null, TYPE_FLOAT, "", null)
+	if not resource_deltas.is_empty():
+		ResourceManager.apply_delta(resource_deltas)
+
+	for counter_name: StringName in option["counter_increments"]:
+		HistoryFlagManager.increment_counter(counter_name, option["counter_increments"][counter_name])
+	if option.has("milestone_to_set"):
+		HistoryFlagManager.set_milestone(option["milestone_to_set"])
+
+	_presented_card = {}
+	_actions_until_check = COOLDOWN_ACTIONS
+	state = State.COOLDOWN

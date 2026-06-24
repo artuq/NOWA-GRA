@@ -3,7 +3,7 @@
 > **Layer**: Core
 > **GDD**: design/gdd/decision-card-system.md
 > **Architecture Module**: DecisionCardSystem
-> **Status**: Ready
+> **Status**: Complete
 > **Stories**: 3 stories created — see table below
 
 ## Overview
@@ -43,12 +43,12 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | Cooldown Mechanism & Pool Eligibility | Logic | Ready | ADR-0005, ADR-0001 |
-| 002 | Weighted Card Selection Formula | Logic | Ready | ADR-0005, ADR-0001 |
-| 003 | Card Presentation & Resolution | Integration | Ready | ADR-0005, ADR-0001 |
+| 001 | Cooldown Mechanism & Pool Eligibility | Logic | Complete | ADR-0005, ADR-0001 |
+| 002 | Weighted Card Selection Formula | Logic | Complete | ADR-0005, ADR-0001 |
+| 003 | Card Presentation & Resolution | Integration | Complete | ADR-0005, ADR-0001 |
 
 **Note**: ADR-0005's Implementation Guidelines pseudocode is stale relative to what's actually built (assumes Resource-object cards with `.intensity`/`.id`, a `HistoryFlagManager.record_choice()` method, and `OnboardingGate.is_card_suppressed()` — none of which exist). All 3 stories implement against the real `Dictionary`-based `CardContentDatabase` API and `HistoryFlagManager`'s actual `set_milestone()`/`increment_counter()` methods instead. `OnboardingGate` integration is explicitly out of scope (zero GDD acceptance criteria reference it) — deferred to a future story once that epic exists.
 
 ## Next Step
 
-Run `/story-readiness production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md` then `/dev-story` to begin implementation.
+Epic complete. Card UI (future epic) can now call `DecisionCardSystem.resolve_choice()`; Class Path System (future Vertical Slice epic) can rely on the `risky_choices_count`/`safe_choices_count` writes this epic produces.

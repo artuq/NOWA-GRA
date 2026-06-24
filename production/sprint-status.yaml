@@ -67,11 +67,11 @@ stories:
     name: "Decision Card System — Card Presentation & Resolution (Story 003)"
     file: "production/epics/decision-card-system/story-003-presentation-resolution.md"
     priority: must-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"
 
   - id: "4-3"
     name: "Doc-sync: Polish→English resource keys (carried over from 3-4)"

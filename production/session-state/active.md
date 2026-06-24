@@ -726,3 +726,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/decision-card-system/story-002-weighted-selection.md — Weighted Card Selection Formula
 - Tech debt logged: None
 - Next recommended: Story 003 (Card Presentation & Resolution) — production/epics/decision-card-system/story-003-presentation-resolution.md — last story in the Decision Card System epic
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/decision-card-system/story-003-presentation-resolution.md — Card Presentation & Resolution
+- Files changed: src/core/decision_card_system.gd (wired _check_pool()->present_next_card(), added resolve_choice() with typed-dict conversion fix)
+- Test written: tests/integration/decision_card_system/card_resolution_test.gd (6 functions covering 5 ACs + 1 real-card regression closer; 6/6 passing, full suite 150/150, re-run twice for isolation confirmation)
+- Blockers: None. Found and fixed a real bug during implementation: option["resource_deltas"] is an untyped Dictionary at runtime even when nested inside a typed Array[Dictionary] (Godot doesn't propagate element typing into nested literals) — ResourceManager.apply_delta() requires a typed Dictionary[StringName, float], so resolve_choice() needed an explicit Dictionary(...) conversion. This would have broken on REAL card resolution, not just tests — caught before it could ship.
+- Next: /code-review src/core/decision_card_system.gd tests/integration/decision_card_system/card_resolution_test.gd production/epics/decision-card-system/story-003-presentation-resolution.md then /story-done — last story in the Decision Card System epic
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/decision-card-system/story-003-presentation-resolution.md — Card Presentation & Resolution
+- Tech debt logged: 3 items (ADR-0005 doubly stale, _card_intensity() schema coupling, accumulating test-only seams)
+- Next recommended: None — Decision Card System epic is now fully Complete (all 3 stories closed). Sprint 4's remaining item is 4-3 (doc-sync tech debt, Nice to Have, carried over twice now).

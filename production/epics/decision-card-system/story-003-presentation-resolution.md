@@ -1,7 +1,7 @@
 # Story 003: Card Presentation & Resolution
 
 > **Epic**: Decision Card System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: S (2-3h)
@@ -45,13 +45,30 @@ ADR-0005's pseudocode calls a `record_choice(id, option)` method that was never 
 
 *Derived from ADR-0005's `resolve_choice()` pseudocode, translated to the real Dictionary/HistoryFlagManager API:*
 
+**Critical implementation step — `_check_pool()` must be EDITED, not just relied upon:**
+QL-STORY-READY (2026-06-24) caught that `_check_pool()` (Story 001) currently sets `state = State.PRESENTING` and stops with a comment ("Story 002 takes over from here") — but nothing has ever actually called `_weighted_pick()` or populated `_presented_card`. This story must REPLACE that stub line with a real call to `present_next_card(pool)`, or `resolve_choice()` will be unreachable in the production flow (only directly callable from tests, never from the real `cooldown→checking→presenting` path). The exact change:
+
+```gdscript
+# In _check_pool() (Story 001), replace:
+#   state = State.PRESENTING
+#   # Story 002 takes over from here: weighted-pick from `pool`.
+# with:
+func _check_pool(cards_override: Variant = null) -> void:
+    var pool: Array[Dictionary] = _build_eligible_pool(cards_override)
+    if pool.is_empty():
+        _actions_until_check = COOLDOWN_ACTIONS
+        state = State.COOLDOWN
+        return
+    present_next_card(pool)  # <-- this story's actual wiring fix
+```
+
 ```gdscript
 # Added to DecisionCardSystem (Stories 001+002's Autoload)
 
 var _presented_card: Dictionary = {}  # empty == no card currently presented
 
 func present_next_card(pool: Array[Dictionary]) -> void:
-    # Called from Story 001's _check_pool() once it has a non-empty pool.
+    # Called from the edited _check_pool() above, once it has a non-empty pool.
     _presented_card = _weighted_pick(pool)  # Story 002
     state = State.PRESENTING
 
@@ -113,10 +130,11 @@ func resolve_choice(option_index: int) -> void:
   - Edge cases: this re-confirms Story 001's cooldown reset is correctly triggered from the resolution path, not just the empty-pool path
 
 - **AC-3**: resolution order — resource_deltas before counter_increments/milestone_to_set
+  - **AMENDED 2026-06-24 (QL-STORY-READY)**: the original plan ("instrument both Autoloads' write-notification signals") doesn't work — `HistoryFlagManager` has no signal at all (`set_milestone()`/`increment_counter()` are silent writes, confirmed by reading the real source). Corrected approach, reusing the technique already established in `tests/integration/action_system/action_system_reward_resolution_test.gd`'s AC-6 test: connect to `ResourceManager.resource_changed` (which DOES exist and fires synchronously, inline, the instant `apply_delta()` runs — before `resolve_choice()`'s execution proceeds to its next line) and, *inside that signal handler*, read `HistoryFlagManager`'s counter/milestone value at that exact moment. If it still shows the PRE-resolution value while the resource signal is firing, that proves the History Flag write hasn't happened yet — establishing the order without needing any signal on the History Flag side.
   - Given: a card option with both `resource_deltas` and `counter_increments` (e.g. `exposed_friend`'s risky option: Reach/Cringe/Morale deltas + `risky_choices_count` +1)
-  - When: `resolve_choice()` runs
-  - Then: `ResourceManager`'s values reflect the delta, AND `HistoryFlagManager`'s counter reflects the increment — order verified by instrumenting both Autoloads' write-notification signals (`ResourceManager.resource_changed`) and confirming the resource signal fires before any `HistoryFlagManager` state changes are observable
-  - Edge cases: use a card whose risky option carries a `milestone_to_set` too (`staged_drama`) to test the 3-way ordering (resource → counter → milestone) in one assertion
+  - When: `resolve_choice()` runs, with a listener connected to `ResourceManager.resource_changed` that captures `HistoryFlagManager.get_counter(&"risky_choices_count")` at the moment the signal fires
+  - Then: the captured counter value (read inside the signal handler) equals the PRE-resolution value, not the post-increment value — proving the resource write commits first; after `resolve_choice()` fully returns, the counter then reflects the increment
+  - Edge cases: use a card whose risky option carries a `milestone_to_set` too (`staged_drama`) to additionally confirm `HistoryFlagManager.has_milestone(...)` is still `false` at the moment the resource signal fires, testing the 3-way ordering (resource → counter → milestone) in one assertion
 
 - **AC-4**: milestone recorded only after resource write, card excludable next cycle
   - Given: `staged_drama`'s risky option chosen (has both `resource_deltas` and `milestone_to_set`)
@@ -148,3 +166,12 @@ func resolve_choice(option_index: int) -> void:
 
 - Depends on: Story 001 (Cooldown Mechanism & Pool Eligibility) and Story 002 (Weighted Card Selection Formula) must both be DONE — this story resolves the card they select and resets the cooldown they manage.
 - Unlocks: Card UI (future epic, calls `resolve_choice()` once built); Class Path System (future Vertical Slice epic, relies on the `risky_choices_count`/`safe_choices_count` writes this story performs being accurate).
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 5/5 passing (none deferred)
+**Deviations**: 3 advisory, logged as tech debt at epic close (LP-CODE-REVIEW) — (1) ADR-0005's code sample is now doubly stale; (2) `_card_intensity()`'s soft coupling to Card Content Database's schema convention; (3) test-only seams accumulating on the production Autoload's public surface.
+**Test Evidence**: Integration — `tests/integration/decision_card_system/card_resolution_test.gd`, 8/8 passing (full regression 152/152 passing)
+**Code Review**: Complete — `/code-review` APPROVED (after fixing a real reentrancy guard gap); LP-CODE-REVIEW gate APPROVE; QL-TEST-COVERAGE gate ADEQUATE
