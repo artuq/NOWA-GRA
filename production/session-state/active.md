@@ -796,3 +796,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/action-ui/story-002-resource-hud.md — Resource HUD
 - Tech debt logged: None (deviation fully documented in story file + tech-debt-register.md)
 - Next recommended: Story 003 (Action Grid) — production/epics/action-ui/story-003-action-grid.md
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/action-ui/story-003-action-grid.md — Action Grid
+- Files changed: src/ui/action_grid.gd (new), scenes/action_screen/action_grid.tscn (new), scenes/action_screen/action_screen.tscn (added ActionGrid as sibling of ResourceHud)
+- Test written: tests/integration/action_ui/action_grid_interaction_test.gd (8 functions using GdUnit4 scene_runner(); 8/8 passing, full suite 194/194)
+- Blockers: None. ActionSystem.start_action() returns bool synchronously, no new "action started" signal needed for this story (Story 004 may still need one for the Overlay -- separate concern). Added ACTION_DISPLAY_NAMES as a hardcoded dict in action_grid.gd, same tech-debt class as ActionSystem's existing ACTION_DURATIONS/ACTION_REWARDS (no localization system exists yet).
+- Next: /code-review src/ui/action_grid.gd scenes/action_screen/ tests/integration/action_ui/action_grid_interaction_test.gd production/epics/action-ui/story-003-action-grid.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/action-ui/story-003-action-grid.md — Action Grid
+- Tech debt logged: None (deviations fully documented in story file)
+- Next recommended: Story 004 (Running Action Overlay) — production/epics/action-ui/story-004-running-action-overlay.md — last story in the Action UI epic

@@ -1,7 +1,7 @@
 # Story 003: Action Grid
 
 > **Epic**: Action UI
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: M (3-4h)
@@ -115,9 +115,9 @@ Locked-slot threshold display: read `unlock_threshold` per slot. If `null`, rend
 
 **Story Type**: UI
 **Required evidence**:
-- `production/qa/evidence/action-grid-evidence.md` — manual walkthrough doc or interaction test, with sign-off
+- `tests/integration/action_ui/action_grid_interaction_test.gd` — interaction test using GdUnit4's `scene_runner()` (standing approach for UI stories in this project, per Story 002's resolution)
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — 8/8 passing
 
 ---
 
@@ -125,3 +125,12 @@ Locked-slot threshold display: read `unlock_threshold` per slot. If `null`, rend
 
 - Depends on: Story 001 (Number Formatting & Progress Bar Math) — calls `ActionUIFormatting.format_number()` for button labels; Story 002 (Resource HUD) — must be DONE first since it creates the shared `ActionScreen` root scene this story adds a sibling node to
 - Unlocks: Story 004 (Running Action Overlay) — the overlay's visibility is conceptually tied to this grid's disabled state
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 8/9 passing, 1 deferred (slot-unlock-in-place — no unlock mechanism exists yet, already in Out of Scope)
+**Deviations**: 1 advisory (evidence method, already documented from Story 002's resolution); 2 real findings from code review fixed before closure — the truncation/ellipsis AC was genuinely unimplemented (now fixed via `clip_text`/`text_overrun_behavior` in the `.tscn`), and `_on_action_completed`'s enable/disable churn simplified
+**Test Evidence**: UI — `tests/integration/action_ui/action_grid_interaction_test.gd`, 10/10 passing (full regression 196/196 passing)
+**Code Review**: Complete — `/code-review` APPROVED

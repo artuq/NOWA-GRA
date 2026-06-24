@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/action_screen/resource_hud.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/action_grid.tscn" id="2"]
 
 [node name="ActionScreen" type="Control"]
 layout_mode = 3
@@ -11,4 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="ResourceHud" parent="." instance=ExtResource("1")]
+layout_mode = 1
+
+[node name="ActionGrid" parent="." instance=ExtResource("2")]
 layout_mode = 1

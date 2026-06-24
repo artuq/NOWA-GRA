@@ -40,7 +40,7 @@ This epic is complete when:
 |---|-------|------|--------|-----|
 | 001 | Number Formatting & Progress Bar Math | Logic | Complete | N/A (pure utility) |
 | 002 | Resource HUD | UI | Complete | ADR-0007, ADR-0001 |
-| 003 | Action Grid | UI | Ready | ADR-0007, ADR-0001 |
+| 003 | Action Grid | UI | Complete | ADR-0007, ADR-0001 |
 | 004 | Running Action Overlay | UI | Ready | ADR-0007, ADR-0004, ADR-0001 |
 
 **Note**: Story 004 may require a small addition to `ActionSystem`'s public signal surface (an "action started" emission) if one doesn't already exist — flagged as a possible in-scope, one-line addition during that story's implementation, not a new architectural decision.
