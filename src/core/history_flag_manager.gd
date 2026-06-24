@@ -13,8 +13,11 @@
 ## order — position 2, immediately after ResourceManager and before
 ## ActionSystem (ADR-0001).
 ##
-## Path Resolution Algorithm (resolve_path_eligibility()) is Story 002 — out
-## of scope here; this module only provides the primitives it will read.
+## Path Resolution Algorithm: resolve_path_eligibility() (Story 002) is a pure
+## query layer over the counters above — filters registered paths by
+## threshold, then breaks ties by a minimum margin; returns null on zero or
+## ambiguous eligibility. Deciding when/how to commit a path belongs to the
+## future Class Path System, not this module.
 ##
 ## Usage example:
 ##   HistoryFlagManager.set_milestone(&"card.exposed_friend.chosen")
@@ -87,3 +90,52 @@ func get_counter(counter_name: StringName) -> int:
 ##       pass
 func counter_above_threshold(counter_name: StringName, threshold: int) -> bool:
 	return get_counter(counter_name) >= threshold
+
+
+## Class Path registrations for resolve_path_eligibility(): each entry's
+## `threshold_min` is the inclusive minimum (per counter_above_threshold()'s
+## `>=` semantics) a path's counter must reach to be eligible at all. Future
+## paths (Vertical Slice/Alpha) register here; the algorithm itself never
+## changes.
+const _REGISTERED_PATHS: Array[Dictionary] = [
+	{"path": "Pato-Streamer Hazardowy", "counter": &"risky_choices_count", "threshold_min": 5},
+	{"path": "Guru-Celebryta", "counter": &"safe_choices_count", "threshold_min": 5},
+]
+
+## Tie-break margin for resolve_path_eligibility(): when two or more paths
+## are eligible, the leading path's counter must exceed the runner-up's by at
+## least this much (inclusive `>=`) to resolve; otherwise the pattern is
+## still ambiguous and resolution returns null.
+const _MARGIN: int = 2
+
+
+## Returns the highest-scoring eligible class path's name, or `null` if zero
+## paths are eligible, or if the top two eligible paths are within [constant
+## _MARGIN] of each other (ambiguous — not yet resolved, never guessed). Pure
+## query: no side effects, no mutation, no path is ever committed here.
+##
+## Example:
+##   var path: Variant = HistoryFlagManager.resolve_path_eligibility()
+##   if path != null:
+##       pass
+func resolve_path_eligibility() -> Variant:
+	var eligible: Array[Dictionary] = []
+	for registered_path: Dictionary in _REGISTERED_PATHS:
+		if counter_above_threshold(registered_path["counter"], registered_path["threshold_min"]):
+			eligible.append(registered_path)
+
+	if eligible.is_empty():
+		return null
+
+	eligible.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return get_counter(a["counter"]) > get_counter(b["counter"])
+	)
+
+	var highest: Dictionary = eligible[0]
+	if eligible.size() == 1:
+		return highest["path"]
+
+	var second: Dictionary = eligible[1]
+	if get_counter(highest["counter"]) - get_counter(second["counter"]) >= _MARGIN:
+		return highest["path"]
+	return null

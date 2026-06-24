@@ -1,7 +1,7 @@
 # Story 002: Path Resolution Algorithm
 
 > **Epic**: History Flag System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Foundation
 > **Type**: Logic
 > **Estimate**: S (2-3h)
@@ -28,13 +28,14 @@
 
 ## Acceptance Criteria
 
-*From GDD `design/gdd/history-flag-system.md` § Acceptance Criteria, scoped to this story:*
+*From GDD `design/gdd/history-flag-system.md` § Acceptance Criteria, scoped to this story. AC-6 added during `/story-readiness` (QL-STORY-READY gate, 2026-06-24) — not present in the GDD's original 5 criteria for this algorithm, but a real boundary gap: none of the original 5 test a counter sitting exactly at `threshold_min` with the other counter at zero.*
 
 - [ ] GIVEN risky=4, safe=2, WHEN `resolve_path_eligibility()`, THEN returns `null` (zero eligible).
 - [ ] GIVEN risky=6, safe=1, WHEN `resolve_path_eligibility()`, THEN returns `"Pato-Streamer Hazardowy"` (one eligible).
 - [ ] GIVEN risky=7, safe=5, WHEN `resolve_path_eligibility()`, THEN returns `"Pato-Streamer Hazardowy"` (margin of 2 exactly met, `>=`).
 - [ ] GIVEN risky=6, safe=5, WHEN `resolve_path_eligibility()`, THEN returns `null` (margin 1 < 2).
 - [ ] GIVEN risky=5, safe=5, WHEN `resolve_path_eligibility()`, THEN returns `null` (exact tie).
+- [ ] GIVEN risky=5, safe=0, WHEN `resolve_path_eligibility()`, THEN returns `"Pato-Streamer Hazardowy"` (exact `threshold_min` boundary, single eligible — confirms `counter_above_threshold`'s inclusive `>=` semantics apply correctly at the single-eligible-path branch, not just the margin branch).
 
 ---
 
@@ -122,6 +123,12 @@ func resolve_path_eligibility() -> Variant:  # returns String path name or null
   - Then: returns `null` (diff = 0)
   - Edge cases: both paths exactly tied at the threshold — must not arbitrarily pick one
 
+- **AC-6**: exact `threshold_min` boundary, single eligible (added via QL-STORY-READY, 2026-06-24)
+  - Given: `risky_choices_count = 5`, `safe_choices_count = 0`
+  - When: `resolve_path_eligibility()`
+  - Then: returns `"Pato-Streamer Hazardowy"` (counter sits exactly at `threshold_min = 5`, the other counter is zero/not eligible)
+  - Edge cases: confirms `counter_above_threshold`'s inclusive `>=` applies correctly in the single-eligible branch, not just the margin-comparison branch (AC-3/AC-4 already lock `>=` for margin; this locks it for threshold)
+
 **Implementation guidance for the test file**: read `_MARGIN` and `threshold_min` via the Autoload's exposed constants rather than hardcoding `2`/`5` as literals in assertions, per the GDD's test-suite note (see Implementation Notes above).
 
 ---
@@ -140,3 +147,12 @@ func resolve_path_eligibility() -> Variant:  # returns String path name or null
 
 - Depends on: Story 001 (HistoryFlagManager Core — Milestone Flags & Pattern Counters) must be DONE; this story reads counters via Story 001's API.
 - Unlocks: Class Path System (future epic, Vertical Slice tier) — calls `resolve_path_eligibility()` to determine path eligibility.
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 6/6 passing (none deferred)
+**Deviations**: 1 advisory, logged as tech debt — `_REGISTERED_PATHS` is a hardcoded const, not loaded from a data file (acceptable at Foundation tier with only 2 paths; flagged by LP-CODE-REVIEW for follow-up once Decision Card System / Class Path System exist and the path count grows past 2-3).
+**Test Evidence**: Logic — `tests/unit/history_flag_system/path_resolution_test.gd`, 6/6 passing (full regression 90/90 passing)
+**Code Review**: Complete — `/code-review` APPROVED; LP-CODE-REVIEW gate APPROVE; QL-TEST-COVERAGE gate ADEQUATE

@@ -646,3 +646,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/history-flag-system/story-001-core-flags-counters.md — HistoryFlagManager Core
 - Tech debt logged: None
 - Next recommended: Story 002 (Path Resolution Algorithm) — production/epics/history-flag-system/story-002-path-resolution-algorithm.md
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/history-flag-system/story-002-path-resolution-algorithm.md — Path Resolution Algorithm
+- Files changed: src/core/history_flag_manager.gd (added resolve_path_eligibility() + consts), tests/unit/history_flag_system/path_resolution_test.gd (new, 6 functions)
+- Test written: tests/unit/history_flag_system/path_resolution_test.gd (6/6 passing; full suite 90/90 passing)
+- Blockers: None. Note: the engine-programmer subagent correctly refused to act on orchestrator-relayed approval (treating it as unverifiable per its own safety instructions) even after two attempts to clarify — implementation was done directly by the orchestrating session instead, using genuine in-session user approval.
+- Next: /code-review src/core/history_flag_manager.gd tests/unit/history_flag_system/path_resolution_test.gd production/epics/history-flag-system/story-002-path-resolution-algorithm.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/history-flag-system/story-002-path-resolution-algorithm.md — Path Resolution Algorithm
+- Tech debt logged: 1 item (_REGISTERED_PATHS hardcoded const, revisit once Decision Card/Class Path System exist)
+- Next recommended: Story 3-2 (Save/Persistence System) — needs /create-stories save-persistence-system first; History Flag System epic is now fully Complete (both stories closed)

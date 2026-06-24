@@ -40,11 +40,11 @@ stories:
     name: "History Flag System — Path Resolution Algorithm (Story 002)"
     file: "production/epics/history-flag-system/story-002-path-resolution-algorithm.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.75
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"
 
   - id: "3-2"
     name: "Save/Persistence System — SaveSystem Autoload"

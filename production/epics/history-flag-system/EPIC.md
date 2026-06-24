@@ -3,7 +3,7 @@
 > **Layer**: Foundation
 > **GDD**: design/gdd/history-flag-system.md
 > **Architecture Module**: HistoryFlagManager
-> **Status**: Ready
+> **Status**: Complete
 > **Stories**: 2 stories created — see table below
 
 ## Overview
@@ -41,9 +41,9 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | HistoryFlagManager Core — Milestone Flags & Pattern Counters | Logic | Ready | ADR-0001 |
-| 002 | Path Resolution Algorithm | Logic | Ready | ADR-0001 |
+| 001 | HistoryFlagManager Core — Milestone Flags & Pattern Counters | Logic | Complete | ADR-0001 |
+| 002 | Path Resolution Algorithm | Logic | Complete | ADR-0001 |
 
 ## Next Step
 
-Run `/story-readiness production/epics/history-flag-system/story-001-core-flags-counters.md` then `/dev-story` to begin implementation.
+Epic complete. Decision Card System and Class Path System can now consume `HistoryFlagManager`'s API.
