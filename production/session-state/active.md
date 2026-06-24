@@ -769,3 +769,17 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - GDD revision flags: technical-preferences.md, action-system.md, action-ui.md, architecture.md, adr-0004 (TouchScreenButton->Button — FIXED this review)
 - Top ADR gaps: ADR-0007 still Proposed (blocks Action UI epic); Card UI / Offline Report Screen Presentation ADRs deferred
 - Report: docs/architecture/architecture-review-2026-06-24.md
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/action-ui/story-001-number-formatting-progress-bar-math.md — Number Formatting & Progress Bar Math
+- Files changed: src/ui/action_ui_formatting.gd (new — ActionUIFormatting static utility class)
+- Test written: tests/unit/action_ui/action_ui_formatting_test.gd (12 functions covering all in-scope AC; 12/12 passing, full suite 178/178)
+- Blockers: None. Found and resolved a real GDD inconsistency: action-ui.md stated "round-half-up" rounding but its own 999,999->"999.9K" example and hard-boundary rule only work under truncation, while its 1,250,000->"1.3M" example only works under rounding -- the two examples can't both be satisfied by one rule. User decided: truncate everywhere; GDD corrected in 2 places (Large-number formatting section + the AC line itself), test locks the real measured behavior (1.2M, not 1.3M).
+- Also found and fixed a real environment gotcha: a new class_name script isn't visible to the headless gdUnit4 test runner until `godot --headless --path . --import` runs once to regenerate .godot/global_script_class_cache.cfg -- logged as tech debt for future class_name additions.
+- Next: /code-review src/ui/action_ui_formatting.gd tests/unit/action_ui/action_ui_formatting_test.gd production/epics/action-ui/story-001-number-formatting-progress-bar-math.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/action-ui/story-001-number-formatting-progress-bar-math.md — Number Formatting & Progress Bar Math
+- Tech debt logged: None (GDD correction fully documented in 3 places, not a separate open issue)
+- Next recommended: Story 002 (Resource HUD) — production/epics/action-ui/story-002-resource-hud.md — first UI-type story (manual evidence, not automated tests)

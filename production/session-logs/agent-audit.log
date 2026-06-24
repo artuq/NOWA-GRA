@@ -394,3 +394,7 @@
 20260624_220912 | Agent completed: ccgs:qa-tester
 20260624_222530 | Agent invoked: ccgs:godot-specialist
 20260624_222549 | Agent completed: ccgs:godot-specialist
+20260624_225401 | Agent invoked: ccgs:godot-gdscript-specialist
+20260624_225405 | Agent invoked: ccgs:qa-tester
+20260624_225420 | Agent completed: ccgs:godot-gdscript-specialist
+20260624_225421 | Agent completed: ccgs:qa-tester

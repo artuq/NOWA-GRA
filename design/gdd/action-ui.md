@@ -72,7 +72,7 @@ Owned by Action System's state (`elapsed_time`, `duration`); this GDD only rende
 | 1,000–999,999 | `X.XK` (1 decimal) | `28,412 → "28.4K"` |
 | ≥ 1,000,000 | `X.XM` (1 decimal) | `1,250,000 → "1.3M"` |
 
-Rounding: round-half-up at the displayed decimal, consistent with the rounding convention already used in Resource System and Action System.
+Rounding: **CORRECTED 2026-06-24** (Action UI Story 001) — this section originally said "round-half-up," but that rule contradicts this GDD's own `999,999 → "999.9K"` example (round-half-up would give "1000.0K") and its own hard-boundary rule above ("no transition zone"). The two could not both be satisfied by one rounding rule, since the Acceptance Criteria's `1,250,000 → "1.3M"` example assumed rounding while the `999,999 → "999.9K"` example assumed truncation. Resolved (user decision): **truncate**, never round, at the displayed decimal. This satisfies the 999.9K example and the hard-boundary rule exactly; the Acceptance Criteria's `1,250,000 → "1.3M"` example is the error — real measured behavior is `"1.2M"`, locked by `tests/unit/action_ui/action_ui_formatting_test.gd`. The "consistent with Resource System/Action System" rounding-convention claim no longer applies to this specific formatting rule (it still applies to other rounding in this GDD, e.g. reward calculations — this correction is scoped to large-number K/M display only).
 
 **Flagged gap (not invented here):** The 3 locked action slots need an `unlock_threshold` (Zasięgi) to display — but no current GDD defines which actions exist beyond the initial 3 or their thresholds (only the now-superseded v2 prototype has placeholder numbers). This GDD does **not** invent those values. See Dependencies and Open Questions.
 
@@ -155,7 +155,7 @@ Rounding: round-half-up at the displayed decimal, consistent with the rounding c
 - **GIVEN** 28,412, **WHEN** formatted, **THEN** `"28.4K"`.
 - **GIVEN** 999,999, **WHEN** formatted, **THEN** `"999.9K"`.
 - **GIVEN** 1,000,000, **WHEN** formatted, **THEN** `"1.0M"` (hard boundary).
-- **GIVEN** 1,250,000, **WHEN** formatted, **THEN** `"1.3M"`.
+- **GIVEN** 1,250,000, **WHEN** formatted, **THEN** `"1.2M"` (**CORRECTED 2026-06-24** — was stated as "1.3M", which assumed rounding; see the Large-number formatting section above for why truncation is the resolved rule).
 
 **Defined edge cases:**
 - **GIVEN** a locked slot's `unlock_threshold` is null, **WHEN** rendered, **THEN** generic 🔒 state, no number.

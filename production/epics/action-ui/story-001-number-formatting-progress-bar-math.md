@@ -1,7 +1,7 @@
 # Story 001: Number Formatting & Progress Bar Math
 
 > **Epic**: Action UI
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Logic
 > **Estimate**: S (1-2h)
@@ -38,7 +38,7 @@
 - [ ] 28,412 → `"28.4K"`
 - [ ] 999,999 → `"999.9K"`
 - [ ] 1,000,000 → `"1.0M"` (hard boundary)
-- [ ] 1,250,000 → `"1.3M"`
+- [x] 1,250,000 → `"1.2M"` (**CORRECTED 2026-06-24** — was `"1.3M"`; the GDD's own rounding rule and this example were mutually inconsistent, see Implementation Notes below; truncation resolved, real measured behavior is `"1.2M"`)
 
 **Progress bar fill_ratio:**
 - [ ] elapsed_time=0, duration=D>0 → fill_ratio=0, no flicker
@@ -82,7 +82,7 @@ This story produces no scene, no Control node, no visual output — it is purely
 - **AC: Number formatting boundaries**
   - Given: each of the 7 listed input values (847, 999, 1000, 28412, 999999, 1000000, 1250000)
   - When: `ActionUIFormatting.format_number(value)` is called
-  - Then: output matches exactly (`"847"`, `"999"`, `"1.0K"`, `"28.4K"`, `"999.9K"`, `"1.0M"`, `"1.3M"`)
+  - Then: output matches exactly (`"847"`, `"999"`, `"1.0K"`, `"28.4K"`, `"999.9K"`, `"1.0M"`, `"1.2M"` — corrected from the GDD's stated `"1.3M"`, see Implementation Notes)
   - Edge cases: the 1,000 and 1,000,000 boundaries specifically — these inclusive-lower-bound transitions are the highest off-by-one risk
 
 - **AC: Progress bar fill_ratio**
@@ -112,3 +112,12 @@ This story produces no scene, no Control node, no visual output — it is purely
 
 - Depends on: None
 - Unlocks: Story 002 (Resource HUD), Story 003 (Action Grid), Story 004 (Running Action Overlay) — all three call this story's functions
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 11/11 passing (none deferred)
+**Deviations**: 1 advisory, fully documented in 3 places (this file, `design/gdd/action-ui.md`, `src/ui/action_ui_formatting.gd`'s doc comments) — GDD's own rounding rule contradicted its own examples; resolved to truncation; `1,250,000` formats as `"1.2M"`, not the GDD's originally-stated `"1.3M"`
+**Test Evidence**: Logic — `tests/unit/action_ui/action_ui_formatting_test.gd`, 13/13 passing (full regression 181/181 passing)
+**Code Review**: Complete — `/code-review` APPROVED (engine specialist CLEAN; qa-tester found 3 real coverage/traceability gaps, all fixed before this closure)
