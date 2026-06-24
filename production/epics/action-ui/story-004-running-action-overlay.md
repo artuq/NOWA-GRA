@@ -1,7 +1,7 @@
 # Story 004: Running Action Overlay
 
 > **Epic**: Action UI
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: M (2-3h)
@@ -114,9 +114,9 @@ On `_on_action_completed`: `set_process(false)`, `visible = false`. Whoever star
 
 **Story Type**: UI
 **Required evidence**:
-- `production/qa/evidence/running-action-overlay-evidence.md` — manual walkthrough doc or interaction test, with sign-off
+- `tests/integration/action_ui/running_action_overlay_interaction_test.gd` — interaction test using GdUnit4's `scene_runner()` (standing approach for UI stories in this project, per Story 002's resolution)
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — 6/6 passing
 
 ---
 
@@ -124,3 +124,12 @@ On `_on_action_completed`: `set_process(false)`, `visible = false`. Whoever star
 
 - Depends on: Story 001 (Number Formatting & Progress Bar Math), Story 003 (Action Grid) — must be DONE first; this story's visibility/process-enable is conceptually paired with the Grid's button-disable on action start, and may require checking/extending `ActionSystem`'s signal surface (see Implementation Notes)
 - Unlocks: None — this is the last story in the Action UI epic
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 6/6 passing (none deferred)
+**Deviations**: 1 advisory — added `ActionSystem.action_started` signal (pre-flagged in this story as expected, in-scope, one-line addition); a real flaky test root cause (`simulate_frames()`'s real-timing variance) found and fixed during code review, documented in `docs/tech-debt-register.md`
+**Test Evidence**: UI — `tests/integration/action_ui/running_action_overlay_interaction_test.gd`, 8/8 passing (full regression 206/206 passing)
+**Code Review**: Complete — `/code-review` APPROVED

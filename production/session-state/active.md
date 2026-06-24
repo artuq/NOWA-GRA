@@ -809,3 +809,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/action-ui/story-003-action-grid.md — Action Grid
 - Tech debt logged: None (deviations fully documented in story file)
 - Next recommended: Story 004 (Running Action Overlay) — production/epics/action-ui/story-004-running-action-overlay.md — last story in the Action UI epic
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/action-ui/story-004-running-action-overlay.md — Running Action Overlay
+- Files changed: src/ui/running_action_overlay.gd (new), scenes/action_screen/running_action_overlay.tscn (new), scenes/action_screen/action_screen.tscn (added as 3rd sibling), src/core/action_system.gd (added new public signal action_started, emitted on successful start_action() only)
+- Test written: tests/integration/action_ui/running_action_overlay_interaction_test.gd (6 functions), plus 2 new functions added to tests/unit/action_system/action_system_timer_concurrency_test.gd for the new action_started signal contract. 8/8 new tests passing, full suite 204/204.
+- Blockers: None. Used ActionSystem.ACTION_DURATIONS (public const) instead of reaching into ActionSystem._timer (private field) for remaining-time display -- respects Autoload encapsulation per ADR-0001.
+- Next: /code-review src/ui/running_action_overlay.gd src/core/action_system.gd scenes/action_screen/ tests/integration/action_ui/running_action_overlay_interaction_test.gd tests/unit/action_system/action_system_timer_concurrency_test.gd production/epics/action-ui/story-004-running-action-overlay.md then /story-done -- last story in the Action UI epic
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/action-ui/story-004-running-action-overlay.md — Running Action Overlay
+- Tech debt logged: 1 resolved (simulate_frames() timing flakiness, fixed same-session)
+- Next recommended: None — Action UI epic is now fully Complete (all 4 stories done, first real playable screen in the project). Sprint 6's Must Have scope is complete.

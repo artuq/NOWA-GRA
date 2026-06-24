@@ -65,6 +65,15 @@ var _timer: Timer
 ## values — per ADR-0004's 2026-06-23 correction.
 signal action_completed(action_id: StringName, rewards: Dictionary[StringName, float])
 
+## Emitted by `start_action()` immediately after a successful start (i.e.,
+## exactly when it is about to return `true`) — never emitted on a rejected
+## start (already running, or unknown action_id). Added for Action UI's
+## RunningActionOverlay (Story 004) to react to "an action just started"
+## without polling or cross-zone coupling — a one-line addition to
+## ActionSystem's existing public surface, not a new architectural decision
+## (ADR-0007 already governs how Action UI consumes ActionSystem's signals).
+signal action_started(action_id: StringName)
+
 
 func _ready() -> void:
 	_timer = Timer.new()
@@ -86,6 +95,7 @@ func start_action(action_id: StringName) -> bool:
 	if not ACTION_DURATIONS.has(action_id):
 		return false  # unknown action_id: reject, no Timer mutation, no crash
 	current_action_id = action_id
+	action_started.emit(action_id)
 	_timer.wait_time = ACTION_DURATIONS[action_id]
 	_timer.start()
 	return true

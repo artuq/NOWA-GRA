@@ -41,6 +41,35 @@ func test_start_action_from_idle_with_known_id_returns_true_and_starts_timer() -
 	assert_bool(_action_system._timer.is_stopped()).is_false()
 
 
+## Added for Action UI's RunningActionOverlay (Story 004): action_started
+## must fire exactly once on a successful start, carrying the started
+## action_id.
+func test_start_action_from_idle_emits_action_started_with_correct_id() -> void:
+	var emitted_ids: Array[StringName] = []
+	var on_started := func(action_id: StringName) -> void:
+		emitted_ids.append(action_id)
+	_action_system.action_started.connect(on_started)
+
+	_action_system.start_action(&"nagraj_vloga")
+
+	assert_array(emitted_ids).has_size(1)
+	assert_that(emitted_ids[0]).is_equal(&"nagraj_vloga")
+
+
+## Companion case: a rejected start (already running) must NOT emit
+## action_started.
+func test_start_action_while_running_does_not_emit_action_started() -> void:
+	_action_system.start_action(&"zrob_drame")
+	var emitted_ids: Array[StringName] = []
+	var on_started := func(action_id: StringName) -> void:
+		emitted_ids.append(action_id)
+	_action_system.action_started.connect(on_started)
+
+	_action_system.start_action(&"przeprosiny")
+
+	assert_array(emitted_ids).is_empty()
+
+
 ## AC-1b: idle + unknown action_id -> rejected, no state mutation, no crash
 ## from indexing a missing ACTION_DURATIONS key, Timer not started.
 func test_start_action_with_unknown_id_returns_false_and_does_not_mutate_state() -> void:

@@ -77,11 +77,11 @@ stories:
     name: "Action UI — Running Action Overlay (Story 004)"
     file: "production/epics/action-ui/story-004-running-action-overlay.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.4
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"
 
 _sprint_5_archive:
   - id: "5-1"
