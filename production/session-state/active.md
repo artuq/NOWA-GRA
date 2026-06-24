@@ -742,3 +742,5 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 
 <!-- QA-PLAN: 2026-06-24 | System: sprint-4 | Plan written: production/qa/qa-plan-sprint-4-2026-06-24.md -->
 <!-- QA RUN: 2026-06-24 | Sprint: sprint-4 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-4-2026-06-24.md -->
+
+<!-- QA-PLAN: 2026-06-24 | System: sprint-5 | Plan written: production/qa/qa-plan-sprint-5-2026-06-24.md -->

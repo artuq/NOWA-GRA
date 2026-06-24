@@ -24,15 +24,41 @@
 # Production → Polish gate-check ran 2026-06-24: verdict FAIL, all 4 directors
 # NOT READY (no scenes/UI, zero playtests, art bible incomplete). Project remains
 # in Production stage; Sprint 4 targets the next increment toward first playable.
+#
+# Sprint 4 (Card Content Database + Decision Card System) is fully closed —
+# record preserved in production/sprints/sprint-4.md, retro-sprint-4-2026-06-24.md,
+# qa-signoff-sprint-4-2026-06-24.md. All 4 Must Have stories marked done.
+# 4-3 (doc-sync) carried into Sprint 5 as 5-1, slotted first per retro action item.
 
-sprint: 4
-goal: "Build the remaining Core-layer backend (Card Content Database + Decision Card System) so Sprint 5 can wire up the Boot scene and minimal UI for a true first-playable build."
-start: "2026-06-30"
-end: "2026-07-04"
+sprint: 5
+goal: "Close the 3-sprint-stale doc-sync tech debt first, then implement Offline Progress System."
+start: "2026-07-07"
+end: "2026-07-11"
 generated: "2026-06-24"
 updated: "2026-06-24"
 
 stories:
+  - id: "5-1"
+    name: "Doc-sync: Polish→English resource keys (carried over 3x from 3-4/4-3)"
+    file: ""
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.25
+    blocker: ""
+    completed: ""
+
+  - id: "5-2"
+    name: "Offline Progress System — OfflineProgressSystem Autoload (simulate_offline())"
+    file: "production/epics/offline-progress-system/EPIC.md"
+    priority: must-have
+    status: backlog
+    owner: ""
+    estimate_days: 2.0
+    blocker: "Epic-level estimate, pending /create-stories breakdown before treated as committed"
+    completed: ""
+
+_sprint_4_archive:
   - id: "4-1"
     name: "Card Content Database — static CardContentDatabase Autoload"
     file: "production/epics/card-content-database/story-001-mvp-card-content.md"
@@ -72,16 +98,6 @@ stories:
     estimate_days: 0.5
     blocker: ""
     completed: "2026-06-24"
-
-  - id: "4-3"
-    name: "Doc-sync: Polish→English resource keys (carried over from 3-4)"
-    file: ""
-    priority: nice-to-have
-    status: backlog
-    owner: ""
-    estimate_days: 0.25
-    blocker: ""
-    completed: ""
 
 _sprint_3_archive:
   - id: "3-1a"
@@ -123,13 +139,3 @@ _sprint_3_archive:
     estimate_days: 0.5
     blocker: ""
     completed: "2026-06-24"
-
-  - id: "3-4"
-    name: "Doc-sync: Polish→English resource keys"
-    file: ""
-    priority: nice-to-have
-    status: backlog
-    owner: ""
-    estimate_days: 0.25
-    blocker: ""
-    completed: ""
