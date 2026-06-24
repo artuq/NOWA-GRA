@@ -49,13 +49,13 @@ stories:
     completed: ""
 
   - id: "5-2"
-    name: "Offline Progress System — OfflineProgressSystem Autoload (simulate_offline())"
-    file: "production/epics/offline-progress-system/EPIC.md"
+    name: "Offline Progress System — Stepped Offline Simulation (Story 001)"
+    file: "production/epics/offline-progress-system/story-001-stepped-offline-simulation.md"
     priority: must-have
-    status: backlog
+    status: ready-for-dev
     owner: ""
     estimate_days: 2.0
-    blocker: "Epic-level estimate, pending /create-stories breakdown before treated as committed"
+    blocker: ""
     completed: ""
 
 _sprint_4_archive:
