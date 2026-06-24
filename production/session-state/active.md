@@ -783,3 +783,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/action-ui/story-001-number-formatting-progress-bar-math.md — Number Formatting & Progress Bar Math
 - Tech debt logged: None (GDD correction fully documented in 3 places, not a separate open issue)
 - Next recommended: Story 002 (Resource HUD) — production/epics/action-ui/story-002-resource-hud.md — first UI-type story (manual evidence, not automated tests)
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/action-ui/story-002-resource-hud.md — Resource HUD
+- Files changed: src/ui/resource_hud.gd (new), scenes/action_screen/resource_hud.tscn (new — first scene in this project), scenes/action_screen/action_screen.tscn (new — root scene)
+- Test written: tests/integration/action_ui/resource_hud_interaction_test.gd (4 functions using GdUnit4 scene_runner(); 4/4 passing, full suite 185/185)
+- Blockers: None. Process decision: UI stories' "manual evidence doc" option was rejected since this session can't actually view a rendered scene -- used GdUnit4's scene_runner() interaction test instead, confirmed working for headless scene instantiation + node assertion. This becomes the standing evidence method for remaining UI stories (003, 004).
+- Next: /code-review src/ui/resource_hud.gd scenes/action_screen/ tests/integration/action_ui/resource_hud_interaction_test.gd production/epics/action-ui/story-002-resource-hud.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/action-ui/story-002-resource-hud.md — Resource HUD
+- Tech debt logged: None (deviation fully documented in story file + tech-debt-register.md)
+- Next recommended: Story 003 (Action Grid) — production/epics/action-ui/story-003-action-grid.md

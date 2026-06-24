@@ -1,7 +1,7 @@
 # Story 002: Resource HUD
 
 > **Epic**: Action UI
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: M (2-3h)
@@ -87,9 +87,9 @@ For the Morale band label: derive the band (High ≥70 / Normal 40-69 / Low 15-3
 
 **Story Type**: UI
 **Required evidence**:
-- `production/qa/evidence/resource-hud-evidence.md` — manual walkthrough doc or interaction test, with sign-off
+- `tests/integration/action_ui/resource_hud_interaction_test.gd` — interaction test using GdUnit4's `scene_runner()` (chosen over a manual evidence doc, since this session cannot actually view a rendered scene — see `docs/tech-debt-register.md` 2026-06-24 entry)
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created — 4/4 passing
 
 ---
 
@@ -97,3 +97,12 @@ For the Morale band label: derive the band (High ≥70 / Normal 40-69 / Low 15-3
 
 - Depends on: Story 001 (Number Formatting & Progress Bar Math) — must be DONE first, this story calls `ActionUIFormatting.format_number()`
 - Unlocks: Story 003 (Action Grid), Story 004 (Running Action Overlay) — both add siblings under this story's `ActionScreen` root scene
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 4/4 passing (none deferred)
+**Deviations**: 1 advisory, fully documented in 2 places (this file, `docs/tech-debt-register.md`) — evidence method changed from manual walkthrough doc to automated `scene_runner()` interaction test, now standing approach for all UI stories in this epic
+**Test Evidence**: UI — `tests/integration/action_ui/resource_hud_interaction_test.gd`, 6/6 passing (full regression 186/186 passing)
+**Code Review**: Complete — `/code-review` APPROVED (engine specialist CLEAN; qa-tester found 1 real gap, fixed — teardown/dangling-connection test; 1 flagged "isolation bug" analyzed and found not real)

@@ -39,7 +39,7 @@ This epic is complete when:
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
 | 001 | Number Formatting & Progress Bar Math | Logic | Complete | N/A (pure utility) |
-| 002 | Resource HUD | UI | Ready | ADR-0007, ADR-0001 |
+| 002 | Resource HUD | UI | Complete | ADR-0007, ADR-0001 |
 | 003 | Action Grid | UI | Ready | ADR-0007, ADR-0001 |
 | 004 | Running Action Overlay | UI | Ready | ADR-0007, ADR-0004, ADR-0001 |
 
