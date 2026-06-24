@@ -11,7 +11,12 @@ config_version=5
 [application]
 
 config/name="King of Cringe"
+run/main_scene="res://scenes/action_screen/action_screen.tscn"
 config/features=PackedStringArray("4.6")
+
+[gui]
+
+theme/custom="res://assets/ui/minimal_ui4/MinimalUI.tres"
 
 [autoload]
 
