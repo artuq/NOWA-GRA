@@ -126,7 +126,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 
 ## UI Requirements
 
-- 3 action buttons, always visible on the main screen (per prototype) — large touch areas (TouchScreenButton), zero hover-only.
+- 3 action buttons, always visible on the main screen (per prototype) — large touch areas (standard `Button` node, not `TouchScreenButton` — per ADR-0007), zero hover-only.
 - During `running`: all 3 buttons disabled (not just visually muted — see Acceptance Criteria), visible progress bar labeled with the active action.
 - Layout must reserve room for 3 future actions (unlocked at milestones, Vertical Slice) without a screen redesign.
 

@@ -117,7 +117,7 @@ Rounding: round-half-up at the displayed decimal, consistent with the rounding c
 
 ## UI Requirements
 
-- All action buttons must use large touch areas (TouchScreenButton or equivalent), per `technical-preferences.md` — zero hover-only interactions.
+- All action buttons must use large touch areas (standard `Button` node, not `TouchScreenButton` — per ADR-0007), per `technical-preferences.md` — zero hover-only interactions.
 - Layout must be responsive across Android screen sizes (no hardcoded pixel positions for the 6 Action Grid slots).
 - The Resource HUD must be legible without scrolling — all 5 resources visible simultaneously on the main screen.
 

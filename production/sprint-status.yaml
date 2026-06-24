@@ -50,7 +50,7 @@ stories:
     status: backlog
     owner: ""
     estimate_days: 3.0
-    blocker: "Epic-level estimate, pending /create-stories breakdown; stories will be Blocked until ADR-0007 is Accepted via /architecture-review (fresh session)"
+    blocker: "Epic-level estimate, pending /create-stories breakdown before treated as committed"
     completed: ""
 
 _sprint_5_archive:

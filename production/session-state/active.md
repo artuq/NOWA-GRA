@@ -761,3 +761,11 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 <!-- QA RUN: 2026-06-24 | Sprint: sprint-5 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-5-2026-06-24.md -->
 
 <!-- QA-PLAN: 2026-06-24 | System: sprint-6 | Plan written: production/qa/qa-plan-sprint-6-2026-06-24.md -->
+
+## Session Extract — /architecture-review 2026-06-24
+- Verdict: CONCERNS (improved from 2026-06-20 CONCERNS — all pre-gate artifacts now present, ADR-0001..0006 Accepted)
+- Requirements: 14 total — 12 covered, 0 partial, 2 gaps (TR-cui-001, TR-ors-001, both deferred by design)
+- New TR-IDs registered: None (TR-aui-001 upgraded partial->covered via ADR-0007)
+- GDD revision flags: technical-preferences.md, action-system.md, action-ui.md, architecture.md, adr-0004 (TouchScreenButton->Button — FIXED this review)
+- Top ADR gaps: ADR-0007 still Proposed (blocks Action UI epic); Card UI / Offline Report Screen Presentation ADRs deferred
+- Report: docs/architecture/architecture-review-2026-06-24.md

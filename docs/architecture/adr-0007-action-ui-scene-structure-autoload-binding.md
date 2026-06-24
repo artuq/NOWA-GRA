@@ -1,7 +1,7 @@
 # ADR-0007: Action UI Scene Structure and Autoload Binding Pattern
 
 ## Status
-Proposed
+Accepted (2026-06-24, following independent `/architecture-review` — verdict CONCERNS overall, no conflicts or blockers against this ADR specifically; both dependencies, ADR-0001 and ADR-0004, already Accepted)
 
 ## Date
 2026-06-24

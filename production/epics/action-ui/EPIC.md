@@ -3,7 +3,7 @@
 > **Layer**: Presentation
 > **GDD**: design/gdd/action-ui.md
 > **Architecture Module**: ActionScreen (3 sibling Control scripts per ADR-0007: ResourceHud, ActionGrid, RunningActionOverlay)
-> **Status**: Ready (stories will be Blocked pending ADR-0007 acceptance)
+> **Status**: Ready
 > **Stories**: Not yet created — run `/create-stories action-ui`
 
 ## Overview
@@ -14,7 +14,7 @@ Implements Action UI — the game's primary screen, where the select-and-wait co
 
 | ADR | Decision Summary | Engine Risk |
 |-----|-----------------|-------------|
-| ADR-0007: Action UI scene structure and Autoload binding pattern | 3 sibling Control scripts, one per GDD zone, no central event bus, no mediating presenter — **Status: Proposed, not yet Accepted** | MEDIUM |
+| ADR-0007: Action UI scene structure and Autoload binding pattern | 3 sibling Control scripts, one per GDD zone, no central event bus, no mediating presenter — **Status: Accepted (2026-06-24)** | MEDIUM |
 | ADR-0001: Autoload singleton architecture | Direct-call/signal split, applied here at the Presentation layer for the first time | LOW |
 | ADR-0004: Action System timer/concurrency | `get_progress()` polling contract, scoped by ADR-0007 to exactly the Running Action Overlay zone | LOW |
 
@@ -22,14 +22,13 @@ Implements Action UI — the game's primary screen, where the select-and-wait co
 
 | TR-ID | Requirement | ADR Coverage |
 |-------|-------------|--------------|
-| TR-aui-001 | Progress bar updates every frame via cheap poll, not throttled | ADR-0004 ✅ (partial — see ADR-0007 for the zone-scoping extension) |
+| TR-aui-001 | Progress bar updates every frame via cheap poll, not throttled | ADR-0004, ADR-0007 ✅ (upgraded partial→covered by `/architecture-review` 2026-06-24) |
 
 **Note**: the GDD has substantially more acceptance criteria (3-zone layout, button enable/disable, number formatting boundaries, defined edge cases) than the TR registry has entries for — only TR-aui-001 is currently registered. This is a registry-completeness gap, not an ADR gap; stories will reference the GDD's Acceptance Criteria section directly where no TR-ID exists yet.
 
 ## Definition of Done
 
 This epic is complete when:
-- ADR-0007 is Accepted (via `/architecture-review` run in a fresh session — not this one)
 - All stories are implemented, reviewed, and closed via `/story-done`
 - All acceptance criteria from `design/gdd/action-ui.md` are verified
 - The Logic-classified pieces (number formatting, progress-bar fill_ratio — see `production/qa/qa-plan-sprint-6-2026-06-24.md`) have passing test files in `tests/`
@@ -37,4 +36,4 @@ This epic is complete when:
 
 ## Next Step
 
-Run `/create-stories action-ui` to break this epic into implementable stories. Stories will be marked `Status: Blocked` until ADR-0007 is Accepted.
+Run `/create-stories action-ui` to break this epic into implementable stories.

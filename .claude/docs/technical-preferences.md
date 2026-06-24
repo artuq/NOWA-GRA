@@ -20,7 +20,7 @@
 - **Primary Input**: Touch
 - **Gamepad Support**: None
 - **Touch Support**: Full
-- **Platform Notes**: Wszystkie akcje podstawowe muszą działać przez duże, dotykowe obszary (TouchScreenButton), nie standardowe przyciski myszowe. Brak hover-only interakcji.
+- **Platform Notes**: Wszystkie akcje podstawowe muszą działać przez duże, dotykowe obszary realizowane standardowym węzłem `Button` (otrzymuje syntezowane zdarzenia dotykowe project-wide), nie `TouchScreenButton` — to przestarzały węzeł `Node2D` niezintegrowany z układem/themingiem `Control` (per ADR-0007, engine-specialist 2026-06-24). Brak hover-only interakcji.
 
 ## Naming Conventions
 

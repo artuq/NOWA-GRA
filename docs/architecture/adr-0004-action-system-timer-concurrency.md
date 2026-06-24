@@ -96,7 +96,7 @@ func _on_action_timeout() -> void:
 ### Architecture Diagram
 ```
 ActionUI._process() -> ActionSystem.get_progress() [poll, every frame]
-TouchScreenButton.pressed -> ActionSystem.start_action(id) -> Timer.start() (or rejected if busy)
+Button.pressed -> ActionSystem.start_action(id) -> Timer.start() (or rejected if busy)   # Button, not TouchScreenButton — per ADR-0007
 Timer.timeout -> ActionSystem._on_action_timeout() -> emits action_completed
 ```
 

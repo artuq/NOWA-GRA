@@ -36,7 +36,7 @@ Decision Card System sits in Feature (not Core) because it depends on Card Conte
 | `SaveSystem` | Foundation | save file I/O, debounce timer | `save_now()`, `load_save()`, signal `save_flushed` | all Core modules (read state) | `FileAccess`, `Timer`, `NOTIFICATION_APPLICATION_PAUSED` (LOW, stable pre-4.3 API) |
 | `CardContentDatabase` | Foundation | static card resource table (12 cards) | `get_card(id)`, `get_all_cards()` | — | `Resource`/JSON (LOW) |
 | `DecisionCardSystem` | Feature | cooldown counter, weighting, presented card state | `present_next_card()`, signal `card_presented` | CardContentDatabase, HistoryFlagManager, ResourceManager | Autoload (LOW) |
-| `ActionUI` | Presentation | Action Grid scene | reads ActionSystem/ResourceManager signals | ActionSystem, ResourceManager | `Control`, `TouchScreenButton` (LOW) |
+| `ActionUI` | Presentation | Action Grid scene | reads ActionSystem/ResourceManager signals | ActionSystem, ResourceManager | `Control`, `Button` (LOW; not `TouchScreenButton` — per ADR-0007) |
 | `CardUI` | Presentation | Card modal scene, drag state | reads DecisionCardSystem/CardContentDatabase | DecisionCardSystem, CardContentDatabase | `Control`, `Tween`, touch input (LOW) |
 | `OfflineReportScreen` | Presentation | report modal | reads OfflineProgressSystem | OfflineProgressSystem, ActionUI (number format) | `Control`, `Tween` (LOW) |
 | `OnboardingGate` | Polish | phase state (3 phases) | gates `DecisionCardSystem.present_next_card()` | ActionSystem (action-completed events) | none — pure logic |

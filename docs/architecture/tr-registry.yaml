@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-06-20
-version: 1
+last_updated: 2026-06-24
+version: 2
 
 requirements:
   - id: TR-res-001
@@ -86,8 +86,9 @@ requirements:
     system: action-ui
     gdd: design/gdd/action-ui.md
     requirement: Progress bar updates every frame via cheap poll, not throttled
-    adr: [ADR-0004]
-    status: partial
+    adr: [ADR-0004, ADR-0007]
+    status: covered
+    note: Upgraded partial->covered 2026-06-24 — ADR-0007 scopes get_progress() per-frame polling to RunningActionOverlay via set_process()
 
   - id: TR-cui-001
     system: card-ui
