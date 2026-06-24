@@ -139,3 +139,43 @@ func resolve_path_eligibility() -> Variant:
 	if get_counter(highest["counter"]) - get_counter(second["counter"]) >= _MARGIN:
 		return highest["path"]
 	return null
+
+
+## Returns this module's persisted state as a JSON-serializable `Dictionary`
+## (plain `String` keys throughout — `StringName` is not a JSON type). Only
+## milestones currently set to `true` are included, per the GDD save schema
+## ("only milestones set to true"). Read by `SaveSystem.save_now()` (ADR-0002).
+##
+## Example:
+##   var snapshot: Dictionary = HistoryFlagManager.serialize_state()
+func serialize_state() -> Dictionary:
+	var milestones_out: Dictionary = {}
+	for key: StringName in _milestones:
+		if _milestones[key]:
+			milestones_out[String(key)] = true
+	var counters_out: Dictionary = {}
+	for key: StringName in _counters:
+		counters_out[String(key)] = _counters[key]
+	return {"milestones": milestones_out, "counters": counters_out}
+
+
+## Restores this module's state from [param data] (as produced by
+## [method serialize_state]). Missing keys default safely — an empty
+## [param data] (`{}`, the first-session case) leaves every milestone unset
+## and every counter at `0`, per ADR-0003's `restore_state()` contract.
+## Called by `SaveSystem.load_save()` at boot, before `ready`. Note: like
+## [method set_milestone], this only ever sets milestones to `true`, never
+## clears one absent from [param data] — a save written without a previously-
+## true milestone (data loss/corruption) will not un-set it on restore. This
+## is the same one-way-ratchet design as the live API, now also baked into
+## persistence, not just gameplay (GDD Pillar 2: decisions cannot be undone).
+##
+## Example:
+##   HistoryFlagManager.restore_state({"milestones": {"card.x": true}, "counters": {"risky_choices_count": 3}})
+func restore_state(data: Dictionary) -> void:
+	var milestones_in: Dictionary = data.get("milestones", {})
+	for key: String in milestones_in:
+		_milestones[StringName(key)] = true
+	var counters_in: Dictionary = data.get("counters", {})
+	for key: String in counters_in:
+		_counters[StringName(key)] = int(counters_in[key])

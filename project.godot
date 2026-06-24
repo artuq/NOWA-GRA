@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.6")
 
 ResourceManager="*res://src/core/resource_manager.gd"
 HistoryFlagManager="*res://src/core/history_flag_manager.gd"
+SaveSystem="*res://src/core/save_system.gd"
 ActionSystem="*res://src/core/action_system.gd"
 
 [editor_plugins]

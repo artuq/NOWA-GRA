@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/save-persistence-system.md
 > **Architecture Module**: SaveSystem
 > **Status**: Ready
-> **Stories**: Not yet created — run `/create-stories save-persistence-system`
+> **Stories**: 2 stories created — see table below
 
 ## Overview
 
@@ -40,6 +40,15 @@ This epic is complete when:
 - All Logic and Integration stories have passing test files in `tests/`
 - All Visual/Feel and UI stories have evidence docs with sign-off in `production/qa/evidence/`
 
+## Stories
+
+| # | Story | Type | Status | ADR |
+|---|-------|------|--------|-----|
+| 001 | Core Save/Load — State Transitions, Atomic Write & Schema Fallback | Integration | Ready | ADR-0002, ADR-0001 |
+| 002 | Debounce/Coalescing & Mobile Lifecycle Flush | Integration | Ready | ADR-0002, ADR-0001 |
+
+**Scope note**: Story 001's round-trip is scoped to `ResourceManager` + `HistoryFlagManager` only — Decision Card System doesn't exist yet, so `decision_card_state` is written as a fixed placeholder, not round-trip tested. A follow-up story will extend this once that epic is built.
+
 ## Next Step
 
-Run `/create-stories save-persistence-system` to break this epic into implementable stories.
+Run `/story-readiness production/epics/save-persistence-system/story-001-core-save-load.md` then `/dev-story` to begin implementation.

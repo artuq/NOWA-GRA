@@ -659,3 +659,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/history-flag-system/story-002-path-resolution-algorithm.md — Path Resolution Algorithm
 - Tech debt logged: 1 item (_REGISTERED_PATHS hardcoded const, revisit once Decision Card/Class Path System exist)
 - Next recommended: Story 3-2 (Save/Persistence System) — needs /create-stories save-persistence-system first; History Flag System epic is now fully Complete (both stories closed)
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/save-persistence-system/story-001-core-save-load.md — Core Save/Load
+- Files changed: src/core/save_system.gd (new), src/core/resource_manager.gd (added restore_state/serialize_state), src/core/history_flag_manager.gd (added restore_state/serialize_state), project.godot (autoload order)
+- Test written: tests/integration/save_persistence_system/save_core_test.gd (13 functions covering 14 ACs, AC-1/AC-9 combined as the same scenario; 13/13 passing, full suite 103/103, re-verified twice for isolation leakage)
+- Blockers: None. Implemented directly rather than via subagent — same structural conflict as Story 002 of History Flag (subagent safety guard against trusting orchestrator-relayed approval).
+- Next: /code-review src/core/save_system.gd src/core/resource_manager.gd src/core/history_flag_manager.gd tests/integration/save_persistence_system/save_core_test.gd production/epics/save-persistence-system/story-001-core-save-load.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE
+- Story: production/epics/save-persistence-system/story-001-core-save-load.md — Core Save/Load
+- Tech debt logged: None
+- Next recommended: Story 002 (Debounce/Coalescing & Mobile Lifecycle Flush) — production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md

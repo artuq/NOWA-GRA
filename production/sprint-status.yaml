@@ -46,13 +46,23 @@ stories:
     blocker: ""
     completed: "2026-06-24"
 
-  - id: "3-2"
-    name: "Save/Persistence System — SaveSystem Autoload"
-    file: "production/epics/save-persistence-system/EPIC.md"
+  - id: "3-2a"
+    name: "Save/Persistence System — Core Save/Load (Story 001)"
+    file: "production/epics/save-persistence-system/story-001-core-save-load.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: "2026-06-24"
+
+  - id: "3-2b"
+    name: "Save/Persistence System — Debounce/Coalescing & Lifecycle Flush (Story 002)"
+    file: "production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md"
     priority: must-have
     status: backlog
     owner: ""
-    estimate_days: 1.5
+    estimate_days: 0.5
     blocker: ""
     completed: ""
 

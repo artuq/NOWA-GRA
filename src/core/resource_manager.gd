@@ -65,3 +65,29 @@ func apply_delta(deltas: Dictionary[StringName, float]) -> void:
 			new_value = clamp(new_value, 0.0, 100.0)
 		_resources[key] = new_value
 		resource_changed.emit(key, new_value, old_value)
+
+
+## Returns this module's persisted state as a JSON-serializable `Dictionary`
+## (plain `String` keys, per `JSON.stringify()`'s requirements — `StringName`
+## is not a JSON type). Read by `SaveSystem.save_now()` (ADR-0002).
+##
+## Example:
+##   var snapshot: Dictionary = ResourceManager.serialize_state()
+func serialize_state() -> Dictionary:
+	var result: Dictionary = {}
+	for key: StringName in _resources:
+		result[String(key)] = _resources[key]
+	return result
+
+
+## Restores this module's state from [param data] (as produced by
+## [method serialize_state]). Missing keys default safely — an empty
+## [param data] (`{}`, the first-session case) leaves every resource at its
+## existing default (`0.0`), per ADR-0003's `restore_state()` contract.
+## Called by `SaveSystem.load_save()` at boot, before `ready`.
+##
+## Example:
+##   ResourceManager.restore_state({"Reach": 25.0, "Cringe": 10.0})
+func restore_state(data: Dictionary) -> void:
+	for key: String in data:
+		_resources[StringName(key)] = float(data[key])
