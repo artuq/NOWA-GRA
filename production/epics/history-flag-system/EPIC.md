@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/history-flag-system.md
 > **Architecture Module**: HistoryFlagManager
 > **Status**: Ready
-> **Stories**: Not yet created — run `/create-stories history-flag-system`
+> **Stories**: 2 stories created — see table below
 
 ## Overview
 
@@ -37,6 +37,13 @@ This epic is complete when:
 - All Logic and Integration stories have passing test files in `tests/`
 - All Visual/Feel and UI stories have evidence docs with sign-off in `production/qa/evidence/`
 
+## Stories
+
+| # | Story | Type | Status | ADR |
+|---|-------|------|--------|-----|
+| 001 | HistoryFlagManager Core — Milestone Flags & Pattern Counters | Logic | Ready | ADR-0001 |
+| 002 | Path Resolution Algorithm | Logic | Ready | ADR-0001 |
+
 ## Next Step
 
-Run `/create-stories history-flag-system` to break this epic into implementable stories.
+Run `/story-readiness production/epics/history-flag-system/story-001-core-flags-counters.md` then `/dev-story` to begin implementation.

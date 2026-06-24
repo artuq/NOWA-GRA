@@ -631,3 +631,18 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Next recommended: None — Sprint 2 (Action System epic) Must Have stories complete. Run sprint close-out sequence.
 
 <!-- QA RUN: 2026-06-24 | Sprint: sprint-2 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-2-2026-06-24.md -->
+
+<!-- QA-PLAN: 2026-06-24 | System: sprint-3 | Plan written: production/qa/qa-plan-sprint-3-2026-06-24.md -->
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/history-flag-system/story-001-core-flags-counters.md — HistoryFlagManager Core
+- Files changed: src/core/history_flag_manager.gd (new), project.godot (autoload order), tests/unit/history_flag_system/history_flag_manager_core_test.gd (new, 10 functions)
+- Test written: tests/unit/history_flag_system/history_flag_manager_core_test.gd (10/10 passing; full suite 84/84 passing, independently re-verified after a post-implementation param rename)
+- Blockers: None
+- Next: /code-review src/core/history_flag_manager.gd tests/unit/history_flag_system/history_flag_manager_core_test.gd production/epics/history-flag-system/story-001-core-flags-counters.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE
+- Story: production/epics/history-flag-system/story-001-core-flags-counters.md — HistoryFlagManager Core
+- Tech debt logged: None
+- Next recommended: Story 002 (Path Resolution Algorithm) — production/epics/history-flag-system/story-002-path-resolution-algorithm.md

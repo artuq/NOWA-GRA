@@ -12,32 +12,56 @@
 # Sprint 1 (Resource System) is fully closed — record preserved in
 # production/sprints/sprint-1.md, retro-sprint-1-2026-06-23.md, and
 # qa-signoff-sprint-1-2026-06-23.md. All 7 stories marked Complete in their files.
+#
+# Sprint 2 (Action System) is fully closed — record preserved in
+# production/sprints/sprint-2.md, retro-sprint-2-2026-06-24.md, and
+# qa-signoff-sprint-2-2026-06-24.md. Both stories marked Complete in their files.
 
-sprint: 2
-goal: "Implement the Action System backend (ActionSystem Autoload — single-Timer concurrency + Morale-scaled reward resolution) in src/, with passing unit + integration tests."
-start: "2026-06-23"
-end: "2026-06-27"
-generated: "2026-06-23"
+sprint: 3
+goal: "Implement the remaining MVP Foundation-layer systems with the heaviest dependency fan-out — History Flag System and Save/Persistence System — unblocking Decision Card System and Offline Progress System."
+start: "2026-06-25"
+end: "2026-06-29"
+generated: "2026-06-24"
 updated: "2026-06-24"
-# 2-1 marked done (story-done 2026-06-24); 2-2 marked done (story-done 2026-06-24)
+# 3-1 marked in-progress (dev-story 2026-06-24)
 
 stories:
-  - id: "2-1"
-    name: "ActionSystem Core — Timer, Single-Concurrency & Progress"
-    file: "production/epics/action-system/story-001-action-core-timer-concurrency.md"
+  - id: "3-1a"
+    name: "History Flag System — Core Flags & Counters (Story 001)"
+    file: "production/epics/history-flag-system/story-001-core-flags-counters.md"
     priority: must-have
     status: done
     owner: ""
-    estimate_days: 0.5
+    estimate_days: 0.75
     blocker: ""
     completed: "2026-06-24"
 
-  - id: "2-2"
-    name: "Action Reward Resolution & Morale Scaling"
-    file: "production/epics/action-system/story-002-reward-resolution-morale-scaling.md"
+  - id: "3-1b"
+    name: "History Flag System — Path Resolution Algorithm (Story 002)"
+    file: "production/epics/history-flag-system/story-002-path-resolution-algorithm.md"
     priority: must-have
-    status: done
+    status: ready-for-dev
     owner: ""
-    estimate_days: 0.5
+    estimate_days: 0.75
     blocker: ""
-    completed: "2026-06-24"
+    completed: ""
+
+  - id: "3-2"
+    name: "Save/Persistence System — SaveSystem Autoload"
+    file: "production/epics/save-persistence-system/EPIC.md"
+    priority: must-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.5
+    blocker: ""
+    completed: ""
+
+  - id: "3-4"
+    name: "Doc-sync: Polish→English resource keys"
+    file: ""
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.25
+    blocker: ""
+    completed: ""
