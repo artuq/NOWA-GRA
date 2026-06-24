@@ -13,6 +13,11 @@ config_version=5
 config/name="King of Cringe"
 config/features=PackedStringArray("4.6")
 
+[autoload]
+
+ResourceManager="*res://src/core/resource_manager.gd"
+ActionSystem="*res://src/core/action_system.gd"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")

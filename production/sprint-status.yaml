@@ -19,7 +19,7 @@ start: "2026-06-23"
 end: "2026-06-27"
 generated: "2026-06-23"
 updated: "2026-06-24"
-# 2-1 marked done (story-done 2026-06-24)
+# 2-1 marked done (story-done 2026-06-24); 2-2 marked done (story-done 2026-06-24)
 
 stories:
   - id: "2-1"
@@ -36,8 +36,8 @@ stories:
     name: "Action Reward Resolution & Morale Scaling"
     file: "production/epics/action-system/story-002-reward-resolution-morale-scaling.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"

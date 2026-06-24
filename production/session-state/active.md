@@ -616,3 +616,18 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/action-system/story-001-action-core-timer-concurrency.md — ActionSystem Core
 - Tech debt logged: None (2 advisory deviations already logged 2026-06-23)
 - Next recommended: Story 002 (Action Reward Resolution & Morale Scaling) — production/epics/action-system/story-002-reward-resolution-morale-scaling.md
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/action-system/story-002-reward-resolution-morale-scaling.md — Action Reward Resolution & Morale Scaling
+- Files changed: src/core/action_system.gd, tests/integration/action_system/action_system_reward_resolution_test.gd, tests/unit/action_system/action_system_timer_concurrency_test.gd (signature regression fix)
+- Test written: tests/integration/action_system/action_system_reward_resolution_test.gd (10 functions, 10/10 passing; full suite 73/73 passing, independently re-verified)
+- Blockers: None
+- Next: /code-review src/core/action_system.gd tests/integration/action_system/action_system_reward_resolution_test.gd production/epics/action-system/story-002-reward-resolution-morale-scaling.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/action-system/story-002-reward-resolution-morale-scaling.md — Action Reward Resolution & Morale Scaling
+- Tech debt logged: None (1 advisory deviation fixed before closure — _on_action_timeout() empty-id guard added + regression test, 74/74 passing)
+- Next recommended: None — Sprint 2 (Action System epic) Must Have stories complete. Run sprint close-out sequence.
+
+<!-- QA RUN: 2026-06-24 | Sprint: sprint-2 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-2-2026-06-24.md -->

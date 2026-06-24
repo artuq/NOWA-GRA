@@ -1,12 +1,12 @@
 # Story 002: Action Reward Resolution & Morale Scaling
 
 > **Epic**: Action System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: M (3-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**: (set by /dev-story when implementation begins)
+> **Last Updated**: 2026-06-24
 
 ## Context
 
@@ -116,7 +116,7 @@ func _on_action_timeout() -> void:
 **Required evidence**:
 - `tests/integration/action_system/action_system_reward_resolution_test.gd` — must exist and pass
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created and passing — `tests/integration/action_system/action_system_reward_resolution_test.gd`, 11/11 passing (verified via `addons/gdUnit4/runtest.sh`, 2026-06-24)
 
 ---
 
@@ -124,3 +124,12 @@ func _on_action_timeout() -> void:
 
 - Depends on: Story 001 (ActionSystem core — `_on_action_timeout()` exists to extend) must be DONE; Resource System epic (`ResourceManager.apply_delta`, `ResourceManager.get_resource`, `ResourceFormulas.action_effectiveness_multiplier`) — Complete.
 - Unlocks: None within this epic. Downstream: Offline Progress System (queries the same reward table); Action UI (displays awarded rewards).
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 6/6 passing (none deferred)
+**Deviations**: 1 advisory, fixed before closure — `_on_action_timeout()` had no guard against firing with `current_action_id == &""` (unreachable in production, flagged by both director gates as non-blocking); added an early-return guard plus a regression test (`test_action_timeout_with_no_active_action_is_a_noop`) rather than deferring it.
+**Test Evidence**: Integration — `tests/integration/action_system/action_system_reward_resolution_test.gd`, 11/11 passing (full regression 74/74 passing)
+**Code Review**: Complete — inline `/code-review` APPROVED WITH SUGGESTIONS; LP-CODE-REVIEW gate APPROVE; QL-TEST-COVERAGE gate ADEQUATE

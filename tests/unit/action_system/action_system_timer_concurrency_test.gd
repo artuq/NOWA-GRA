@@ -69,6 +69,9 @@ func test_start_action_while_running_returns_false_and_does_not_interrupt_runnin
 
 ## AC-3: Timer elapsing -> _on_action_timeout() resets current_action_id to
 ## idle and emits action_completed exactly once with the completed action_id.
+## Story 002 note: action_completed now also carries the resolved rewards
+## dict; at default Morale (0.0, Critical band, 0.5x), przeprosiny's base
+## Reach 6 scales to 3.0, so the expected payload reflects that.
 func test_action_timeout_resets_state_and_emits_completed_signal_exactly_once() -> void:
 	monitor_signals(_action_system)
 	_action_system.start_action(&"przeprosiny")
@@ -76,7 +79,12 @@ func test_action_timeout_resets_state_and_emits_completed_signal_exactly_once() 
 	_action_system._on_action_timeout()
 
 	assert_that(_action_system.current_action_id).is_equal(&"")
-	await assert_signal(_action_system).is_emitted("action_completed", [&"przeprosiny"])
+	var expected_rewards: Dictionary[StringName, float] = {
+		&"Reach": 3.0,
+		&"Cringe": -15.0,
+		&"Morale": 5.0,
+	}
+	await assert_signal(_action_system).is_emitted("action_completed", [&"przeprosiny", expected_rewards])
 
 
 ## AC-3 edge case: the signal fires exactly once per timeout, not zero or
@@ -84,7 +92,7 @@ func test_action_timeout_resets_state_and_emits_completed_signal_exactly_once() 
 ## so count emissions directly via a connected counter callable instead.
 func test_action_timeout_emits_signal_exactly_once_not_zero_or_twice() -> void:
 	var emit_count: Array = [0]
-	_action_system.action_completed.connect(func(_id: StringName) -> void: emit_count[0] += 1)
+	_action_system.action_completed.connect(func(_id: StringName, _rewards: Dictionary) -> void: emit_count[0] += 1)
 	_action_system.start_action(&"nagraj_vloga")
 
 	_action_system._on_action_timeout()
