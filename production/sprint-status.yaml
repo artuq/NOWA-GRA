@@ -45,12 +45,12 @@ updated: "2026-06-24"
 stories:
   - id: "6-1"
     name: "Action UI — epic-level (provisional, pending /create-stories breakdown)"
-    file: "design/gdd/action-ui.md"
+    file: "production/epics/action-ui/EPIC.md"
     priority: must-have
     status: backlog
     owner: ""
     estimate_days: 3.0
-    blocker: "Epic-level estimate, pending /create-epics + /create-stories breakdown before treated as committed; no epic exists yet"
+    blocker: "Epic-level estimate, pending /create-stories breakdown; stories will be Blocked until ADR-0007 is Accepted via /architecture-review (fresh session)"
     completed: ""
 
 _sprint_5_archive:
