@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/action-ui.md
 > **Architecture Module**: ActionScreen (3 sibling Control scripts per ADR-0007: ResourceHud, ActionGrid, RunningActionOverlay)
 > **Status**: Ready
-> **Stories**: Not yet created — run `/create-stories action-ui`
+> **Stories**: 4 stories created — see table below
 
 ## Overview
 
@@ -34,6 +34,17 @@ This epic is complete when:
 - The Logic-classified pieces (number formatting, progress-bar fill_ratio — see `production/qa/qa-plan-sprint-6-2026-06-24.md`) have passing test files in `tests/`
 - The UI-classified pieces (layout, slot state, button enable/disable) have an evidence doc with sign-off in `production/qa/evidence/`
 
+## Stories
+
+| # | Story | Type | Status | ADR |
+|---|-------|------|--------|-----|
+| 001 | Number Formatting & Progress Bar Math | Logic | Ready | N/A (pure utility) |
+| 002 | Resource HUD | UI | Ready | ADR-0007, ADR-0001 |
+| 003 | Action Grid | UI | Ready | ADR-0007, ADR-0001 |
+| 004 | Running Action Overlay | UI | Ready | ADR-0007, ADR-0004, ADR-0001 |
+
+**Note**: Story 004 may require a small addition to `ActionSystem`'s public signal surface (an "action started" emission) if one doesn't already exist — flagged as a possible in-scope, one-line addition during that story's implementation, not a new architectural decision.
+
 ## Next Step
 
-Run `/create-stories action-ui` to break this epic into implementable stories.
+Run `/story-readiness production/epics/action-ui/story-001-number-formatting-progress-bar-math.md` then `/dev-story` to begin implementation.
