@@ -1,7 +1,7 @@
 # Story 002: Weighted Card Selection Formula
 
 > **Epic**: Decision Card System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (3-4h)
@@ -170,3 +170,12 @@ func _weighted_pick(pool: Array[Dictionary]) -> Dictionary:
 
 - Depends on: Story 001 (Cooldown Mechanism & Pool Eligibility) must be DONE; this story's `_weighted_pick()` is called with the pool Story 001 builds.
 - Unlocks: Story 003 (Card Presentation & Resolution — resolves the card this story selects).
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 9/9 passing (none deferred)
+**Deviations**: None open — code review found `_weighted_pick()` had no internal empty-pool guard; fixed with a `push_error()` + `{}` return before this gate, not left open.
+**Test Evidence**: Logic — `tests/unit/decision_card_system/weighted_selection_test.gd`, 8/8 passing (full regression 145/145 passing)
+**Code Review**: Complete — `/code-review` APPROVED (after empty-pool guard fix); LP-CODE-REVIEW gate APPROVE; QL-TEST-COVERAGE gate ADEQUATE

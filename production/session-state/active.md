@@ -713,3 +713,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md — Cooldown Mechanism & Pool Eligibility
 - Tech debt logged: None
 - Next recommended: Story 002 (Weighted Card Selection Formula) — production/epics/decision-card-system/story-002-weighted-selection.md
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/decision-card-system/story-002-weighted-selection.md — Weighted Card Selection Formula
+- Files changed: src/core/decision_card_system.gd (added _card_intensity/_card_weight/_weighted_pick/set_seed/_rng)
+- Test written: tests/unit/decision_card_system/weighted_selection_test.gd (6 functions covering 9 ACs; 6/6 passing, full suite 143/143)
+- Blockers: None. Milestone-exclusion test used a separate dedicated test milestone from Story 001's, avoiding any collision.
+- Next: /code-review src/core/decision_card_system.gd tests/unit/decision_card_system/weighted_selection_test.gd production/epics/decision-card-system/story-002-weighted-selection.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE
+- Story: production/epics/decision-card-system/story-002-weighted-selection.md — Weighted Card Selection Formula
+- Tech debt logged: None
+- Next recommended: Story 003 (Card Presentation & Resolution) — production/epics/decision-card-system/story-003-presentation-resolution.md — last story in the Decision Card System epic

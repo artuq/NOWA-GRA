@@ -57,11 +57,11 @@ stories:
     name: "Decision Card System — Weighted Card Selection Formula (Story 002)"
     file: "production/epics/decision-card-system/story-002-weighted-selection.md"
     priority: must-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.75
     blocker: ""
-    completed: ""
+    completed: "2026-06-24"
 
   - id: "4-2c"
     name: "Decision Card System — Card Presentation & Resolution (Story 003)"

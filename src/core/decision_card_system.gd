@@ -43,9 +43,23 @@ var state: State = State.COOLDOWN
 
 var _actions_until_check: int = COOLDOWN_ACTIONS
 
+## Flat weight floor every eligible card receives, independent of Cringe or
+## intensity. GDD Tuning Knob: start 10, safe range 5-20.
+const BASE_WEIGHT: float = 10.0
+
+var _rng := RandomNumberGenerator.new()
+
 
 func _ready() -> void:
 	ActionSystem.action_completed.connect(_on_action_completed)
+	_rng.randomize()
+
+
+## Test hook only — production code never calls this. Allows tests to pin
+## `_rng` to a fixed seed, satisfying coding-standards.md's "no random
+## seeds" determinism rule for the weighted-pick statistical tests.
+func set_seed(s: int) -> void:
+	_rng.seed = s
 
 
 func _on_action_completed(_action_id: StringName, _rewards: Dictionary) -> void:
@@ -105,3 +119,46 @@ func _is_milestone_exhausted(card: Dictionary) -> bool:
 		if option.has("milestone_to_set") and HistoryFlagManager.has_milestone(option["milestone_to_set"]):
 			return true
 	return false
+
+
+## Per the GDD's Formulas section: "the risky option's Cringe delta (for
+## risky/safe cards) or 0 (for neutral cards)." Derived at selection time —
+## CardContentDatabase's Dictionary schema has no stored `.intensity` field.
+## A card's risky option is identified by which option increments
+## `risky_choices_count`; neutral cards have no such option on either side,
+## so the loop falls through to the `0.0` fallback.
+func _card_intensity(card: Dictionary) -> float:
+	for option: Dictionary in card["options"]:
+		if option["counter_increments"].has(&"risky_choices_count"):
+			return option["resource_deltas"].get(&"Cringe", 0.0)
+	return 0.0
+
+
+func _card_weight(card: Dictionary, current_cringe: float) -> float:
+	return BASE_WEIGHT + (current_cringe / 100.0) * _card_intensity(card)
+
+
+## Picks one card from [param pool] via a cumulative-weight roll. [param
+## pool] must be non-empty — [method _check_pool] only calls this when
+## `pool.size() > 0`. Selection probability = weight(card) / sum(all
+## weights), recomputed fresh each call (not pre-normalized). Defends
+## against a future caller bypassing that contract: returns `{}` rather
+## than crashing on `pool[-1]`'s out-of-bounds access on an empty array.
+func _weighted_pick(pool: Array[Dictionary]) -> Dictionary:
+	if pool.is_empty():
+		push_error("_weighted_pick() called with an empty pool — this should never happen, _check_pool() must guard against it")
+		return {}
+	var current_cringe: float = ResourceManager.get_resource(&"Cringe")
+	var weights: Array[float] = []
+	var total: float = 0.0
+	for card: Dictionary in pool:
+		var w: float = _card_weight(card, current_cringe)
+		weights.append(w)
+		total += w
+	var roll: float = _rng.randf() * total
+	var cumulative: float = 0.0
+	for i in pool.size():
+		cumulative += weights[i]
+		if roll <= cumulative:
+			return pool[i]
+	return pool[-1]  # float-rounding fallback, never reached in practice
