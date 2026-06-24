@@ -700,3 +700,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/card-content-database/story-001-mvp-card-content.md — MVP Card Content
 - Tech debt logged: 3 items (AC-7 ratio bound violated by GDD's own data; AC-13 Sponsors rule corrected; CardContentDatabase/ResourceManager key-drift risk)
 - Next recommended: Decision Card System (4-2) — needs /create-stories decision-card-system; Card Content Database epic is now fully Complete
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md — Cooldown Mechanism & Pool Eligibility
+- Files changed: src/core/decision_card_system.gd (new), project.godot (autoload order)
+- Test written: tests/unit/decision_card_system/cooldown_pool_test.gd (8 functions covering 8 ACs; 8/8 passing, full suite 136/136)
+- Blockers: None. One real implementation bug found and fixed during testing: Variant-typed cards_override parameter needed explicit Array(...) typed-conversion, plain assignment from untyped Array literal to Array[Dictionary] fails at runtime. Milestone-exclusion tests use a dedicated synthetic card + test-only milestone string, never the real staged_drama/cancel_threat/algorithm_hack production milestones, to avoid permanently excluding those cards from later test suites in the same invocation (milestones can't be unset).
+- Next: /code-review src/core/decision_card_system.gd tests/unit/decision_card_system/cooldown_pool_test.gd production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE
+- Story: production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md — Cooldown Mechanism & Pool Eligibility
+- Tech debt logged: None
+- Next recommended: Story 002 (Weighted Card Selection Formula) — production/epics/decision-card-system/story-002-weighted-selection.md

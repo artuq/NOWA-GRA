@@ -3,6 +3,8 @@
 ## Status
 Accepted (2026-06-20, following independent /architecture-review — verdict CONCERNS overall but no conflicts or blockers against this ADR specifically)
 
+**Implementation Note (2026-06-24, Story 001 of Decision Card System)**: the `Implementation Guidelines` code sample below is stale relative to what was actually built. It assumes cards are `Resource` objects with `.intensity`/`.id`/`.get_effects(option)`, and that `HistoryFlagManager.record_choice()` and `OnboardingGate.is_card_suppressed()` exist. None of that matches reality: `CardContentDatabase.get_all_cards()` returns `Array[Dictionary]`, `HistoryFlagManager`'s real API is `set_milestone()`/`increment_counter()`, and `OnboardingGate` doesn't exist yet (zero GDD acceptance criteria reference it). See `src/core/decision_card_system.gd`'s header doc comment and `production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md` for the corrected, actually-implemented version. The underlying architectural decisions below (int-counter cooldown not Timer, per-instance RNG with `set_seed()` test hook, weighted cumulative-sum selection, ownership-clear direct calls) remain valid — only the code sample's data-access syntax is stale.
+
 ## Date
 2026-06-19
 

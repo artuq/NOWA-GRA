@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/decision-card-system.md
 > **Architecture Module**: DecisionCardSystem
 > **Status**: Ready
-> **Stories**: Not yet created — run `/create-stories decision-card-system`
+> **Stories**: 3 stories created — see table below
 
 ## Overview
 
@@ -39,6 +39,16 @@ This epic is complete when:
 - All Logic and Integration stories have passing test files in `tests/`
 - All Visual/Feel and UI stories have evidence docs with sign-off in `production/qa/evidence/`
 
+## Stories
+
+| # | Story | Type | Status | ADR |
+|---|-------|------|--------|-----|
+| 001 | Cooldown Mechanism & Pool Eligibility | Logic | Ready | ADR-0005, ADR-0001 |
+| 002 | Weighted Card Selection Formula | Logic | Ready | ADR-0005, ADR-0001 |
+| 003 | Card Presentation & Resolution | Integration | Ready | ADR-0005, ADR-0001 |
+
+**Note**: ADR-0005's Implementation Guidelines pseudocode is stale relative to what's actually built (assumes Resource-object cards with `.intensity`/`.id`, a `HistoryFlagManager.record_choice()` method, and `OnboardingGate.is_card_suppressed()` — none of which exist). All 3 stories implement against the real `Dictionary`-based `CardContentDatabase` API and `HistoryFlagManager`'s actual `set_milestone()`/`increment_counter()` methods instead. `OnboardingGate` integration is explicitly out of scope (zero GDD acceptance criteria reference it) — deferred to a future story once that epic exists.
+
 ## Next Step
 
-Run `/create-stories decision-card-system` to break this epic into implementable stories.
+Run `/story-readiness production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md` then `/dev-story` to begin implementation.
