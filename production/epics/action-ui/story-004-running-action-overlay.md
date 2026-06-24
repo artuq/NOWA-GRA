@@ -70,6 +70,8 @@ On `_on_action_completed`: `set_process(false)`, `visible = false`. Whoever star
 
 **Important note for `/dev-story`**: if `ActionSystem` has no "action started" signal (only `action_completed`), this story may need a small `ActionSystem` addition (e.g., emit on `start_action()` success) — check before implementing, and if needed, treat that as a small in-scope addition to `ActionSystem`, not a new story, since it's a one-line signal emission consistent with the system's existing public surface, not a new architectural decision.
 
+**Performance**: the only zone in Action UI using `_process()` (per ADR-0007's explicit scoping decision) — O(1) per frame while active (one `get_progress()` call, one fill update), but zero cost while idle, per the `_ready()` initial-state guard documented above.
+
 ---
 
 ## Out of Scope
