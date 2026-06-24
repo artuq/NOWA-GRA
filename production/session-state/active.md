@@ -757,3 +757,5 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/offline-progress-system/story-001-stepped-offline-simulation.md — Stepped Offline Simulation
 - Tech debt logged: None (deviation fully documented in story file, not separately tracked)
 - Next recommended: Sprint 5's 5-1 (doc-sync, Polish->English resource keys) — last remaining Must Have story this sprint
+
+<!-- QA RUN: 2026-06-24 | Sprint: sprint-5 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-5-2026-06-24.md -->
