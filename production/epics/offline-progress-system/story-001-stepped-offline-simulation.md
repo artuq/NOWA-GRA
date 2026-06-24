@@ -1,7 +1,7 @@
 # Story 001: Stepped Offline Simulation
 
 > **Epic**: Offline Progress System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (2.0 days — provisional, per Sprint 5's producer feasibility gate; the loop logic and its tests are explicitly the least compressible part if this overruns)
@@ -109,7 +109,7 @@ func simulate_offline(elapsed_seconds: int) -> Dictionary:
     return result
 ```
 
-`ResourceFormulas` is a **new file**, `res://src/core/resource_formulas.gd`, `class_name ResourceFormulas` — a static-method utility class containing `haters_growth_rate()`, `morale_drain_rate()`, `action_effectiveness_multiplier()`. This story creates that file. `ActionSystem`/`ResourceManager` are expected to migrate their own existing inline formula logic to call these same static functions in a future story — **do not modify `ActionSystem` in this story**; creating `ResourceFormulas` with the correct math is sufficient scope here, and `OfflineProgressSystem` is the only consumer this story wires up.
+**Correction discovered during implementation (2026-06-24)**: ADR-0006's text above describes `ResourceFormulas` as something this story creates — that's stale. `res://src/core/resource_formulas.gd` already exists in full, built during the Resource System epic (Stories 003-005, all Complete), including a fourth function, `passive_zasiegi_income(hatersi_count, morale_mult, elapsed_seconds)`, that ADR-0006 predates and never mentions. This story's actual scope is therefore smaller than the ADR implies: only `OfflineProgressSystem` itself (the loop sequencing `ResourceFormulas`' already-tested static calls) is new code here. The implementation calls `ResourceFormulas.passive_zasiegi_income()` for the Z step rather than reimplementing the `Z_PER_HATER` multiplication inline as ADR-0006's pseudocode shows — using the real, already-tested function instead of duplicating its math, consistent with the ADR's own stated goal of one shared implementation. Do not modify `ActionSystem` in this story; it does not yet call `ResourceFormulas` at all (separate future migration), and that remains out of scope here.
 
 **Known GDD deviation — reentrancy AC dropped, documented per user decision (2026-06-24):**
 The GDD's Acceptance Criteria section includes: *"GIVEN `computing` or `presenting`, WHEN a second app-start event fires before the cycle completes, THEN `simulate_offline` is not invoked a second time concurrently."* This scenario is structurally unreachable given the actual architecture: ADR-0003 establishes that `BootController._ready()` runs exactly once per cold start (Godot's main-scene lifecycle cannot fire `_ready()` twice within one process), and `simulate_offline()` itself is a synchronous, sub-millisecond loop (per ADR-0006's Performance Implications) — there is no "mid-cycle" window for a second invocation to race against, either within one process or across a killed/relaunched process (no in-memory state survives a process kill to be re-entered). This was a known open question in the GDD itself (`## Open Questions`: *"Re-entrancy guard for rapid repeated app launches — flagged by qa-lead, no explicit lock rule defined"*), never resolved by ADR-0003 or ADR-0006 despite the GDD's stated target of resolving it "before `/architecture-decision`." Resolution: drop the AC from this story rather than add a guard with no real trigger path to test against. Add this as a one-line code comment on `simulate_offline()`, not a defensive guard clause.
@@ -187,3 +187,12 @@ The GDD's Acceptance Criteria section includes: *"GIVEN `computing` or `presenti
 
 - Depends on: Resource System (Complete), Save/Persistence System (Complete) — both provide the `ResourceManager` reads this story's `simulate_offline()` consumes
 - Unlocks: A future Boot/Scene-Management epic (TR-off-002, ADR-0003) — cannot start until `simulate_offline()`'s output shape is fixed by this story
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-24
+**Criteria**: 19/19 passing (reentrancy AC dropped per documented decision — structurally unreachable given the actual architecture)
+**Deviations**: 1 advisory, already documented in this file's Implementation Notes — `ResourceFormulas` already existed (Resource System epic) before this story began; ADR-0006's claim that this story creates it was stale, corrected here rather than left silently wrong
+**Test Evidence**: Logic — `tests/unit/offline_progress_system/offline_simulation_test.gd`, 14/14 passing (full regression 166/166 passing)
+**Code Review**: Complete — `/code-review` APPROVED (engine specialist CLEAN; qa-tester found 4 real coverage gaps, all fixed with new tests before this closure)

@@ -388,3 +388,7 @@
 20260624_180554 | Agent completed: ccgs:lead-programmer
 20260624_181503 | Agent invoked: ccgs:producer
 20260624_181513 | Agent completed: ccgs:producer
+20260624_220848 | Agent invoked: ccgs:godot-gdscript-specialist
+20260624_220852 | Agent invoked: ccgs:qa-tester
+20260624_220907 | Agent completed: ccgs:godot-gdscript-specialist
+20260624_220912 | Agent completed: ccgs:qa-tester

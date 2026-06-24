@@ -21,6 +21,7 @@ CardContentDatabase="*res://src/core/card_content_database.gd"
 SaveSystem="*res://src/core/save_system.gd"
 ActionSystem="*res://src/core/action_system.gd"
 DecisionCardSystem="*res://src/core/decision_card_system.gd"
+OfflineProgressSystem="*res://src/core/offline_progress_system.gd"
 
 [editor_plugins]
 

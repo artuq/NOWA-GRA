@@ -3,7 +3,7 @@
 > **Layer**: Core
 > **GDD**: design/gdd/offline-progress-system.md
 > **Architecture Module**: OfflineProgressSystem
-> **Status**: Ready
+> **Status**: Complete (in-scope story); TR-off-002 deferred to a future Boot/Scene-Management epic
 > **Stories**: 1 story created — see table below
 
 ## Overview
@@ -42,7 +42,7 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | Stepped Offline Simulation | Logic | Ready | ADR-0006, ADR-0003 (secondary, deferred) |
+| 001 | Stepped Offline Simulation | Logic | Complete | ADR-0006, ADR-0003 (secondary, deferred) |
 
 **Note**: TR-off-002 (launch-time boot sequencing, ADR-0003) is explicitly out of scope for Story 001 — it requires `BootController`, the Offline Report Screen, and the Main scene, none of which exist yet. Deferred to a future Boot/Scene-Management epic. The GDD's reentrancy acceptance criterion ("a second app-start event... not invoked a second time concurrently") was dropped from Story 001 — it describes a scenario structurally unreachable given ADR-0003's actual boot model (runs once per process) and ADR-0006's synchronous sub-millisecond loop; this was a known unresolved open question in the GDD itself, never resolved by either ADR.
 

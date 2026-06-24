@@ -744,3 +744,16 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 <!-- QA RUN: 2026-06-24 | Sprint: sprint-4 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-4-2026-06-24.md -->
 
 <!-- QA-PLAN: 2026-06-24 | System: sprint-5 | Plan written: production/qa/qa-plan-sprint-5-2026-06-24.md -->
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/offline-progress-system/story-001-stepped-offline-simulation.md — Stepped Offline Simulation
+- Files changed: src/core/offline_progress_system.gd (new — OfflineProgressSystem Autoload, simulate_offline()), project.godot (registered OfflineProgressSystem Autoload, after DecisionCardSystem)
+- Test written: tests/unit/offline_progress_system/offline_simulation_test.gd (10 functions covering all in-scope AC; 10/10 passing, full suite 162/162)
+- Blockers: None. Found during implementation: ResourceFormulas already existed in full (built during Resource System epic, Stories 003-005) — ADR-0006's text describing it as something this story creates was stale. Used the real passive_zasiegi_income() function instead of ADR-0006's inline Z_PER_HATER pseudocode. Story file corrected to document this rather than silently following stale guidance.
+- Next: /code-review src/core/offline_progress_system.gd tests/unit/offline_progress_system/offline_simulation_test.gd production/epics/offline-progress-system/story-001-stepped-offline-simulation.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/offline-progress-system/story-001-stepped-offline-simulation.md — Stepped Offline Simulation
+- Tech debt logged: None (deviation fully documented in story file, not separately tracked)
+- Next recommended: Sprint 5's 5-1 (doc-sync, Polish->English resource keys) — last remaining Must Have story this sprint
