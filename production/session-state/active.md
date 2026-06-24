@@ -822,3 +822,5 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/action-ui/story-004-running-action-overlay.md — Running Action Overlay
 - Tech debt logged: 1 resolved (simulate_frames() timing flakiness, fixed same-session)
 - Next recommended: None — Action UI epic is now fully Complete (all 4 stories done, first real playable screen in the project). Sprint 6's Must Have scope is complete.
+
+<!-- QA RUN: 2026-06-25 | Sprint: sprint-6 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-6-2026-06-25.md -->
