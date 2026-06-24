@@ -685,3 +685,18 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Story: production/epics/save-persistence-system/story-002-debounce-lifecycle-flush.md — Debounce/Coalescing & Mobile Lifecycle Flush
 - Tech debt logged: 1 item (missing save_flushed signal per ADR-0002, no consumer needs it yet)
 - Next recommended: None — Sprint 3 (History Flag System + Save/Persistence System) Must Have stories complete. Run sprint close-out sequence.
+
+<!-- QA RUN: 2026-06-24 | Sprint: sprint-3 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-3-2026-06-24.md -->
+
+## Session Extract — /dev-story 2026-06-24
+- Story: production/epics/card-content-database/story-001-mvp-card-content.md — MVP Card Content
+- Files changed: src/core/card_content_database.gd (new), project.godot (autoload order)
+- Test written: tests/unit/card_content_database/card_content_database_test.gd (17 functions; 17/17 passing, full suite 128/128)
+- Blockers: None. Two real GDD content/AC contradictions discovered and resolved during implementation (both amended in the story file with user approval, not silently patched): (1) AC-7's 1.4-1.8x Reach ratio bound is violated by 3 of 8 GDD-authored risky/safe pairs (staged_drama 1.833, leaked_dm 1.810, cancel_threat 1.818) — implemented as-authored, test locks real measured ratios; (2) AC-13's "Sponsors key only on 2 cards" contradicted fan_in_trouble's authored -1 Sponsors cost — corrected to allow non-qualifying costs, only positive Sponsors rewards are gated to the 2 qualifying cards.
+- Next: /code-review src/core/card_content_database.gd tests/unit/card_content_database/card_content_database_test.gd production/epics/card-content-database/story-001-mvp-card-content.md then /story-done
+
+## Session Extract — /story-done 2026-06-24
+- Verdict: COMPLETE WITH NOTES
+- Story: production/epics/card-content-database/story-001-mvp-card-content.md — MVP Card Content
+- Tech debt logged: 3 items (AC-7 ratio bound violated by GDD's own data; AC-13 Sponsors rule corrected; CardContentDatabase/ResourceManager key-drift risk)
+- Next recommended: Decision Card System (4-2) — needs /create-stories decision-card-system; Card Content Database epic is now fully Complete

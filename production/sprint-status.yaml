@@ -16,16 +16,54 @@
 # Sprint 2 (Action System) is fully closed — record preserved in
 # production/sprints/sprint-2.md, retro-sprint-2-2026-06-24.md, and
 # qa-signoff-sprint-2-2026-06-24.md. Both stories marked Complete in their files.
+#
+# Sprint 3 (History Flag System + Save/Persistence System) is fully closed —
+# record preserved in production/sprints/sprint-3.md, qa-signoff-sprint-3-2026-06-24.md.
+# No retrospective was written for Sprint 3 (skipped in favor of running /gate-check
+# directly) — flagged as a minor gap by the Sprint 4 producer feasibility gate.
+# Production → Polish gate-check ran 2026-06-24: verdict FAIL, all 4 directors
+# NOT READY (no scenes/UI, zero playtests, art bible incomplete). Project remains
+# in Production stage; Sprint 4 targets the next increment toward first playable.
 
-sprint: 3
-goal: "Implement the remaining MVP Foundation-layer systems with the heaviest dependency fan-out — History Flag System and Save/Persistence System — unblocking Decision Card System and Offline Progress System."
-start: "2026-06-25"
-end: "2026-06-29"
+sprint: 4
+goal: "Build the remaining Core-layer backend (Card Content Database + Decision Card System) so Sprint 5 can wire up the Boot scene and minimal UI for a true first-playable build."
+start: "2026-06-30"
+end: "2026-07-04"
 generated: "2026-06-24"
 updated: "2026-06-24"
-# 3-1 marked in-progress (dev-story 2026-06-24)
 
 stories:
+  - id: "4-1"
+    name: "Card Content Database — static CardContentDatabase Autoload"
+    file: "production/epics/card-content-database/story-001-mvp-card-content.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1.0
+    blocker: ""
+    completed: "2026-06-24"
+
+  - id: "4-2"
+    name: "Decision Card System — DecisionCardSystem Autoload"
+    file: "production/epics/decision-card-system/EPIC.md"
+    priority: must-have
+    status: backlog
+    owner: ""
+    estimate_days: 2.0
+    blocker: ""
+    completed: ""
+
+  - id: "4-3"
+    name: "Doc-sync: Polish→English resource keys (carried over from 3-4)"
+    file: ""
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.25
+    blocker: ""
+    completed: ""
+
+_sprint_3_archive:
   - id: "3-1a"
     name: "History Flag System — Core Flags & Counters (Story 001)"
     file: "production/epics/history-flag-system/story-001-core-flags-counters.md"
