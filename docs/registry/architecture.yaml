@@ -60,15 +60,15 @@ interfaces:
     owner: ActionSystem
     note: "Polled every frame by Action UI; returns 0.0-1.0; guards divide-by-zero when idle"
     source: docs/architecture/adr-0004-action-system-timer-concurrency.md
-    referenced_by: []
+    referenced_by: [docs/architecture/adr-0007-action-ui-scene-structure-autoload-binding.md]
 
   - name: action_completed
     signature: "action_completed(action_id: String, payload: Dictionary)"
     type: signal
     emitter: ActionSystem
-    subscribers: [OnboardingGate, DecisionCardSystem]
+    subscribers: [OnboardingGate, DecisionCardSystem, ActionGrid, RunningActionOverlay]
     source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
-    referenced_by: []
+    referenced_by: [docs/architecture/adr-0007-action-ui-scene-structure-autoload-binding.md]
 
 api_decisions:
   - decision: "ResourceFormulas (res://src/core/resource_formulas.gd, class_name ResourceFormulas) is a stateless static-method utility class shared between live-play (ActionSystem) and offline simulation (OfflineProgressSystem) call sites"
@@ -124,6 +124,16 @@ api_decisions:
   - decision: "Direct calls for ownership-clear writes; signals for multi-subscriber events"
     rationale: "Avoids both over-coupling (Alternative B) and unnecessary indirection (Alternative A, central EventBus)"
     source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+    referenced_by: []
+
+  - decision: "Action UI is 3 sibling Control scripts (ResourceHud, ActionGrid, RunningActionOverlay) under one root ActionScreen, each calling ResourceManager/ActionSystem directly — no central UI event bus, no mediating presenter layer"
+    rationale: "Each zone has a different update cadence per action-ui.md (event-driven HUD, event-driven Grid, per-frame Overlay); per-zone direct calls keep each script scoped to its own GDD zone without introducing indirection this project's scale (1 screen, 3 zones, 2 Autoload dependencies) doesn't need"
+    source: docs/architecture/adr-0007-action-ui-scene-structure-autoload-binding.md
+    referenced_by: []
+
+  - decision: "RunningActionOverlay is the sole _process()-using zone in Action UI, gated by set_process(bool) toggled on ActionSystem.action_completed, with an explicit initial-state check in _ready() (Control nodes process by default)"
+    rationale: "Keeps per-frame UI work at zero cost while idle; without the explicit _ready() check, the overlay would poll needlessly from scene load until the first completion event ever fires"
+    source: docs/architecture/adr-0007-action-ui-scene-structure-autoload-binding.md
     referenced_by: []
 
 forbidden_patterns:
