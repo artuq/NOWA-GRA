@@ -48,6 +48,8 @@ In `_ready()`: connect to `ResourceManager.resource_changed(name: StringName, ne
 
 For the Morale band label: derive the band (High ≥70 / Normal 40-69 / Low 15-39 / Critical 0-14) using the same boundary values `ResourceFormulas.action_effectiveness_multiplier()` already encodes (`E_FULL_THRESHOLD`, `E_HIGH_THRESHOLD`, `E_LOW_THRESHOLD` constants) — do not hardcode duplicate boundary numbers in this UI script; reference the existing constants from `ResourceFormulas` directly to avoid drift between the formula's bands and the HUD's displayed band.
 
+**Performance**: signal-driven, O(1) work per `resource_changed` emission (one label update) — no per-frame cost, unlike Story 004's `RunningActionOverlay` which is the only zone using `_process()`.
+
 ---
 
 ## Out of Scope
