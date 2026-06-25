@@ -70,6 +70,24 @@ interfaces:
     source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
     referenced_by: [docs/architecture/adr-0007-action-ui-scene-structure-autoload-binding.md]
 
+  - name: action_started
+    signature: "action_started(action_id: StringName)"
+    type: signal
+    emitter: ActionSystem
+    subscribers: [RunningActionOverlay]
+    note: "Emitted on a successful start_action() only; added by ADR-0007's work for RunningActionOverlay"
+    source: docs/architecture/adr-0007-action-ui-scene-structure-autoload-binding.md
+    referenced_by: []
+
+  - name: card_presented
+    signature: "card_presented(card: Dictionary)"
+    type: signal
+    emitter: DecisionCardSystem
+    subscribers: [CardScreen]
+    note: "Emitted by present_next_card() when state becomes PRESENTING; the only signal on DecisionCardSystem. Card UI's entry trigger (ADR-0008), proposed"
+    source: docs/architecture/adr-0008-card-ui-modal-swipe-integration.md
+    referenced_by: []
+
 api_decisions:
   - decision: "ResourceFormulas (res://src/core/resource_formulas.gd, class_name ResourceFormulas) is a stateless static-method utility class shared between live-play (ActionSystem) and offline simulation (OfflineProgressSystem) call sites"
     rationale: "Guarantees online/offline formula consistency by construction — one implementation, two call sites, no risk of drift"
@@ -134,6 +152,16 @@ api_decisions:
   - decision: "RunningActionOverlay is the sole _process()-using zone in Action UI, gated by set_process(bool) toggled on ActionSystem.action_completed, with an explicit initial-state check in _ready() (Control nodes process by default)"
     rationale: "Keeps per-frame UI work at zero cost while idle; without the explicit _ready() check, the overlay would poll needlessly from scene load until the first completion event ever fires"
     source: docs/architecture/adr-0007-action-ui-scene-structure-autoload-binding.md
+    referenced_by: []
+
+  - decision: "Card UI is a full-screen modal Control (CardScreen), the top sibling under ActionScreen, mouse_filter=STOP + dimming backdrop while shown, visible=false when idle -- blocks the Action UI zones beneath only while a card is active (ADR-0008, proposed)"
+    rationale: "Topmost full-rect STOP Control consumes the touch so sibling zones beneath never receive it; visible=false fully releases input when idle, no per-state mouse_filter management. Modal-over-screen, not a scene swap (keeps Action UI's live state beneath, per card-ui.md)"
+    source: docs/architecture/adr-0008-card-ui-modal-swipe-integration.md
+    referenced_by: []
+
+  - decision: "CardSwipeMath (res://src/ui/card_swipe_math.gd, class_name CardSwipeMath) is a stateless static utility holding the swipe rotation + commitment-threshold formulas; the gesture state machine + Tween + single-touch index latch live in card_screen.gd (ADR-0008, proposed)"
+    rationale: "Same precedent as ResourceFormulas/ActionUIFormatting -- pure math is headlessly unit-testable against the GDD's exact numeric ACs, independent of any gesture/scene; only the stateful state machine needs scene_runner + simulated touch"
+    source: docs/architecture/adr-0008-card-ui-modal-swipe-integration.md
     referenced_by: []
 
 forbidden_patterns:
