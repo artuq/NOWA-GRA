@@ -44,7 +44,7 @@ func test_action_started_shows_overlay_and_enables_process() -> void:
 
 	assert_bool(overlay.visible).is_true()
 	assert_bool(overlay.is_processing()).is_true()
-	assert_str((overlay.find_child("ActionNameLabel") as Label).text).is_equal("zrob_drame")
+	assert_str((overlay.find_child("ActionNameLabel") as Label).text).is_equal("Make Drama")
 
 ## AC: progress bar fill matches ActionSystem.get_progress() while running.
 func test_progress_bar_fill_matches_get_progress_while_running() -> void:

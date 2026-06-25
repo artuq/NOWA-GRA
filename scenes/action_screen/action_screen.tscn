@@ -1,8 +1,13 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/action_screen/resource_hud.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/action_grid.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/running_action_overlay.tscn" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_avatar.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_settings.png" id="5"]
+
+[sub_resource type="StyleBoxFlat" id="AppBackground"]
+bg_color = Color(0.082353, 0.082353, 0.101961, 1)
 
 [node name="ActionScreen" type="Control"]
 layout_mode = 3
@@ -12,11 +17,70 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ResourceHud" parent="." instance=ExtResource("1")]
+[node name="Background" type="Panel" parent="."]
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("AppBackground")
 
-[node name="ActionGrid" parent="." instance=ExtResource("2")]
+[node name="MainLayout" type="VBoxContainer" parent="."]
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 28.0
+offset_right = -16.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="TopBar" type="HBoxContainer" parent="MainLayout"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Avatar" type="TextureRect" parent="MainLayout/TopBar"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="TopBarSpacer" type="Control" parent="MainLayout/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SettingsButton" type="Button" parent="MainLayout/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+size_flags_vertical = 4
+flat = true
+icon = ExtResource("5")
+expand_icon = true
+texture_filter = 1
+
+[node name="ResourceHud" parent="MainLayout" instance=ExtResource("1")]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="MiddleSpacer" type="Control" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ActionGrid" parent="MainLayout" instance=ExtResource("2")]
+custom_minimum_size = Vector2(0, 540)
+layout_mode = 2
+size_flags_vertical = 1
 
 [node name="RunningActionOverlay" parent="." instance=ExtResource("3")]
 layout_mode = 1

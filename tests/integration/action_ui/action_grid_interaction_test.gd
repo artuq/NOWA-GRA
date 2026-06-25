@@ -37,15 +37,53 @@ func test_action_grid_renders_six_slots_three_unlocked_three_locked() -> void:
 	assert_int(unlocked_count).is_equal(3)
 	assert_int(locked_count).is_equal(3)
 
-## AC: locked slot shows a generic lock, no number (unlock_threshold is null
-## for all 3 placeholder locked slots in this story's scope).
+## AC: locked slot shows a generic lock icon, no number (unlock_threshold is
+## null for all 3 placeholder locked slots in this story's scope). Icon moved
+## from Button.text to a TextureRect child during the 2026-06-25 redesign.
 func test_locked_slots_show_generic_lock_with_no_number() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 
 	for i in range(4, 7):
+		var icon: TextureRect = grid.find_child("Slot%dIcon" % i) as TextureRect
+		var title: Label = grid.find_child("Slot%dTitle" % i) as Label
+		var stats: Label = grid.find_child("Slot%dStats" % i) as Label
+		assert_object(icon.texture).is_equal(ActionGrid.LOCKED_ICON)
+		assert_str(title.text).is_equal("")
+		assert_str(stats.text).is_equal("")
+
+## Coverage gap closed (flagged by playtest feedback): locked slots must be
+## visually dimmed, not just disabled -- the disabled StyleBox alone reads
+## as too subtle. Verifies the icon's modulate is darkened.
+func test_locked_slot_icons_are_visually_dimmed() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
+	var grid: Node = runner.scene()
+
+	for i in range(4, 7):
+		var icon: TextureRect = grid.find_child("Slot%dIcon" % i) as TextureRect
+		assert_object(icon.modulate).is_equal(ActionGrid.LOCKED_MODULATE)
+
+## Buttons must EXPAND horizontally (so the 2-column grid splits screen width
+## evenly) but only FILL vertically, NOT expand -- vertical expand caused the
+## "skyscraper" buttons in portrait (flagged by playtest 2026-06-25). The grid
+## now sits as a fixed-height block pushed down by a spacer, with compact
+## app-tile-proportioned cards rather than tall stretched ones.
+func test_slot_buttons_expand_horizontally_but_not_vertically() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
+	var grid: Node = runner.scene()
+
+	for i in range(1, 7):
 		var button: Button = grid.find_child("Slot%dButton" % i) as Button
-		assert_str(button.text).is_equal("🔒")
+		assert_int(button.size_flags_horizontal).is_equal(Control.SIZE_EXPAND_FILL)
+		assert_int(button.size_flags_vertical).is_equal(Control.SIZE_FILL)
+
+## Portrait layout: the grid is 2 columns x 3 rows (not 3x2), which fits a
+## phone's narrow vertical screen far better (flagged by playtest 2026-06-25).
+func test_grid_uses_two_columns_for_portrait() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
+	var grid_container: GridContainer = runner.scene().find_child("GridContainer") as GridContainer
+
+	assert_int(grid_container.columns).is_equal(2)
 
 ## AC: idle state -- tapping an unlocked button calls ActionSystem.start_action()
 ## and the action actually starts (current_action_id becomes non-empty).
@@ -94,14 +132,17 @@ func test_action_completed_reenables_unlocked_but_not_locked_slots() -> void:
 	for i in range(4, 7):
 		assert_bool((grid.find_child("Slot%dButton" % i) as Button).disabled).is_true()
 
-## AC: button anatomy -- name, duration, and reward values with explicit
-## sign prefixes, formatted via ActionUIFormatting.format_number().
-func test_button_label_shows_name_duration_and_signed_rewards() -> void:
+## AC: button anatomy -- now split into a primary Title label (action name)
+## and a secondary Stats label (duration + rewards), for typographic hierarchy
+## (Art Director direction 2026-06-25). The title is large/white, the stats
+## small/grey; they're separate nodes, not one \n-joined string.
+func test_button_shows_title_and_stats_as_separate_labels() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
-	var slot2: Button = runner.scene().find_child("Slot2Button") as Button
+	var grid: Node = runner.scene()
 
 	# zrob_drame: 9s, Reach +10, Cringe +20, Morale -3 (per ActionSystem.ACTION_REWARDS)
-	assert_str(slot2.text).is_equal("Zrób dramę\n9s — +10Z, +20C, -3M")
+	assert_str((grid.find_child("Slot2Title") as Label).text).is_equal("Make Drama")
+	assert_str((grid.find_child("Slot2Stats") as Label).text).is_equal("9s — +10R, +20C, -3M")
 
 ## ActionScreen root scene instantiates ActionGrid as a sibling of ResourceHud.
 func test_action_screen_root_instantiates_action_grid_zone() -> void:
@@ -113,24 +154,20 @@ func test_action_screen_root_instantiates_action_grid_zone() -> void:
 	assert_object(grid).is_not_null()
 	assert_object(hud).is_not_null()
 
-## AC (coverage gap closed, flagged by code review): an action name exceeding
-## button width truncates with an ellipsis, button dimensions unchanged.
-## Headless testing cannot inspect actual rendered pixels, so this test
-## verifies the configuration that produces that behavior (clip_text +
-## OVERRUN_TRIM_ELLIPSIS + a fixed custom_minimum_size) is correctly set on
-## every slot button -- the actual glyph-level truncation is then a Godot
-## TextServer guarantee, not something re-verified here. button.text itself
-## is never mutated by clip_text (it's a rendering-only clip), so dimension
-## stability is implied by custom_minimum_size never changing post-_ready().
-func test_all_slot_buttons_configured_for_ellipsis_truncation_with_stable_size() -> void:
+## AC (revised by playtest feedback 2026-06-25): a long action title should
+## WRAP onto multiple lines rather than truncate with an ellipsis -- the
+## buttons are large icon-first cards with room for wrapped text. The Title
+## label uses word-smart autowrap; the button keeps a sane custom_minimum_size
+## floor so it never collapses below readability.
+func test_title_labels_wrap_text_and_buttons_have_minimum_size() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 
 	for i in range(1, 7):
 		var button: Button = grid.find_child("Slot%dButton" % i) as Button
-		assert_bool(button.clip_text).is_true()
-		assert_int(button.text_overrun_behavior).is_equal(TextServer.OVERRUN_TRIM_ELLIPSIS)
-		assert_vector(button.custom_minimum_size).is_equal(Vector2(160, 100))
+		var title: Label = grid.find_child("Slot%dTitle" % i) as Label
+		assert_int(title.autowrap_mode).is_equal(TextServer.AUTOWRAP_WORD_SMART)
+		assert_vector(button.custom_minimum_size).is_equal(Vector2(100, 160))
 
 ## AC (coverage gap closed, flagged by code review): start_action() returning
 ## false (e.g. an action already running) must not disable buttons a second

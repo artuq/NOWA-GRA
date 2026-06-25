@@ -4,6 +4,13 @@
 ## `ActionSystem.start_action()`, and disables/re-enables all 6 buttons on
 ## action start/completion.
 ##
+## Redesigned 2026-06-25 per Art Director review: icon-first buttons (real
+## pixel-art icon + small name/duration/reward caption beneath), rounded
+## light-mode styling (design/art/art-bible-stub.md), replacing the original
+## plain-text dark buttons. Icons are free, CC BY 4.0-licensed placeholders
+## from "Icons Essential" v1.2 (see assets/ui/icons/ATTRIBUTION.md) -- swap
+## for bespoke pixel art later without redesigning this layout.
+##
 ## No `_process()` in this zone -- RunningActionOverlay is the sole
 ## `_process()`-using zone, per ADR-0007.
 ##
@@ -14,22 +21,35 @@
 class_name ActionGrid
 extends Control
 
-## Display names for the 3 currently-unlocked actions, keyed by action_id.
-## TECH DEBT (same class as ActionSystem's ACTION_DURATIONS/ACTION_REWARDS,
-## see that file's header comment): hardcoded here because no localization
-## system or external display-name registry exists yet. Candidate for
-## extraction to a shared data resource once one exists.
-const ACTION_DISPLAY_NAMES: Dictionary[StringName, String] = {
-	&"nagraj_vloga": "Nagraj vloga",
-	&"zrob_drame": "Zrób dramę",
-	&"przeprosiny": "Przeproś w internecie",
-}
-
 ## The 3 unlocked action slots, in display order.
 const UNLOCKED_ACTION_IDS: Array[StringName] = [&"nagraj_vloga", &"zrob_drame", &"przeprosiny"]
 
+## Icon textures for each action, keyed by action_id. Free CC BY 4.0 assets
+## (see assets/ui/icons/ATTRIBUTION.md) -- swap for bespoke pixel art later
+## without redesigning this layout (Art Director direction, 2026-06-25).
+const ACTION_ICONS: Dictionary[StringName, Texture2D] = {
+	&"nagraj_vloga": preload("res://assets/ui/icons/icon_action_vlog.png"),
+	&"zrob_drame": preload("res://assets/ui/icons/icon_action_drama.png"),
+	&"przeprosiny": preload("res://assets/ui/icons/icon_action_apology.png"),
+}
+
+const LOCKED_ICON: Texture2D = preload("res://assets/ui/icons/icon_locked.png")
+
 @onready var _slot_buttons: Array[Button] = [
 	%Slot1Button, %Slot2Button, %Slot3Button, %Slot4Button, %Slot5Button, %Slot6Button,
+]
+@onready var _slot_icons: Array[TextureRect] = [
+	%Slot1Icon, %Slot2Icon, %Slot3Icon, %Slot4Icon, %Slot5Icon, %Slot6Icon,
+]
+## Action title (display name) -- the primary, larger, white label.
+@onready var _slot_titles: Array[Label] = [
+	%Slot1Title, %Slot2Title, %Slot3Title, %Slot4Title, %Slot5Title, %Slot6Title,
+]
+## Action stats (duration + rewards) -- the secondary, smaller, grey label,
+## visually subordinate to the title (typographic hierarchy, Art Director
+## direction 2026-06-25).
+@onready var _slot_stats: Array[Label] = [
+	%Slot1Stats, %Slot2Stats, %Slot3Stats, %Slot4Stats, %Slot5Stats, %Slot6Stats,
 ]
 
 func _ready() -> void:
@@ -38,42 +58,53 @@ func _ready() -> void:
 	_configure_locked_slots()
 
 
-## Wires the first 3 slots to the 3 currently-unlocked actions: label text,
-## enabled state, and the pressed -> start_action() connection.
+## Wires the first 3 slots to the 3 currently-unlocked actions: icon, title +
+## stats text, enabled state, and the pressed -> start_action() connection.
 func _configure_unlocked_slots() -> void:
 	for i in UNLOCKED_ACTION_IDS.size():
 		var action_id: StringName = UNLOCKED_ACTION_IDS[i]
-		var button: Button = _slot_buttons[i]
-		button.text = _button_label(action_id)
-		button.disabled = false
-		button.pressed.connect(_on_unlocked_button_pressed.bind(action_id))
+		_slot_icons[i].texture = ACTION_ICONS.get(action_id)
+		_slot_titles[i].text = ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+		_slot_stats[i].text = _stats_text(action_id)
+		_slot_buttons[i].disabled = false
+		_slot_buttons[i].pressed.connect(_on_unlocked_button_pressed.bind(action_id))
 
+
+## Visual dimming for locked slots -- distinct from the `disabled` StyleBox
+## (which only changes the button's background/border), this mutes the icon
+## itself so a locked slot reads as visually muted, not just inert. Uses
+## reduced alpha (a "ghosted" look) rather than darkening toward black --
+## against this dark-mode UI (2026-06-25 revision), darkening an already-dark
+## icon would make it nearly invisible; translucency reads as "inactive"
+## clearly on both light and dark surfaces.
+const LOCKED_MODULATE: Color = Color(1.0, 1.0, 1.0, 0.45)
 
 ## Wires the last 3 slots as locked, generic placeholders -- no source of
 ## truth exists yet for real unlock_threshold values (per this story's Out
 ## of Scope), so these are disabled-by-default placeholders, never tappable.
 func _configure_locked_slots() -> void:
 	for i in range(UNLOCKED_ACTION_IDS.size(), _slot_buttons.size()):
-		var button: Button = _slot_buttons[i]
-		button.text = "🔒"
-		button.disabled = true
+		_slot_icons[i].texture = LOCKED_ICON
+		_slot_icons[i].modulate = LOCKED_MODULATE
+		_slot_titles[i].text = ""
+		_slot_stats[i].text = ""
+		_slot_buttons[i].disabled = true
 		# No pressed connection at all -- a disabled button never fires
 		# pressed, so no redundant guard is needed in a handler.
 
 
-## Builds the button label per action-ui.md's anatomy rule: name, duration,
-## and reward values, e.g. "Zrób dramę\n9s — +10Z, +20C, -3M". Reward values
-## are formatted via ActionUIFormatting.format_number(), with an explicit
-## "+" prefix added for non-negative deltas (format_number only prefixes
-## "-" for negative values, per its own contract).
-func _button_label(action_id: StringName) -> String:
-	var name: String = ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+## Builds the secondary stats line per action-ui.md's anatomy rule: duration
+## and reward values, e.g. "9s — +10R, +20C, -3M" -- shown beneath the title
+## in a smaller, greyed label (the title/name is set separately as the primary
+## label). Reward values are formatted via ActionUIFormatting.format_number(),
+## with an explicit "+" prefix added for non-negative deltas.
+func _stats_text(action_id: StringName) -> String:
 	var duration: float = ActionSystem.ACTION_DURATIONS[action_id]
 	var rewards: Dictionary = ActionSystem.ACTION_REWARDS[action_id]
 	var reach_str: String = _signed_number(rewards[&"Reach"])
 	var cringe_str: String = _signed_number(rewards[&"Cringe"])
 	var morale_str: String = _signed_number(rewards[&"Morale"])
-	return "%s\n%ds — %sZ, %sC, %sM" % [name, int(duration), reach_str, cringe_str, morale_str]
+	return "%ds — %sR, %sC, %sM" % [int(duration), reach_str, cringe_str, morale_str]
 
 
 ## Formats [param value] via ActionUIFormatting.format_number(), adding an

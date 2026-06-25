@@ -1,51 +1,226 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/ui/resource_hud.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_reach.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_cringe.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_haters.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_morale.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_sponsors.png" id="6"]
+
+[sub_resource type="StyleBoxFlat" id="PillReach"]
+bg_color = Color(0.168627, 0.168627, 0.211765, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.290196, 0.541176, 0.568627, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="PillCringe"]
+bg_color = Color(0.168627, 0.168627, 0.211765, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.603922, 0.419608, 0.572549, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="PillHaters"]
+bg_color = Color(0.168627, 0.168627, 0.211765, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.435294, 0.384314, 0.658824, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="PillMorale"]
+bg_color = Color(0.168627, 0.168627, 0.211765, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.658824, 0.560784, 0.360784, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="PillSponsors"]
+bg_color = Color(0.168627, 0.168627, 0.211765, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.360784, 0.560784, 0.407843, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
 
 [node name="ResourceHud" type="Control"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 48.0
+offset_bottom = 56.0
 grow_horizontal = 2
 script = ExtResource("1")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="HBoxContainer" type="HFlowContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 12
 alignment = 1
 
-[node name="ReachLabel" type="Label" parent="HBoxContainer"]
+[node name="ReachPill" type="PanelContainer" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.168627, 0.701961, 0.752941, 1)
+theme_override_styles/panel = SubResource("PillReach")
+
+[node name="ReachBox" type="HBoxContainer" parent="HBoxContainer/ReachPill"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ReachIcon" type="TextureRect" parent="HBoxContainer/ReachPill/ReachBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(24, 24)
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="ReachValueLabel" type="Label" parent="HBoxContainer/ReachPill/ReachBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_font_sizes/font_size = 19
 text = "Reach: 0"
 
-[node name="CringeLabel" type="Label" parent="HBoxContainer"]
+[node name="CringePill" type="PanelContainer" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.768627, 0.309804, 0.690196, 1)
+theme_override_styles/panel = SubResource("PillCringe")
+
+[node name="CringeBox" type="HBoxContainer" parent="HBoxContainer/CringePill"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CringeIcon" type="TextureRect" parent="HBoxContainer/CringePill/CringeBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(24, 24)
+texture = ExtResource("3")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="CringeValueLabel" type="Label" parent="HBoxContainer/CringePill/CringeBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_font_sizes/font_size = 19
 text = "Cringe: 0"
 
-[node name="HatersLabel" type="Label" parent="HBoxContainer"]
+[node name="HatersPill" type="PanelContainer" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.478431, 0.356863, 0.878431, 1)
+theme_override_styles/panel = SubResource("PillHaters")
+
+[node name="HatersBox" type="HBoxContainer" parent="HBoxContainer/HatersPill"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HatersIcon" type="TextureRect" parent="HBoxContainer/HatersPill/HatersBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(24, 24)
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="HatersValueLabel" type="Label" parent="HBoxContainer/HatersPill/HatersBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_font_sizes/font_size = 19
 text = "Haters: 0"
 
-[node name="MoraleLabel" type="Label" parent="HBoxContainer"]
+[node name="MoralePill" type="PanelContainer" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.878431, 0.650980, 0.227451, 1)
+theme_override_styles/panel = SubResource("PillMorale")
+
+[node name="MoraleBox" type="HBoxContainer" parent="HBoxContainer/MoralePill"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MoraleIcon" type="TextureRect" parent="HBoxContainer/MoralePill/MoraleBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(24, 24)
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="MoraleValueLabel" type="Label" parent="HBoxContainer/MoralePill/MoraleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_font_sizes/font_size = 19
 text = "Morale: High"
 
-[node name="SponsorsLabel" type="Label" parent="HBoxContainer"]
+[node name="SponsorsPill" type="PanelContainer" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.247059, 0.658824, 0.352941, 1)
+theme_override_styles/panel = SubResource("PillSponsors")
+
+[node name="SponsorsBox" type="HBoxContainer" parent="HBoxContainer/SponsorsPill"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SponsorsIcon" type="TextureRect" parent="HBoxContainer/SponsorsPill/SponsorsBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(24, 24)
+texture = ExtResource("6")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="SponsorsValueLabel" type="Label" parent="HBoxContainer/SponsorsPill/SponsorsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_font_sizes/font_size = 19
 text = "Sponsors: 0"

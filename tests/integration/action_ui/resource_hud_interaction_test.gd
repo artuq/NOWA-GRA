@@ -40,18 +40,18 @@ func test_resource_hud_displays_all_five_resources_on_load() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/resource_hud.tscn")
 	var hud: Node = runner.scene()
 
-	assert_str((hud.find_child("ReachLabel") as Label).text).is_equal("Reach: 28.4K")
-	assert_str((hud.find_child("CringeLabel") as Label).text).is_equal("Cringe: 50")
-	assert_str((hud.find_child("HatersLabel") as Label).text).is_equal("Haters: 12")
-	assert_str((hud.find_child("MoraleLabel") as Label).text).is_equal("Morale: High")
-	assert_str((hud.find_child("SponsorsLabel") as Label).text).is_equal("Sponsors: 3")
+	assert_str((hud.find_child("ReachValueLabel") as Label).text).is_equal("Reach: 28.4K")
+	assert_str((hud.find_child("CringeValueLabel") as Label).text).is_equal("Cringe: 50")
+	assert_str((hud.find_child("HatersValueLabel") as Label).text).is_equal("Haters: 12")
+	assert_str((hud.find_child("MoraleValueLabel") as Label).text).is_equal("Morale: High")
+	assert_str((hud.find_child("SponsorsValueLabel") as Label).text).is_equal("Sponsors: 3")
 
 ## AC: Morale shows a band label, not raw percentage -- all 4 bands,
 ## including the inclusive-lower-bound boundaries (exactly 70, 40, 15).
 func test_resource_hud_morale_band_label_at_all_boundaries() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/resource_hud.tscn")
 	var hud: Node = runner.scene()
-	var morale_label: Label = hud.find_child("MoraleLabel") as Label
+	var morale_label: Label = hud.find_child("MoraleValueLabel") as Label
 
 	var cases: Array[Array] = [
 		[90.0, "Morale: High"],
@@ -74,8 +74,8 @@ func test_resource_hud_morale_band_label_at_all_boundaries() -> void:
 func test_resource_hud_updates_only_changed_label_on_signal() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/resource_hud.tscn")
 	var hud: Node = runner.scene()
-	var reach_label: Label = hud.find_child("ReachLabel") as Label
-	var cringe_label: Label = hud.find_child("CringeLabel") as Label
+	var reach_label: Label = hud.find_child("ReachValueLabel") as Label
+	var cringe_label: Label = hud.find_child("CringeValueLabel") as Label
 	var cringe_before: String = cringe_label.text
 
 	ResourceManager.apply_delta({&"Reach": 100.0})
@@ -91,7 +91,7 @@ func test_action_screen_root_instantiates_resource_hud_zone() -> void:
 	var hud: Node = root.find_child("ResourceHud", true, false)
 
 	assert_object(hud).is_not_null()
-	assert_object(hud.find_child("ReachLabel")).is_not_null()
+	assert_object(hud.find_child("ReachValueLabel")).is_not_null()
 
 ## Coverage gap closed (flagged by code review): a freed ResourceHud must not
 ## keep reacting to ResourceManager.resource_changed -- Godot auto-disconnects
@@ -112,4 +112,4 @@ func test_freed_resource_hud_does_not_react_to_later_resource_changes() -> void:
 
 	var second_runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/resource_hud.tscn")
 	var second_hud: Node = second_runner.scene()
-	assert_object(second_hud.find_child("ReachLabel")).is_not_null()
+	assert_object(second_hud.find_child("ReachValueLabel")).is_not_null()

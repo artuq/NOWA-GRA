@@ -27,7 +27,9 @@ func _ready() -> void:
 	set_process(is_running)
 	visible = is_running
 	if is_running:
-		_action_name_label.text = String(ActionSystem.current_action_id)
+		_action_name_label.text = ActionSystem.ACTION_DISPLAY_NAMES.get(
+			ActionSystem.current_action_id, String(ActionSystem.current_action_id)
+		)
 
 
 func _process(_delta: float) -> void:
@@ -42,7 +44,11 @@ func _process(_delta: float) -> void:
 
 
 func _on_action_started(action_id: StringName) -> void:
-	_action_name_label.text = String(action_id)
+	# Fixed a real bug found via user playtesting: this previously showed the
+	# raw action_id (e.g. "zrob_drame") instead of a display name.
+	# ACTION_DISPLAY_NAMES now lives on ActionSystem (not ActionGrid) so this
+	# zone can use it without cross-zone coupling (ADR-0007).
+	_action_name_label.text = ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
 	_progress_bar.value = 0.0
 	visible = true
 	set_process(true)

@@ -52,6 +52,19 @@ const ACTION_REWARDS: Dictionary[StringName, Dictionary] = {
 	&"przeprosiny": {&"Reach": 6.0, &"Cringe": -15.0, &"Morale": 5.0},
 }
 
+## English UI display names, keyed by action_id. The game's UI language is
+## English (user decision, 2026-06-25); action_id keys themselves stay as-is
+## (internal identifiers, not player-facing). Moved here from ActionGrid
+## (Action UI epic, Story 003) so it's accessible to any Action UI zone
+## without cross-zone coupling (ADR-0007) -- RunningActionOverlay needed this
+## too and previously fell back to displaying the raw action_id, a real bug
+## found via user playtesting.
+const ACTION_DISPLAY_NAMES: Dictionary[StringName, String] = {
+	&"nagraj_vloga": "Record a Vlog",
+	&"zrob_drame": "Make Drama",
+	&"przeprosiny": "Apologize Online",
+}
+
 ## The currently running action's id, or `&""` when idle. This is the sole
 ## state field gating concurrency — `start_action()` is the only writer.
 var current_action_id: StringName = &""

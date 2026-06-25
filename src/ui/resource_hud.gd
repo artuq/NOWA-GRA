@@ -1,7 +1,13 @@
 ## ResourceHud is one of 3 sibling Control-node zones under the ActionScreen
-## root scene (ADR-0007). Displays all 5 resources, reacting to
-## ResourceManager.resource_changed -- never polls, never reads all 5
-## resources every frame.
+## root scene (ADR-0007). Displays all 5 resources as rounded "pill" panels
+## (icon + value), reacting to ResourceManager.resource_changed -- never
+## polls, never reads all 5 resources every frame.
+##
+## Redesigned 2026-06-25 per Art Director review: light-mode "Gamified
+## Analytics" dashboard aesthetic (design/art/art-bible-stub.md), replacing
+## the initial dark/flat/text-only HUD. Icons are emoji placeholders until
+## real pixel-art sprites exist -- swapping them later does not require
+## redesigning this layout.
 ##
 ## Morale is shown as its band label (High/Normal/Low/Critical), not the raw
 ## percentage, per action-ui.md's Resource HUD rule. Band boundaries are read
@@ -10,23 +16,29 @@
 ## drift between the formula's bands and this HUD's displayed band.
 ##
 ## Performance: signal-driven, O(1) work per resource_changed emission (one
-## label update) -- no per-frame cost, unlike RunningActionOverlay (the only
-## zone using _process(), per ADR-0007).
+## label update + one Tween) -- no per-frame cost, unlike RunningActionOverlay
+## (the only zone using _process(), per ADR-0007).
 ##
 ## Usage: instanced as a child of ActionScreen (res://scenes/action_screen/action_screen.tscn).
 class_name ResourceHud
 extends Control
 
-@onready var _reach_label: Label = %ReachLabel
-@onready var _cringe_label: Label = %CringeLabel
-@onready var _haters_label: Label = %HatersLabel
-@onready var _morale_label: Label = %MoraleLabel
-@onready var _sponsors_label: Label = %SponsorsLabel
+@onready var _reach_label: Label = %ReachValueLabel
+@onready var _cringe_label: Label = %CringeValueLabel
+@onready var _haters_label: Label = %HatersValueLabel
+@onready var _morale_label: Label = %MoraleValueLabel
+@onready var _sponsors_label: Label = %SponsorsValueLabel
+
+@onready var _reach_pill: Control = %ReachPill
+@onready var _cringe_pill: Control = %CringePill
+@onready var _haters_pill: Control = %HatersPill
+@onready var _morale_pill: Control = %MoralePill
+@onready var _sponsors_pill: Control = %SponsorsPill
 
 func _ready() -> void:
 	ResourceManager.resource_changed.connect(_on_resource_changed)
 	# Populate initial state -- resource_changed only fires on subsequent
-	# changes, not on this HUD's own _ready().
+	# changes, not on this HUD's own _ready(). No pop animation on initial load.
 	_update_label(&"Reach", ResourceManager.get_resource(&"Reach"))
 	_update_label(&"Cringe", ResourceManager.get_resource(&"Cringe"))
 	_update_label(&"Haters", ResourceManager.get_resource(&"Haters"))
@@ -36,15 +48,9 @@ func _ready() -> void:
 
 func _on_resource_changed(name: StringName, new_value: float, _old_value: float) -> void:
 	_update_label(name, new_value)
+	_pop(_pill_for(name))
 
 
-## Fixed a real readability defect (caught by user testing the actual scene,
-## 2026-06-25): bare formatted numbers with no identifying label are
-## unreadable when shown side by side ("19 20 0 Critical 0" -- no way to
-## tell which value is which resource). Each label now shows its English
-## display name as a prefix -- the game's UI language is English (per user
-## correction 2026-06-25); the existing Polish action/card content elsewhere
-## in the project is a separate, deliberate follow-up, not addressed here.
 func _update_label(name: StringName, value: float) -> void:
 	match name:
 		&"Reach":
@@ -57,6 +63,36 @@ func _update_label(name: StringName, value: float) -> void:
 			_morale_label.text = "Morale: %s" % _morale_band_label(value)
 		&"Sponsors":
 			_sponsors_label.text = "Sponsors: %s" % ActionUIFormatting.format_number(value)
+
+
+func _pill_for(name: StringName) -> Control:
+	match name:
+		&"Reach":
+			return _reach_pill
+		&"Cringe":
+			return _cringe_pill
+		&"Haters":
+			return _haters_pill
+		&"Morale":
+			return _morale_pill
+		&"Sponsors":
+			return _sponsors_pill
+		_:
+			return null
+
+
+## Brief scale-punch (~1.0 -> 1.3 -> 1.0, ~200ms) on the pill when its value
+## changes -- a small, locally-scoped piece of the eventual Juice/Feedback
+## System (Vertical Slice tier), not a substitute for it. Sets pivot_offset
+## to the pill's own size/2 each call so the punch scales from its center
+## regardless of layout position.
+func _pop(pill: Control) -> void:
+	if pill == null:
+		return
+	pill.pivot_offset = pill.size / 2.0
+	var tween: Tween = create_tween()
+	tween.tween_property(pill, "scale", Vector2(1.3, 1.3), 0.1)
+	tween.tween_property(pill, "scale", Vector2(1.0, 1.0), 0.1)
 
 
 ## Maps a raw Morale value to its band label, per resource-system.md's

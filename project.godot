@@ -14,9 +14,18 @@ config/name="King of Cringe"
 run/main_scene="res://scenes/action_screen/action_screen.tscn"
 config/features=PackedStringArray("4.6")
 
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/handheld/orientation=1
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [gui]
 
-theme/custom="res://assets/ui/minimal_ui4/MinimalUI.tres"
+theme/custom_font="res://assets/ui/fonts/VT323-Regular.ttf"
+theme/default_font_size=20
 
 [autoload]
 
