@@ -19,11 +19,9 @@
 #
 # Sprint 3 (History Flag System + Save/Persistence System) is fully closed —
 # record preserved in production/sprints/sprint-3.md, qa-signoff-sprint-3-2026-06-24.md.
-# No retrospective was written for Sprint 3 (skipped in favor of running /gate-check
-# directly) — flagged as a minor gap by the Sprint 4 producer feasibility gate.
 # Production → Polish gate-check ran 2026-06-24: verdict FAIL, all 4 directors
 # NOT READY (no scenes/UI, zero playtests, art bible incomplete). Project remains
-# in Production stage; Sprint 4 targets the next increment toward first playable.
+# in Production stage.
 #
 # Sprint 4 (Card Content Database + Decision Card System) is fully closed —
 # record preserved in production/sprints/sprint-4.md, retro-sprint-4-2026-06-24.md,
@@ -32,17 +30,35 @@
 # Sprint 5 (Doc-sync + Offline Progress System) is fully closed — record
 # preserved in production/sprints/sprint-5.md, retro-sprint-5-2026-06-24.md,
 # qa-signoff-sprint-5-2026-06-24.md. Both Must Have stories marked done.
-# Tech debt entry #1 (3-sprint-stale doc-sync) finally closed this sprint.
-# review-mode.txt switched from full to lean mid-sprint (cost reduction).
+#
+# Sprint 6 (Action UI epic, 4 stories) is fully closed — record preserved in
+# production/sprints/sprint-6.md, retro-sprint-6-2026-06-25.md,
+# qa-signoff-sprint-6-2026-06-25.md. All 4 Must Have stories marked done.
+# First scene/UI work in the project. Post-close fixes: Resource HUD English
+# labels + art-bible color tokens, MinimalUI4 theme applied project-wide.
+# Retro flagged: Card UI epic doesn't exist yet — DecisionCardSystem's
+# backend has been complete since Sprint 4 but nothing in any UI consumes
+# it, so cards never appear in actual play. Sprint 7 targets this directly.
 
-sprint: 6
-goal: "Build the first real playable surface: minimal Boot scene + Action UI."
-start: "2026-07-14"
-end: "2026-07-18"
-generated: "2026-06-24"
-updated: "2026-06-24"
+sprint: 7
+goal: "Build Card UI — make decision cards actually visible and playable."
+start: "2026-07-21"
+end: "2026-07-25"
+generated: "2026-06-25"
+updated: "2026-06-25"
 
 stories:
+  - id: "7-1"
+    name: "Card UI — epic-level (provisional, pending /create-stories breakdown)"
+    file: "design/gdd/card-ui.md"
+    priority: must-have
+    status: backlog
+    owner: ""
+    estimate_days: 2.5
+    blocker: "Epic-level estimate, pending /create-epics + /create-stories breakdown before treated as committed; no epic exists yet"
+    completed: ""
+
+_sprint_6_archive:
   - id: "6-1a"
     name: "Action UI — Number Formatting & Progress Bar Math (Story 001)"
     file: "production/epics/action-ui/story-001-number-formatting-progress-bar-math.md"
@@ -101,46 +117,5 @@ _sprint_5_archive:
     status: done
     owner: ""
     estimate_days: 2.0
-    blocker: ""
-    completed: "2026-06-24"
-
-_sprint_4_archive:
-  - id: "4-1"
-    name: "Card Content Database — static CardContentDatabase Autoload"
-    file: "production/epics/card-content-database/story-001-mvp-card-content.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 1.0
-    blocker: ""
-    completed: "2026-06-24"
-
-  - id: "4-2a"
-    name: "Decision Card System — Cooldown Mechanism & Pool Eligibility (Story 001)"
-    file: "production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.75
-    blocker: ""
-    completed: "2026-06-24"
-
-  - id: "4-2b"
-    name: "Decision Card System — Weighted Card Selection Formula (Story 002)"
-    file: "production/epics/decision-card-system/story-002-weighted-selection.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.75
-    blocker: ""
-    completed: "2026-06-24"
-
-  - id: "4-2c"
-    name: "Decision Card System — Card Presentation & Resolution (Story 003)"
-    file: "production/epics/decision-card-system/story-003-presentation-resolution.md"
-    priority: must-have
-    status: done
-    owner: ""
-    estimate_days: 0.5
     blocker: ""
     completed: "2026-06-24"
