@@ -1,7 +1,7 @@
 # ADR-0008: Card UI Modal, Swipe Gesture, and Decision Card System Integration
 
 ## Status
-Proposed
+Accepted (2026-06-26, following independent `/architecture-review` in a separate session — verdict: no conflicts, no engine issues, all pre-gate artifacts present; the review's only flagged item was this ADR's own pending acceptance, now resolved. Dependencies ADR-0001 and ADR-0007 are both Accepted.)
 
 ## Date
 2026-06-25

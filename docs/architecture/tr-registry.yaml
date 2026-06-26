@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-06-24
-version: 2
+last_updated: 2026-06-25
+version: 3
 
 requirements:
   - id: TR-res-001
@@ -94,9 +94,9 @@ requirements:
     system: card-ui
     gdd: design/gdd/card-ui.md
     requirement: Swipe/drag modal card presentation with commitment threshold
-    adr: []
-    status: gap
-    note: Deferred by architecture.md — straightforward Control-node pattern, low risk
+    adr: [ADR-0008]
+    status: covered
+    note: Covered 2026-06-25 by ADR-0008 (Card UI modal + swipe + card_presented signal). ADR still Proposed — Card UI epic gated until Accepted.
 
   - id: TR-ors-001
     system: offline-report-screen
