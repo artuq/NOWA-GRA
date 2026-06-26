@@ -57,6 +57,8 @@ func test_commit_right_resolves_option_b() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
 	screen.resolution_beat_seconds = 0.05
+	screen.resolution_beat_per_char = 0.0
+	screen.resolution_beat_milestone_bonus = 0.0
 	await runner.simulate_frames(2)
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
@@ -83,6 +85,8 @@ func test_commit_left_resolves_option_a() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
 	screen.resolution_beat_seconds = 0.05
+	screen.resolution_beat_per_char = 0.0
+	screen.resolution_beat_milestone_bonus = 0.0
 	await runner.simulate_frames(2)
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 

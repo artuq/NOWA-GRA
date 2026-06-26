@@ -189,7 +189,7 @@ This GDD has no original game-design math — display-derivation rules only, sam
 
 **Not testable against this GDD alone:**
 - Whether a new card-trigger is suppressed while Card UI is non-`hidden` — depends on Decision Card System's single-concurrency guarantee, not this GDD.
-- Exact resolution beat duration for the `resolving` state — intensity is data-driven from Card Content Database; this GDD doesn't define a fallback duration.
+- ~~Exact resolution beat duration for the `resolving` state~~ — **RESOLVED 2026-06-26**: dynamic duration in `card_screen.gd` = `1.5s base + reaction.length()*0.04s reading time + 1.0s bonus when the chosen option sets a milestone` (heavier beat for permanent decisions, per the GDD requirement). Gives ~2.3-3.5s normal, +1s milestone — within the 2-2.5s+ toast-readability guideline. Knobs are tunable members.
 - The triggering event/source for "a card is triggered" (AC for entering) — depends on undesigned Main Navigation/Screen Flow or the calling system's contract.
 
 ## Open Questions

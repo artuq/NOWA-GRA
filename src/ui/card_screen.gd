@@ -38,11 +38,20 @@ var _card: Dictionary = {}
 @onready var _option_b_label: Label = %OptionBLabel
 @onready var _card_node: Control = %Card
 
-## Resolution-beat hold (seconds): after a choice commits, the card stays on
-## screen with the chosen option's flat `resolution_reaction` text before it
-## dismisses — the algorithm's cold comment on the choice (GDD `resolving`
-## state; beat duration is a data-driven tuning knob). Lowered by tests for speed.
+## Resolution-beat timing (GDD `resolving` state). The card holds on screen with
+## the chosen option's flat `resolution_reaction` before dismissing, long enough
+## to read. Duration is dynamic: a base, plus per-character reading time, plus a
+## bonus for milestone-setting choices so a permanent narrative decision lands
+## with a visibly heavier beat (GDD hard requirement). Tuning knobs (tests lower
+## them for speed):
+##   duration = resolution_beat_seconds
+##            + reaction.length() * resolution_beat_per_char
+##            + (resolution_beat_milestone_bonus if the option sets a milestone)
+## Defaults give ~2.3s for a short reaction, ~3.5s for a long one, +1s on a
+## milestone — within the 2-2.5s+ toast-readability guideline.
 var resolution_beat_seconds: float = 1.5
+var resolution_beat_per_char: float = 0.04
+var resolution_beat_milestone_bonus: float = 1.0
 
 ## Swipe gesture state (Story 003). `-1` = no touch tracked. Only the first
 ## touch that starts a drag is tracked; events with a different index are
@@ -245,18 +254,21 @@ func resolve(option_index: int) -> void:
 	if _rest_captured:
 		_card_node.position = _card_rest_position
 	_card_node.rotation_degrees = 0.0
-	# Read the chosen option's reaction BEFORE the system consumes the card.
+	# Read the chosen option's reaction + milestone flag BEFORE the system
+	# consumes the card.
 	var reaction: String = _reaction_for(option_index)
+	var has_milestone: bool = _option_sets_milestone(option_index)
 	# Apply effects (resources before flags, per the system) — the HUD updates
 	# live underneath while the reaction is shown.
 	DecisionCardSystem.resolve_choice(option_index)
 	# Resolution beat: swap the situation text for the algorithm's flat reaction
-	# and hide the option prompts, hold, then dismiss. state stays RESOLVING so
-	# the _input guard blocks any swipe and resolve() can't re-enter mid-beat.
+	# and hide the option prompts, hold (longer for longer text / milestones),
+	# then dismiss. state stays RESOLVING so the _input guard blocks any swipe
+	# and resolve() can't re-enter mid-beat.
 	_situation_label.text = reaction
 	_option_a_label.visible = false
 	_option_b_label.visible = false
-	await get_tree().create_timer(resolution_beat_seconds).timeout
+	await get_tree().create_timer(_resolution_beat_duration(reaction, has_milestone)).timeout
 	_card = {}
 	visible = false
 	state = State.HIDDEN
@@ -271,3 +283,22 @@ func _reaction_for(option_index: int) -> String:
 		return "The algorithm notes your choice and moves on."
 	var reaction: String = options[option_index].get("resolution_reaction", "")
 	return reaction if not reaction.is_empty() else "The algorithm notes your choice and moves on."
+
+
+## True if the chosen option permanently changes the narrative (sets a history
+## milestone) — earns the heavier/longer resolution beat (GDD requirement).
+func _option_sets_milestone(option_index: int) -> bool:
+	var options: Array = _card.get("options", [])
+	if option_index >= options.size():
+		return false
+	return options[option_index].has("milestone_to_set")
+
+
+## Resolution-beat hold in seconds: base + reading time proportional to the
+## reaction length + a fixed bonus when the choice sets a milestone. See the
+## tuning-knob members for the formula and defaults.
+func _resolution_beat_duration(reaction: String, has_milestone: bool) -> float:
+	var duration: float = resolution_beat_seconds + reaction.length() * resolution_beat_per_char
+	if has_milestone:
+		duration += resolution_beat_milestone_bonus
+	return duration

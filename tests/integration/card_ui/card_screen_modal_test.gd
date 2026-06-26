@@ -105,7 +105,9 @@ func test_resolve_calls_resolve_choice_and_hides() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
 	assert_bool(screen.visible).is_true()
-	screen.resolution_beat_seconds = 0.05  # keep the beat short for the test
+	screen.resolution_beat_seconds = 0.05
+	screen.resolution_beat_per_char = 0.0
+	screen.resolution_beat_milestone_bonus = 0.0  # keep the beat short for the test
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
 	screen.resolve(0)  # option_A: Reach +10
@@ -147,12 +149,50 @@ func test_resolve_passes_option_b_index() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
 	screen.resolution_beat_seconds = 0.05
+	screen.resolution_beat_per_char = 0.0
+	screen.resolution_beat_milestone_bonus = 0.0
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
 	screen.resolve(1)  # option_B: Reach +5 (not +10)
 
 	assert_float(ResourceManager.get_resource(&"Reach") - reach_before).is_equal_approx(5.0, 0.0001)
 	await get_tree().create_timer(0.12).timeout  # let the beat finish before teardown
+
+## AC: resolution-beat duration formula — base + per-char reading time, plus a
+## fixed bonus for milestone-setting choices (heavier beat). Pure method check,
+## no timing/await.
+func test_resolution_beat_duration_formula() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/card_screen/card_screen.tscn")
+	var screen: Node = runner.scene()
+	screen.resolution_beat_seconds = 1.5
+	screen.resolution_beat_per_char = 0.04
+	screen.resolution_beat_milestone_bonus = 1.0
+
+	# 10-char reaction, no milestone: 1.5 + 10*0.04 = 1.9
+	assert_float(screen._resolution_beat_duration("0123456789", false)).is_equal_approx(1.9, 0.0001)
+	# longer text holds longer: 25 chars -> 1.5 + 1.0 = 2.5
+	assert_float(screen._resolution_beat_duration("0123456789012345678901234", false)).is_equal_approx(2.5, 0.0001)
+	# milestone adds a full second: 10 chars + milestone -> 1.9 + 1.0 = 2.9
+	assert_float(screen._resolution_beat_duration("0123456789", true)).is_equal_approx(2.9, 0.0001)
+
+## AC: a milestone-setting choice gets the heavier beat end-to-end (the option's
+## milestone flag flows into the duration).
+func test_milestone_choice_gets_heavier_beat() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/card_screen/card_screen.tscn")
+	var screen: Node = runner.scene()
+	var milestone_card: Dictionary = {
+		"id": "test_milestone_card",
+		"text": "Big permanent choice.",
+		"options": [
+			{"label": "Do it", "resolution_reaction": "Done.", "resource_deltas": {}, "milestone_to_set": &"card.test.flag"},
+			{"label": "Skip", "resolution_reaction": "Skipped.", "resource_deltas": {}},
+		],
+	}
+	DecisionCardSystem.card_presented.emit(milestone_card)
+	# option 0 sets a milestone, option 1 does not -> 0 must hold longer.
+	var with_milestone: float = screen._resolution_beat_duration("X", screen._option_sets_milestone(0))
+	var without_milestone: float = screen._resolution_beat_duration("X", screen._option_sets_milestone(1))
+	assert_float(with_milestone - without_milestone).is_equal_approx(screen.resolution_beat_milestone_bonus, 0.0001)
 
 ## AC: the resolving beat — on resolve the card stays up and swaps the situation
 ## text to the chosen option's resolution_reaction, then dismisses after the beat.
@@ -164,6 +204,8 @@ func test_resolution_beat_shows_reaction_then_dismisses() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
 	screen.resolution_beat_seconds = 0.05
+	screen.resolution_beat_per_char = 0.0
+	screen.resolution_beat_milestone_bonus = 0.0
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
 	screen.resolve(1)  # Stay true -> "Kept it real. 5k watched."
