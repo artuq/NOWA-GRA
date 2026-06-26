@@ -1,7 +1,7 @@
 # Story 001: Offline Report Formatting
 
 > **Epic**: Offline Report Screen (+ Boot Flow)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Logic
 > **Estimate**: S (1-2h)
@@ -106,3 +106,12 @@ Note: integer division floors naturally (3601/3600 = 1 → "1 hour"; 3599/60 = 5
 
 - Depends on: None
 - Unlocks: Story 002 (Offline Report Screen) — uses `format_duration` for the duration line
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-26
+**Criteria**: all passing (9 unit tests, one per GDD duration AC + pluralisation)
+**Deviations**: None
+**Test Evidence**: Logic — `tests/unit/offline_report/offline_report_formatting_test.gd`, 9/9 passing (full regression 249/249)
+**Code Review**: Complete — godot-gdscript-specialist verdict CLEAN (fully typed, int-division flooring correct for the non-negative trusted range, unit-switch boundary precise, tests map 1:1 to ACs)

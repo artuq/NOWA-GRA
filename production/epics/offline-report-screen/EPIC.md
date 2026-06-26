@@ -51,7 +51,7 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | Offline Report Formatting | Logic | Ready | ADR-0009 |
+| 001 | Offline Report Formatting | Logic | Complete | ADR-0009 |
 | 002 | Offline Report Screen | UI | Ready | ADR-0009, ADR-0007 |
 | 003 | Boot Flow & Threshold Routing | Integration | Ready | ADR-0003, ADR-0009/0006/0001 |
 
