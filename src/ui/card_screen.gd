@@ -36,6 +36,21 @@ var _card: Dictionary = {}
 @onready var _situation_label: Label = %SituationLabel
 @onready var _option_a_label: Label = %OptionALabel
 @onready var _option_b_label: Label = %OptionBLabel
+@onready var _card_node: Control = %Card
+
+## Swipe gesture state (Story 003). `-1` = no touch tracked. Only the first
+## touch that starts a drag is tracked; events with a different index are
+## ignored entirely (single-touch latch, ADR-0008 / GDD multi-touch rule).
+var _tracked_index: int = -1
+var _drag_start: Vector2 = Vector2.ZERO
+## The card's resting position, captured lazily once layout has settled (on the
+## first drag), so bounce-back and re-show return it to the right spot.
+var _card_rest_position: Vector2 = Vector2.ZERO
+var _rest_captured: bool = false
+## Last horizontal drag velocity (px/s), from the most recent drag event --
+## used by the commitment check at release (a fast short flick can confirm).
+var _last_drag_velocity: float = 0.0
+var _bounce_tween: Tween
 
 func _ready() -> void:
 	DecisionCardSystem.card_presented.connect(_on_card_presented)
@@ -48,9 +63,130 @@ func _ready() -> void:
 func _on_card_presented(card: Dictionary) -> void:
 	_card = card
 	_populate(card)
+	# Reset any leftover transform from a previous card's swipe.
+	if _rest_captured:
+		_card_node.position = _card_rest_position
+	_card_node.rotation_degrees = 0.0
+	_reset_option_feedback()
 	visible = true
-	# Minimal entrance for the shell (Story 003 replaces this with a tween):
-	# go straight to awaiting_swipe so the card is immediately interactable.
+	# Minimal entrance for the shell (a heavier entrance tween is deferred
+	# polish): go straight to awaiting_swipe so the card is immediately swipeable.
+	state = State.AWAITING_SWIPE
+
+
+## Gesture handling (Story 003). Uses _input (not _gui_input) for robust
+## full-screen touch capture, guarded by visibility/state so it only acts while
+## a card is shown. The modal's STOP root still blocks the Action UI beneath via
+## GUI hit-order independently of this raw-input path.
+func _input(event: InputEvent) -> void:
+	if state == State.HIDDEN or state == State.ENTERING or state == State.RESOLVING:
+		return
+
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_on_touch_pressed(event)
+		else:
+			_on_touch_released(event)
+	elif event is InputEventScreenDrag and event.index == _tracked_index and state == State.DRAGGING:
+		_on_drag(event)
+
+
+func _on_touch_pressed(event: InputEventScreenTouch) -> void:
+	# Begin tracking only if no touch is currently tracked. A second
+	# simultaneous finger (different index) is ignored entirely.
+	if _tracked_index != -1:
+		return
+	# Touching the card again mid-bounce-back cancels the tween immediately and
+	# resumes dragging (interruptible bounce-back, GDD Core Rules rule 7).
+	if _bounce_tween != null and _bounce_tween.is_running():
+		_bounce_tween.kill()
+	if not _rest_captured:
+		_card_rest_position = _card_node.position
+		_rest_captured = true
+	_card_node.pivot_offset = _card_node.size / 2.0
+	_tracked_index = event.index
+	_drag_start = event.position
+	_last_drag_velocity = 0.0
+	state = State.DRAGGING
+
+
+func _on_drag(event: InputEventScreenDrag) -> void:
+	var delta: Vector2 = event.position - _drag_start
+	_card_node.position = _card_rest_position + delta
+	var half_w: float = get_viewport_rect().size.x / 2.0
+	_card_node.rotation_degrees = CardSwipeMath.rotation_degrees(delta.x, half_w)
+	_last_drag_velocity = event.velocity.x
+	_update_option_feedback(delta.x)
+
+
+func _on_touch_released(event: InputEventScreenTouch) -> void:
+	if event.index != _tracked_index or state != State.DRAGGING:
+		return
+	var drag_x: float = event.position.x - _drag_start.x
+	var screen_width: float = get_viewport_rect().size.x
+	_tracked_index = -1
+	if CardSwipeMath.is_committed(drag_x, _last_drag_velocity, screen_width):
+		# Drag right -> option_B (index 1); drag left -> option_A (index 0).
+		var option_index: int = 1 if drag_x > 0.0 else 0
+		resolve(option_index)
+	else:
+		_start_bounce_back()
+
+
+## Tweens the card back to its rest position/rotation (ease-out, 150ms), matching
+## the entrance timing. Stored + kill()-able so a re-touch can interrupt it.
+func _start_bounce_back() -> void:
+	if _bounce_tween != null and _bounce_tween.is_running():
+		_bounce_tween.kill()
+	_bounce_tween = create_tween().set_ease(Tween.EASE_OUT)
+	_bounce_tween.tween_property(_card_node, "position", _card_rest_position, 0.15)
+	_bounce_tween.parallel().tween_property(_card_node, "rotation_degrees", 0.0, 0.15)
+	_reset_option_feedback()
+	state = State.AWAITING_SWIPE
+
+
+## While dragging, the option label in the drag direction slightly enlarges and
+## the other dims -- purely interactive "this will confirm" feedback, NOT moral
+## colour coding (both labels keep an identical neutral base colour/style; only
+## scale/opacity change, symmetrically by direction).
+func _update_option_feedback(drag_x: float) -> void:
+	if drag_x > 0.0:  # heading right -> option_B
+		_set_option_emphasis(_option_b_label, true)
+		_set_option_emphasis(_option_a_label, false)
+	elif drag_x < 0.0:  # heading left -> option_A
+		_set_option_emphasis(_option_a_label, true)
+		_set_option_emphasis(_option_b_label, false)
+	else:
+		_reset_option_feedback()
+
+
+func _set_option_emphasis(label: Label, active: bool) -> void:
+	label.scale = Vector2(1.15, 1.15) if active else Vector2(1.0, 1.0)
+	label.modulate = Color(1, 1, 1, 1) if active else Color(1, 1, 1, 0.5)
+
+
+func _reset_option_feedback() -> void:
+	_option_a_label.scale = Vector2.ONE
+	_option_b_label.scale = Vector2.ONE
+	_option_a_label.modulate = Color(1, 1, 1, 1)
+	_option_b_label.modulate = Color(1, 1, 1, 1)
+
+
+## Interruption (app backgrounded / focus lost) while dragging: reset position
+## and rotation to rest INSTANTLY (no tween), state back to awaiting_swipe, drop
+## the tracked touch -- per GDD Core Rules rule 8 ("no partial state persisted").
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_APPLICATION_PAUSED and what != NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		return
+	if state != State.DRAGGING:
+		return
+	if _bounce_tween != null and _bounce_tween.is_running():
+		_bounce_tween.kill()
+	if _rest_captured:
+		_card_node.position = _card_rest_position
+	_card_node.rotation_degrees = 0.0
+	_reset_option_feedback()
+	_tracked_index = -1
 	state = State.AWAITING_SWIPE
 
 
@@ -87,6 +223,8 @@ func resolve(option_index: int) -> void:
 	if state == State.HIDDEN or state == State.RESOLVING:
 		return
 	state = State.RESOLVING
+	_tracked_index = -1
+	_reset_option_feedback()
 	DecisionCardSystem.resolve_choice(option_index)
 	_card = {}
 	visible = false

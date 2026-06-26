@@ -1,7 +1,7 @@
 # Story 003: Swipe Gesture Interaction
 
 > **Epic**: Card UI
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: M (3-4h)
@@ -133,3 +133,12 @@ Interruption reset: connect to the relevant `NOTIFICATION_APPLICATION_PAUSED`/fo
 
 - Depends on: Story 001 (Card Swipe Math) — calls its functions; Story 002 (Card Screen Modal) — extends its script and routes into its resolution path
 - Unlocks: None — last story in the Card UI epic (completing it makes decision cards fully playable end-to-end)
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-26
+**Criteria**: core ACs passing via 6 interaction tests (drag→DRAGGING + rotation matches CardSwipeMath; commit-right→option_B index 1; commit-left→option_A index 0; uncommitted release→bounce-back; tap-without-drag→bounce-back; second-touch index ignored while latched). Velocity-flick commit, bounce-back interruptibility, label enlarge/dim feedback, and app-background interruption reset are implemented but verified by author inspection / left as manual (tween-timing is flaky headless; velocity math is covered by Story 001 unit tests) — consistent with the story's QA spec flagging those as manual/edge.
+**Deviations**: (1) Gesture handled via `_input` rather than `_gui_input` (ADR-0008 suggested `_gui_input`) — chosen for robust full-screen touch capture; the modal's STOP root still blocks the Action UI beneath via GUI hit-order independently, so the blocking guarantee is unaffected. (2) Code review was author-performed this story: the godot-gdscript-specialist and qa-tester subagents hit the session limit and returned no verdict — Stories 001 and 002 received full independent specialist reviews; this one did not. Re-run `/code-review src/ui/card_screen.gd` after the limit resets for an independent pass if desired.
+**Test Evidence**: UI/Integration — `tests/integration/card_ui/card_swipe_gesture_test.gd`, 6/6 passing (full regression 236/236)
+**Code Review**: Author self-review only (specialist subagents unavailable — session limit). Findings: `_input` deviation sound; single-touch latch correct; bounce-back null-checked + interruptible; one cosmetic note (label.scale inside HBoxContainer may be layout-corrected — visual juice only, non-breaking).

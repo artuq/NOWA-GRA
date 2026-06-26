@@ -3,8 +3,8 @@
 > **Layer**: Presentation
 > **GDD**: design/gdd/card-ui.md
 > **Architecture Module**: CardScreen (full-screen modal Control + CardSwipeMath static utility, per ADR-0008)
-> **Status**: Ready
-> **Stories**: 3 stories created — see table below
+> **Status**: Complete
+> **Stories**: 3 stories — all Complete (see table below)
 
 ## Overview
 
@@ -41,7 +41,7 @@ This epic is complete when:
 |---|-------|------|--------|-----|
 | 001 | Card Swipe Math | Logic | Complete | N/A (pure utility, structure per ADR-0008) |
 | 002 | Card Screen Modal & Resolution | Integration | Complete | ADR-0008, ADR-0001 |
-| 003 | Swipe Gesture Interaction | UI | Ready | ADR-0008 |
+| 003 | Swipe Gesture Interaction | UI | Complete | ADR-0008 |
 
 **Build order**: 001 (math) and 002 (modal shell) are independent and can be done in either order; 003 (gesture) depends on both. Story 002 is the playability win on its own (cards appear and resolve via a method seam); 003 adds the swipe feel.
 
