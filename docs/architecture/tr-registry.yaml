@@ -102,6 +102,6 @@ requirements:
     system: offline-report-screen
     gdd: design/gdd/offline-report-screen.md
     requirement: Offline simulation result presentation screen with dismiss gesture
-    adr: []
-    status: gap
-    note: Deferred by architecture.md — straightforward Control-node pattern, low risk
+    adr: [ADR-0009]
+    status: covered
+    note: ADR-0009 (Proposed → pending independent architecture-review) — standalone scene, reads OfflineProgressSystem.last_simulation_result (+elapsed_seconds added by BootController), dismiss via scene swap to main; boot orchestration already covered by ADR-0003

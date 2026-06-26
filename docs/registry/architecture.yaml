@@ -164,6 +164,21 @@ api_decisions:
     source: docs/architecture/adr-0008-card-ui-modal-swipe-integration.md
     referenced_by: []
 
+  - decision: "Offline Report Screen is a standalone full-screen scene (scenes/offline_report/offline_report.tscn), reached via change_scene_to_file() from BootController and dismissed via change_scene_to_file(main) -- NOT a mouse_filter=STOP modal like Card UI (ADR-0009)"
+    rationale: "It is a launch-only gate before gameplay exists, not an interruption of live play; a full scene swap matches that lifecycle, whereas Card UI's modal preserves the live Action UI state beneath. Opposite requirements, opposite mechanism"
+    source: docs/architecture/adr-0009-offline-report-screen-scene-data-handoff.md
+    referenced_by: []
+
+  - decision: "Offline Report Screen reads its data from OfflineProgressSystem.last_simulation_result (the existing launch-only transient field), which BootController augments with an added elapsed_seconds key; no new signal or presenting/idle state machine is added to OfflineProgressSystem (ADR-0009)"
+    rationale: "The scene flow (Boot -> Offline Report -> Main) already marks the lifecycle, so a state/signal would have no reader -- unlike Card UI's card_presented, needed because a modal has no scene transition to mark its event. simulate_offline's result lacks elapsed_seconds, which format_duration needs, so BootController adds it to the transient payload"
+    source: docs/architecture/adr-0009-offline-report-screen-scene-data-handoff.md
+    referenced_by: []
+
+  - decision: "OfflineReportFormatting (res://src/ui/offline_report_formatting.gd, class_name OfflineReportFormatting) is a stateless static utility holding format_duration(elapsed_seconds) -> String; the headline number reuses ActionUIFormatting.format_number, not a second K/M convention (ADR-0009)"
+    rationale: "Same per-domain stateless-static-util precedent as ResourceFormulas/ActionUIFormatting/CardSwipeMath -- format_duration is a genuine display derivation, headlessly unit-testable against the GDD's exact duration ACs"
+    source: docs/architecture/adr-0009-offline-report-screen-scene-data-handoff.md
+    referenced_by: []
+
 forbidden_patterns:
   - pattern: "Adding instance vars or @export fields to ResourceFormulas"
     reason: "Must remain stateless — shared by two independent call sites (live play and offline simulation); any state would silently leak across unrelated contexts"
