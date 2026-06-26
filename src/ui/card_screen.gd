@@ -161,8 +161,13 @@ func _update_option_feedback(drag_x: float) -> void:
 
 
 func _set_option_emphasis(label: Label, active: bool) -> void:
-	label.scale = Vector2(1.15, 1.15) if active else Vector2(1.0, 1.0)
-	label.modulate = Color(1, 1, 1, 1) if active else Color(1, 1, 1, 0.5)
+	# Grow from the label's centre (not the default top-left pivot) so the scale
+	# bump reads as the label swelling in place rather than drifting sideways.
+	label.pivot_offset = label.size / 2.0
+	label.scale = Vector2(1.2, 1.2) if active else Vector2(1.0, 1.0)
+	# Dim the non-chosen option clearly (0.3 alpha) so the player is certain
+	# which direction confirms which choice before lifting their finger.
+	label.modulate = Color(1, 1, 1, 1) if active else Color(1, 1, 1, 0.3)
 
 
 func _reset_option_feedback() -> void:

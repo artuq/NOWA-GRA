@@ -134,6 +134,36 @@ func test_tap_without_drag_bounces_back() -> void:
 	assert_bool(screen.visible).is_true()
 	assert_int(screen.state).is_equal(screen.State.AWAITING_SWIPE)
 
+## AC: during a drag the option label in the drag direction is emphasised
+## (scale up) and the opposite one dimmed (alpha down); on bounce-back both reset.
+func test_drag_emphasises_direction_label_and_resets() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/card_screen/card_screen.tscn")
+	var screen: Node = runner.scene()
+	DecisionCardSystem.card_presented.emit(_present_card())
+	await runner.simulate_frames(2)
+	var label_a: Label = screen.find_child("OptionALabel", true, false) as Label
+	var label_b: Label = screen.find_child("OptionBLabel", true, false) as Label
+
+	var width: float = screen.get_viewport_rect().size.x
+	var start: Vector2 = Vector2(width / 2.0, 400.0)
+	var held: Vector2 = start + Vector2(width * 0.15, 0.0)  # heading right -> option_B
+	await runner.simulate_screen_touch_press(0, start)
+	await runner.simulate_screen_touch_drag(0, held)
+	await runner.simulate_frames(1)
+
+	# Right drag: B emphasised (scale > 1, full alpha), A dimmed (alpha < 1).
+	assert_float(label_b.scale.x).is_greater(1.0)
+	assert_float(label_a.modulate.a).is_less(1.0)
+
+	# Settle to zero velocity then release -> bounce-back resets both labels.
+	await runner.simulate_screen_touch_drag(0, held)
+	await runner.simulate_screen_touch_release(0)
+	await runner.simulate_frames(2)
+	assert_float(label_a.scale.x).is_equal_approx(1.0, 0.001)
+	assert_float(label_b.scale.x).is_equal_approx(1.0, 0.001)
+	assert_float(label_a.modulate.a).is_equal_approx(1.0, 0.001)
+	assert_float(label_b.modulate.a).is_equal_approx(1.0, 0.001)
+
 ## AC: single-touch latch -- once tracking touch index 0, a second touch (index
 ## 1) is ignored; dragging index 1 does NOT move the card.
 func test_second_touch_is_ignored_while_dragging() -> void:
