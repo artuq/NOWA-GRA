@@ -90,7 +90,7 @@ option:
 
 **Resolved open question (from Resource System GDD): "qualifying card" for Sponsorzy.** Only `sponsor_offer_shady` and `brand_deal_choice` qualify — the only 2 of 12 cards whose premise is directly a sponsor/brand offer. Rule for future cards: "qualifying" = the card's premise is a sponsor/brand/monetization offer, not just "any risky choice."
 
-**Resolution reactions (`resolution_reaction` field, added by `juice-feedback-system.md`) — written for the 3 cards currently used in the vertical slice. Remaining 9 cards' reactions are an Open Question.**
+**Resolution reactions (`resolution_reaction` field, added by `juice-feedback-system.md`) — authored for ALL 12 cards (2026-06-26, shipped with the Card UI resolving beat). The 3 below are the original vertical-slice reactions; the other 9 follow the same dry, fact/number, no-judgment tone and live in `src/core/card_content_database.gd`.**
 
 | Card | Option | Resolution Reaction |
 |---|---|---|
@@ -237,4 +237,4 @@ Cards are the only modal screen in MVP besides the HUD — warrants a dedicated 
 - **Which future card will query the `card.algorithm_hack.saved` milestone?** — forward hook with no consumer in MVP. *Owner: future Vertical Slice/Alpha cards. Target: once the card pool grows.*
 - **Swipe "commitment threshold"** — implementation detail deferred to `/ux-design`. *Owner: UX spec. Target: before Pre-Production.*
 - **Team/equipment upgrade cards** — out of scope for this GDD and for MVP; owned by **Team/Staff Management System** (Alpha tier per `systems-index.md`). No MVP card references team/equipment upgrades. Noted here only as a forward pointer, not duplicated. *Owner: Team/Staff Management GDD. Target: Alpha tier.*
-- **`resolution_reaction` content for the remaining 9 cards** — written for `sponsor_offer_shady`, `hater_callout`, `fan_in_trouble` only (the 3 used in the vertical slice). The other 9 (`exposed_friend`, `staged_drama`, `competitor_drama`, `leaked_dm`, `cancel_threat`, `apology_tour`, `brand_deal_choice`, `algorithm_hack`, `burnout_warning`) still need reactions before they can use `juice-feedback-system.md`'s payoff state. *Owner: narrative-director/writer. Target: before the next `/vertical-slice` re-run if those cards enter scope, otherwise before full Production content pass.*
+- ~~**`resolution_reaction` content for the remaining 9 cards**~~ — **RESOLVED 2026-06-26**: all 12 cards now have authored `resolution_reaction` for both options (in `src/core/card_content_database.gd`), shipped with the Card UI resolving beat. Tone follows the same dry fact/number, no-judgment rule. (Also authored: the `text` and option `label` copy, previously empty placeholders.)

@@ -38,6 +38,12 @@ var _card: Dictionary = {}
 @onready var _option_b_label: Label = %OptionBLabel
 @onready var _card_node: Control = %Card
 
+## Resolution-beat hold (seconds): after a choice commits, the card stays on
+## screen with the chosen option's flat `resolution_reaction` text before it
+## dismisses — the algorithm's cold comment on the choice (GDD `resolving`
+## state; beat duration is a data-driven tuning knob). Lowered by tests for speed.
+var resolution_beat_seconds: float = 1.5
+
 ## Swipe gesture state (Story 003). `-1` = no touch tracked. Only the first
 ## touch that starts a drag is tracked; events with a different index are
 ## ignored entirely (single-touch latch, ADR-0008 / GDD multi-touch rule).
@@ -209,6 +215,9 @@ func _populate(card: Dictionary) -> void:
 	var options: Array = card.get("options", [])
 	_option_a_label.text = "← %s" % _option_label(options, 0, "Option A")
 	_option_b_label.text = "%s →" % _option_label(options, 1, "Option B")
+	# Re-show prompts in case the previous card's resolution beat hid them.
+	_option_a_label.visible = true
+	_option_b_label.visible = true
 
 
 func _option_label(options: Array, index: int, fallback: String) -> String:
@@ -230,7 +239,35 @@ func resolve(option_index: int) -> void:
 	state = State.RESOLVING
 	_tracked_index = -1
 	_reset_option_feedback()
+	# Snap the card back to centre/upright so the reaction text reads cleanly.
+	if _bounce_tween != null and _bounce_tween.is_running():
+		_bounce_tween.kill()
+	if _rest_captured:
+		_card_node.position = _card_rest_position
+	_card_node.rotation_degrees = 0.0
+	# Read the chosen option's reaction BEFORE the system consumes the card.
+	var reaction: String = _reaction_for(option_index)
+	# Apply effects (resources before flags, per the system) — the HUD updates
+	# live underneath while the reaction is shown.
 	DecisionCardSystem.resolve_choice(option_index)
+	# Resolution beat: swap the situation text for the algorithm's flat reaction
+	# and hide the option prompts, hold, then dismiss. state stays RESOLVING so
+	# the _input guard blocks any swipe and resolve() can't re-enter mid-beat.
+	_situation_label.text = reaction
+	_option_a_label.visible = false
+	_option_b_label.visible = false
+	await get_tree().create_timer(resolution_beat_seconds).timeout
 	_card = {}
 	visible = false
 	state = State.HIDDEN
+
+
+## Returns the chosen option's `resolution_reaction`, or a neutral fallback when
+## a card has none authored yet (per the GDD, some cards' reactions are still an
+## open question). The fallback stays factual/non-judgmental (anti-pillar rule).
+func _reaction_for(option_index: int) -> String:
+	var options: Array = _card.get("options", [])
+	if option_index >= options.size():
+		return "The algorithm notes your choice and moves on."
+	var reaction: String = options[option_index].get("resolution_reaction", "")
+	return reaction if not reaction.is_empty() else "The algorithm notes your choice and moves on."

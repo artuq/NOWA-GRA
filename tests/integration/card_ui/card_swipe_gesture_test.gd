@@ -20,8 +20,8 @@ func _present_card() -> Dictionary:
 		"id": "swipe_test_card",
 		"text": "Swipe me.",
 		"options": [
-			{"label": "Left", "resource_deltas": {&"Reach": 10.0}, "counter_increments": {&"safe_choices_count": 1}},
-			{"label": "Right", "resource_deltas": {&"Reach": 5.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Left", "resolution_reaction": "Chose left.", "resource_deltas": {&"Reach": 10.0}, "counter_increments": {&"safe_choices_count": 1}},
+			{"label": "Right", "resolution_reaction": "Chose right.", "resource_deltas": {&"Reach": 5.0}, "counter_increments": {&"risky_choices_count": 1}},
 		],
 	}
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
@@ -56,6 +56,7 @@ func test_commit_right_resolves_option_b() -> void:
 	var screen: Node = runner.scene()
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
+	screen.resolution_beat_seconds = 0.05
 	await runner.simulate_frames(2)
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
@@ -66,8 +67,9 @@ func test_commit_right_resolves_option_b() -> void:
 	await runner.simulate_screen_touch_release(0)
 	await runner.simulate_frames(2)
 
-	# option_B (index 1) => Reach +5
+	# option_B (index 1) => Reach +5, applied synchronously on release.
 	assert_float(ResourceManager.get_resource(&"Reach") - reach_before).is_equal_approx(5.0, 0.0001)
+	await get_tree().create_timer(0.12).timeout  # resolution beat then dismiss
 	assert_bool(screen.visible).is_false()
 	# cleanup
 	ResourceManager.apply_delta({&"Reach": reach_before - ResourceManager.get_resource(&"Reach")})
@@ -80,6 +82,7 @@ func test_commit_left_resolves_option_a() -> void:
 	var screen: Node = runner.scene()
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
+	screen.resolution_beat_seconds = 0.05
 	await runner.simulate_frames(2)
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
@@ -92,6 +95,7 @@ func test_commit_left_resolves_option_a() -> void:
 
 	# option_A (index 0) => Reach +10
 	assert_float(ResourceManager.get_resource(&"Reach") - reach_before).is_equal_approx(10.0, 0.0001)
+	await get_tree().create_timer(0.12).timeout  # resolution beat then dismiss
 	assert_bool(screen.visible).is_false()
 	ResourceManager.apply_delta({&"Reach": reach_before - ResourceManager.get_resource(&"Reach")})
 

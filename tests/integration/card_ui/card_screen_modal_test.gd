@@ -37,8 +37,8 @@ func _synthetic_card(id: String) -> Dictionary:
 		"trigger_condition": "always",
 		"text": "A juicy dilemma appears.",
 		"options": [
-			{"label": "Sell out", "resource_deltas": {&"Reach": 10.0}, "counter_increments": {&"risky_choices_count": 1}},
-			{"label": "Stay true", "resource_deltas": {&"Reach": 5.0}, "counter_increments": {&"safe_choices_count": 1}},
+			{"label": "Sell out", "resolution_reaction": "Sold. 10k watched.", "resource_deltas": {&"Reach": 10.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Stay true", "resolution_reaction": "Kept it real. 5k watched.", "resource_deltas": {&"Reach": 5.0}, "counter_increments": {&"safe_choices_count": 1}},
 		],
 	}
 
@@ -105,13 +105,19 @@ func test_resolve_calls_resolve_choice_and_hides() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
 	assert_bool(screen.visible).is_true()
+	screen.resolution_beat_seconds = 0.05  # keep the beat short for the test
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
 	screen.resolve(0)  # option_A: Reach +10
 
+	# Effects apply synchronously (before the beat's await); the card stays up
+	# showing the reaction during the resolving beat, then dismisses.
 	assert_float(ResourceManager.get_resource(&"Reach") - reach_before).is_equal_approx(10.0, 0.0001)
-	assert_bool(screen.visible).is_false()
 	assert_int(DecisionCardSystem.state).is_equal(DecisionCardSystem.State.COOLDOWN)
+	assert_bool(screen.visible).is_true()
+	assert_str((screen.find_child("SituationLabel") as Label).text).is_equal("Sold. 10k watched.")
+	await get_tree().create_timer(0.12).timeout
+	assert_bool(screen.visible).is_false()
 
 ## AC (gap closed, flagged by code review): card_presented is NOT emitted when
 ## the eligible pool is empty -- only present_next_card emits, and _check_pool
@@ -140,11 +146,35 @@ func test_resolve_passes_option_b_index() -> void:
 	var screen: Node = runner.scene()
 	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
 	DecisionCardSystem.card_presented.emit(card)
+	screen.resolution_beat_seconds = 0.05
 	var reach_before: float = ResourceManager.get_resource(&"Reach")
 
 	screen.resolve(1)  # option_B: Reach +5 (not +10)
 
 	assert_float(ResourceManager.get_resource(&"Reach") - reach_before).is_equal_approx(5.0, 0.0001)
+	await get_tree().create_timer(0.12).timeout  # let the beat finish before teardown
+
+## AC: the resolving beat — on resolve the card stays up and swaps the situation
+## text to the chosen option's resolution_reaction, then dismisses after the beat.
+func test_resolution_beat_shows_reaction_then_dismisses() -> void:
+	var card: Dictionary = _synthetic_card("test_beat_card")
+	DecisionCardSystem.present_next_card(_single_card_pool(card))
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/card_screen/card_screen.tscn")
+	var screen: Node = runner.scene()
+	DecisionCardSystem.state = DecisionCardSystem.State.PRESENTING
+	DecisionCardSystem.card_presented.emit(card)
+	screen.resolution_beat_seconds = 0.05
+	var reach_before: float = ResourceManager.get_resource(&"Reach")
+
+	screen.resolve(1)  # Stay true -> "Kept it real. 5k watched."
+
+	# During the beat: still visible, situation text replaced by the reaction.
+	assert_bool(screen.visible).is_true()
+	assert_str((screen.find_child("SituationLabel") as Label).text).is_equal("Kept it real. 5k watched.")
+	# After the beat: dismissed.
+	await get_tree().create_timer(0.12).timeout
+	assert_bool(screen.visible).is_false()
+	ResourceManager.apply_delta({&"Reach": reach_before - ResourceManager.get_resource(&"Reach")})
 
 ## AC (gap closed, flagged by code review): resolve() is a no-op when the modal
 ## is hidden (no card shown) -- guards against a stray call, mirroring
