@@ -824,3 +824,11 @@ All 8 required + Visual/Audio (None), UI Requirements (None), Open Questions —
 - Next recommended: None — Action UI epic is now fully Complete (all 4 stories done, first real playable screen in the project). Sprint 6's Must Have scope is complete.
 
 <!-- QA RUN: 2026-06-25 | Sprint: sprint-6 | Verdict: PASS | Report: production/qa/qa-signoff-sprint-6-2026-06-25.md -->
+
+## Session Extract — /architecture-review 2026-06-25
+- Verdict: CONCERNS (improved — prior blocker ADR-0007 cleared, now Accepted)
+- Requirements: 14 total — 13 covered, 0 partial, 1 gap (TR-ors-001, deliberately deferred)
+- New TR-IDs registered: None (TR-cui-001 flipped gap→covered, adr:[ADR-0008])
+- GDD revision flags: None
+- Top ADR gaps: ADR-0008 (Card UI modal/swipe) still Proposed — sign off to unblock Card UI epic; TR-ors-001 (Offline Report Screen) has no ADR yet, deferred by design
+- Report: docs/architecture/architecture-review-2026-06-25.md

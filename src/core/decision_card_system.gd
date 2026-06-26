@@ -41,6 +41,14 @@ enum State { COOLDOWN, CHECKING, PRESENTING, RESOLVING }
 ## convention (e.g. `ActionSystem.current_action_id`, `SaveSystem.state`).
 var state: State = State.COOLDOWN
 
+## Emitted by present_next_card() when a card enters PRESENTING, carrying the
+## chosen card Dictionary. The only signal on this system. Card UI's entry
+## trigger (ADR-0008) -- an additive notification mirroring ActionSystem's
+## action_started (ADR-0007); never emitted on an empty pool (present_next_card
+## is only ever called with a non-empty pool, see _check_pool). Lets Card UI
+## react without polling state or reading the private _presented_card.
+signal card_presented(card: Dictionary)
+
 var _actions_until_check: int = COOLDOWN_ACTIONS
 
 ## Flat weight floor every eligible card receives, independent of Cringe or
@@ -177,6 +185,7 @@ var _presented_card: Dictionary = {}
 func present_next_card(pool: Array[Dictionary]) -> void:
 	_presented_card = _weighted_pick(pool)
 	state = State.PRESENTING
+	card_presented.emit(_presented_card)
 
 
 ## Called when the player chooses an option ([param option_index]: `0` or

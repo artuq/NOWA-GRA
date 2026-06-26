@@ -40,7 +40,7 @@ This epic is complete when:
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
 | 001 | Card Swipe Math | Logic | Complete | N/A (pure utility, structure per ADR-0008) |
-| 002 | Card Screen Modal & Resolution | Integration | Ready | ADR-0008, ADR-0001 |
+| 002 | Card Screen Modal & Resolution | Integration | Complete | ADR-0008, ADR-0001 |
 | 003 | Swipe Gesture Interaction | UI | Ready | ADR-0008 |
 
 **Build order**: 001 (math) and 002 (modal shell) are independent and can be done in either order; 003 (gesture) depends on both. Story 002 is the playability win on its own (cards appear and resolve via a method seam); 003 adds the swipe feel.

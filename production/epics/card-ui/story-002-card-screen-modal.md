@@ -1,7 +1,7 @@
 # Story 002: Card Screen Modal & Resolution
 
 > **Epic**: Card UI
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Integration
 > **Estimate**: M (3-4h)
@@ -120,3 +120,12 @@ Content keys: read the card's category for the icon, the situation text key, and
 
 - Depends on: None (the gesture-free modal shell; DecisionCardSystem is Complete and only gains an additive signal here)
 - Unlocks: Story 003 (Swipe Gesture Interaction) — attaches the swipe gesture to this modal and routes it to this story's resolution path
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-26
+**Criteria**: all passing (8 interaction tests: signal emits once + carries card, empty-pool no-emit, modal appears+content, placeholder fallback, resolve(0)/resolve(1) correct index, resolve no-op when hidden, topmost STOP modal structure)
+**Deviations**: GDD-vs-implementation gap, documented (not blocked) — CardContentDatabase has no `category` field and empty placeholder text/labels; modal falls back to card id (title) + neutral "← Option A"/"Option B →" + a generic placeholder category icon. Logged in `docs/tech-debt-register.md` for when narrative copy + category taxonomy are authored.
+**Test Evidence**: Integration — `tests/integration/card_ui/card_screen_modal_test.gd`, 8/8 passing (full regression 230/230)
+**Code Review**: Complete — godot-specialist CLEAN (signal additive + correctly placed, modal-by-visibility + mouse_filter STOP correct, no bugs); qa-tester found 3 real test gaps (empty-pool no-emit, resolve(1) index, resolve no-op when hidden), all added before closure

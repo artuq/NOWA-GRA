@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/action_screen/resource_hud.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/action_grid.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/running_action_overlay.tscn" id="3"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/icon_avatar.png" id="4"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/icon_settings.png" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/card_screen/card_screen.tscn" id="6"]
 
 [sub_resource type="StyleBoxFlat" id="AppBackground"]
 bg_color = Color(0.082353, 0.082353, 0.101961, 1)
@@ -83,4 +84,7 @@ layout_mode = 2
 size_flags_vertical = 1
 
 [node name="RunningActionOverlay" parent="." instance=ExtResource("3")]
+layout_mode = 1
+
+[node name="CardScreen" parent="." instance=ExtResource("6")]
 layout_mode = 1
