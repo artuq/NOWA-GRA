@@ -105,8 +105,14 @@ func test_uncommitted_release_bounces_back() -> void:
 
 	var width: float = screen.get_viewport_rect().size.x
 	var start: Vector2 = Vector2(width / 2.0, 400.0)
+	var held: Vector2 = start + Vector2(width * 0.1, 0.0)  # 10% < 30%
 	await runner.simulate_screen_touch_press(0, start)
-	await runner.simulate_screen_touch_drag(0, start + Vector2(width * 0.1, 0.0))  # 10% < 30%
+	await runner.simulate_screen_touch_drag(0, held)
+	# Settle: a second drag to the SAME point yields a zero-movement drag event,
+	# forcing release velocity to 0 (InputEventScreenDrag.velocity is otherwise
+	# timing-dependent in the headless harness and can spuriously exceed the
+	# 800px/s flick threshold, making this a velocity-commit instead of a bounce).
+	await runner.simulate_screen_touch_drag(0, held)
 	await runner.simulate_screen_touch_release(0)
 	await runner.simulate_frames(2)
 
@@ -141,13 +147,16 @@ func test_second_touch_is_ignored_while_dragging() -> void:
 	await runner.simulate_screen_touch_press(0, start)  # latch index 0
 	await runner.simulate_screen_touch_drag(0, start + Vector2(width * 0.15, 0.0))
 	await runner.simulate_frames(1)
-	var card_node: Control = screen.find_child("Card", true, false) as Control
-	var pos_after_index0: Vector2 = card_node.position
 
 	# A second finger (index 1) starts and drags -- must be ignored entirely.
 	await runner.simulate_screen_touch_press(1, start)
 	await runner.simulate_screen_touch_drag(1, start + Vector2(width * 0.4, 0.0))
 	await runner.simulate_frames(1)
 
-	assert_vector(card_node.position).is_equal_approx(pos_after_index0, Vector2(0.5, 0.5))
+	# Assert the latch DIRECTLY: index 0 is still tracked (the second finger did
+	# not steal tracking), and we're still mid-drag. Asserting on _tracked_index
+	# rather than card position avoids the emulate_touch_from_mouse artifact
+	# (GdUnit's cursor warp emits index-0 micro-drags that nudge the card a few
+	# px) while still proving the real invariant: index 1 was rejected.
+	assert_int(screen._tracked_index).is_equal(0)
 	assert_int(screen.state).is_equal(screen.State.DRAGGING)

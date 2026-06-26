@@ -27,6 +27,10 @@ window/stretch/aspect="expand"
 theme/custom_font="res://assets/ui/fonts/VT323-Regular.ttf"
 theme/default_font_size=20
 
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
 [autoload]
 
 ResourceManager="*res://src/core/resource_manager.gd"
