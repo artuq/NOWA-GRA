@@ -39,7 +39,7 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | Card Swipe Math | Logic | Ready | N/A (pure utility, structure per ADR-0008) |
+| 001 | Card Swipe Math | Logic | Complete | N/A (pure utility, structure per ADR-0008) |
 | 002 | Card Screen Modal & Resolution | Integration | Ready | ADR-0008, ADR-0001 |
 | 003 | Swipe Gesture Interaction | UI | Ready | ADR-0008 |
 

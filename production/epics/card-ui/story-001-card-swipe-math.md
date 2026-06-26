@@ -1,7 +1,7 @@
 # Story 001: Card Swipe Math
 
 > **Epic**: Card UI
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Logic
 > **Estimate**: S (1-2h)
@@ -122,3 +122,12 @@ Note: `half_screen_width > 0` is the caller's contract (a real screen always has
 
 - Depends on: None
 - Unlocks: Story 003 (Swipe Gesture Interaction) — calls these functions during a live drag
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-26
+**Criteria**: all passing (5 rotation cases + 8 commitment cases = 13 tests, one per GDD numeric AC)
+**Deviations**: None
+**Test Evidence**: Logic — `tests/unit/card_ui/card_swipe_math_test.gd`, 13/13 passing (full regression 222/222)
+**Code Review**: Complete — godot-gdscript-specialist verdict CLEAN (zero bugs, fully typed, `clampf`/`absf` idiomatic, tests exhaustive against every GDD AC including inclusive boundaries and both OR-branches)
