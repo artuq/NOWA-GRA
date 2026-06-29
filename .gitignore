@@ -11,3 +11,8 @@ reports/
 
 # Agent working memory (scratch, not a project deliverable)
 .claude/agent-memory/
+
+# Session audit trail and ephemeral session state (per directory-structure.md
+# — these are local working artifacts, not project deliverables)
+production/session-logs/
+production/session-state/

@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-06-25
-version: 3
+last_updated: 2026-06-26
+version: 4
 
 requirements:
   - id: TR-res-001
@@ -104,4 +104,4 @@ requirements:
     requirement: Offline simulation result presentation screen with dismiss gesture
     adr: [ADR-0009]
     status: covered
-    note: ADR-0009 (Proposed → pending independent architecture-review) — standalone scene, reads OfflineProgressSystem.last_simulation_result (+elapsed_seconds added by BootController), dismiss via scene swap to main; boot orchestration already covered by ADR-0003
+    note: ADR-0009 Accepted 2026-06-26 (independent architecture-review, verdict PASS) — standalone scene, reads OfflineProgressSystem.last_simulation_result (+elapsed_seconds added by BootController), dismiss via scene swap to main; boot orchestration already covered by ADR-0003

@@ -1,7 +1,7 @@
 # ADR-0009: Offline Report Screen — Standalone Scene, Transient Result Hand-off, Dismiss
 
 ## Status
-Proposed
+Accepted (2026-06-26, following independent `/architecture-review` in a separate session — verdict PASS: no conflicts, no engine issues, all 14 MVP requirements covered, all pre-gate artifacts present. Dependencies ADR-0001, ADR-0003, ADR-0006, ADR-0007 all Accepted.)
 
 ## Date
 2026-06-26
