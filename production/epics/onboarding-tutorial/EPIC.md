@@ -40,7 +40,7 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | OnboardingGate State Machine | Logic | Ready | ADR-0001, ADR-0005 |
+| 001 | OnboardingGate State Machine | Logic | Complete | ADR-0001, ADR-0005 |
 | 002 | Live Wiring — ActionSystem & DecisionCardSystem | Integration | Ready | ADR-0005, ADR-0001 |
 | 003 | Persistence — Save/Load & Boot Wiring | Integration | Ready | ADR-0003, ADR-0002 |
 

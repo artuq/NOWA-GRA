@@ -1,7 +1,7 @@
 # Story 001: OnboardingGate State Machine
 
 > **Epic**: Onboarding/Tutorial
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (2-3h)
@@ -136,3 +136,12 @@ Note: at the moment the Phase 1→2 transition fires, Story 002's `force_cooldow
 
 - Depends on: None
 - Unlocks: Story 002 (Live Wiring) — connects this state machine to real signals; Story 003 (Persistence) — saves/restores `phase` and `_completed_types`
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-29
+**Criteria**: all passing (8 unit tests: single action, repeat-stays-pure, third-distinct-transitions, all 6 permutations, first_card_pending→normal, normal-is-terminal, is_card_suppressed per phase)
+**Deviations**: None. Note: building this story's test surfaced a real, pre-existing test-isolation gap (`SaveSystem._ready()` auto-loading a stale local `user://save.json` between repeated local test runs, exposed by the 2026-06-29 mark_dirty fix) — fixed separately in `tests/README.md` + 11 test files (commit `fd1009b`), not part of this story's own scope.
+**Test Evidence**: Logic — `tests/unit/onboarding/onboarding_gate_state_test.gd`, 8/8 passing (full regression 281/281, verified clean from a deleted local save file)
+**Code Review**: Complete — godot-gdscript-specialist verdict CLEAN (all 3 sibling-convention precedents confirmed: Dictionary-as-set shape, REQUIRED_TYPES StringName values match ActionSystem.ACTION_DURATIONS exactly, no class_name on the Autoload). One optional nit applied: `_completed_types` typed as `Dictionary[StringName, bool]` for exact parity with `HistoryFlagManager._milestones`.
