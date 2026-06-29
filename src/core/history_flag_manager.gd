@@ -46,6 +46,7 @@ var _counters: Dictionary[StringName, int] = {}
 ##   HistoryFlagManager.set_milestone(&"card.exposed_friend.chosen")
 func set_milestone(flag_name: StringName) -> void:
 	_milestones[flag_name] = true
+	SaveSystem.mark_dirty()
 
 
 ## Returns whether milestone [param flag_name] has ever been set. Returns
@@ -70,6 +71,7 @@ func increment_counter(counter_name: StringName, amount: int = 1) -> void:
 	if amount < 0:
 		return
 	_counters[counter_name] = _counters.get(counter_name, 0) + amount
+	SaveSystem.mark_dirty()
 
 
 ## Returns the current value of counter [param counter_name], or `0` if it

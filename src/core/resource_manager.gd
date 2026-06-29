@@ -65,6 +65,8 @@ func apply_delta(deltas: Dictionary[StringName, float]) -> void:
 			new_value = clamp(new_value, 0.0, 100.0)
 		_resources[key] = new_value
 		resource_changed.emit(key, new_value, old_value)
+	if not deltas.is_empty():
+		SaveSystem.mark_dirty()
 
 
 ## Returns this module's persisted state as a JSON-serializable `Dictionary`
