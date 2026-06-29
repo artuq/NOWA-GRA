@@ -192,6 +192,25 @@ static func action_effectiveness_multiplier(morale: float) -> float:
 		return E_MULT_CRITICAL
 
 
+## Returns the display band label for a Morale value, per resource-system.md's
+## Formula C bands — the single source of truth shared by the Resource HUD and
+## the Offline Report Screen (both need the same band name, so the boundary
+## numbers live here once, never duplicated at a UI call site). Same
+## inclusive-lower band boundaries as [method action_effectiveness_multiplier].
+##
+## Usage example:
+##   ResourceFormulas.morale_band_label(35.0)  # -> "Low"
+static func morale_band_label(morale: float) -> String:
+	if morale >= E_FULL_THRESHOLD:
+		return "High"
+	elif morale >= E_HIGH_THRESHOLD:
+		return "Normal"
+	elif morale >= E_LOW_THRESHOLD:
+		return "Low"
+	else:
+		return "Critical"
+
+
 ## Passive Zasięgi/Reach income generated per Hatersi, per minute, before the
 ## Morale multiplier is applied. Locked tuning constant, per
 ## resource-system.md's Formula D.

@@ -95,15 +95,8 @@ func _pop(pill: Control) -> void:
 	tween.tween_property(pill, "scale", Vector2(1.0, 1.0), 0.1)
 
 
-## Maps a raw Morale value to its band label, per resource-system.md's
-## Formula C bands -- reads ResourceFormulas' existing threshold constants
-## directly rather than redeclaring the boundary numbers here.
+## Maps a raw Morale value to its band label. Delegates to the shared
+## ResourceFormulas.morale_band_label (single source of truth, also used by the
+## Offline Report Screen) so the band boundaries are never duplicated.
 func _morale_band_label(morale: float) -> String:
-	if morale >= ResourceFormulas.E_FULL_THRESHOLD:
-		return "High"
-	elif morale >= ResourceFormulas.E_HIGH_THRESHOLD:
-		return "Normal"
-	elif morale >= ResourceFormulas.E_LOW_THRESHOLD:
-		return "Low"
-	else:
-		return "Critical"
+	return ResourceFormulas.morale_band_label(morale)

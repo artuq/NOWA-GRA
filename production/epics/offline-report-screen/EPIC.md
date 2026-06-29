@@ -52,7 +52,7 @@ This epic is complete when:
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
 | 001 | Offline Report Formatting | Logic | Complete | ADR-0009 |
-| 002 | Offline Report Screen | UI | Ready | ADR-0009, ADR-0007 |
+| 002 | Offline Report Screen | UI | Complete | ADR-0009, ADR-0007 |
 | 003 | Boot Flow & Threshold Routing | Integration | Ready | ADR-0003, ADR-0009/0006/0001 |
 
 **Build order**: 001 (format util, independent) → 002 (report screen, uses 001) → 003 (boot flow, routes to 002 + builds its `main.tscn` dismiss target). 002 is the visible win; 003 wires it into a real cold-start sequence and delivers the boot→main skeleton.

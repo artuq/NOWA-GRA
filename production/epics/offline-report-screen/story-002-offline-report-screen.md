@@ -1,7 +1,7 @@
 # Story 002: Offline Report Screen
 
 > **Epic**: Offline Report Screen (+ Boot Flow)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: UI
 > **Estimate**: M (3-4h)
@@ -109,3 +109,12 @@
 
 - Depends on: Story 001 (Offline Report Formatting) — uses `format_duration`
 - Unlocks: Story 003 (Boot Flow) — routes to this scene when `Δt ≥ 300s`; this scene's dismiss routes to Story 003's `main.tscn`
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-29
+**Criteria**: all passing (8 interaction tests: hero/ΔHaters/duration render, +0 delta + band-change indicator, band-unchanged no indicator, capped message + 24h, negative ΔHaters, missing-keys fallback, single-fire dismiss via a counted `scene_swap_requested` signal, both inputs wired to `_dismiss`)
+**Deviations**: Extracted `ResourceFormulas.morale_band_label` as a new shared static (Resource HUD now delegates to it instead of duplicating the band lookup) — not a scope violation, it's the single-source-of-truth this story's ΔMorale-band rendering needed, and removes a drift risk the HUD's own comment had flagged.
+**Test Evidence**: UI — `tests/integration/offline_report/offline_report_screen_test.gd`, 8/8 passing (full regression 257/257)
+**Code Review**: Complete — godot-specialist verdict CLEAN (nested-Button input routing correct, Autoload-read-in-_ready safe, `main_scene_path` test seam idiomatic, shared band-label home correct, .tscn layout correct; one nit `focus_mode=0` applied); qa-tester found 3 real gaps (single-fire test was tautological, missing negative-delta case, missing empty-dict fallback case) — all three closed before closure
