@@ -1,7 +1,7 @@
 # Story 003: Boot Flow & Threshold Routing
 
 > **Epic**: Offline Report Screen (+ Boot Flow)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Presentation
 > **Type**: Integration
 > **Estimate**: M (3-4h)
@@ -49,11 +49,20 @@
 
 ---
 
+## Discovered Deviations from ADR-0003's Illustrative Code Sample
+
+*ADR-0003 was written before these modules reached their final implemented shape. Its `gdscript` code sample is illustrative, not literal — the real APIs differ. Documented here rather than silently smoothed over:*
+
+- **Real save keys**: `SaveSystem.load_save()` returns `{schema_version, last_saved_at, resources, history_flags, decision_card_state}` — NOT `last_save_timestamp` / `history` as the ADR's sample used.
+- **`restore_state` only exists on `ResourceManager` and `HistoryFlagManager`.** `ActionSystem`, `DecisionCardSystem` have no `restore_state` method; `OnboardingGate` doesn't exist as a system in this project at all. `BootController` calls `restore_state` only on the two modules that implement it. (`DecisionCardSystem`'s save stub in `SaveSystem.save_now()` is hardcoded zeros — pre-existing gap, out of scope here; not this story's job to build Decision Card persistence.)
+- **`simulate_offline()` returns absolute finals, not a deltas dict**: `{final_H, final_M, total_Z_gained, capped}`. There is no `resource_deltas` key. `BootController` must capture `h0`/`m0` (current Haters/Morale) *before* calling `simulate_offline`, then apply via `ResourceManager.apply_delta({Reach: total_Z_gained, Haters: final_H - h0, Morale: final_M - m0})` — the only write method `ResourceManager` exposes is `apply_delta`, there is no absolute setter.
+- **`MIN_REPORT_THRESHOLD_SECONDS` doesn't exist as a constant anywhere** — only as prose in the GDD. Added to `OfflineProgressSystem` (sibling to its existing `MAX_OFFLINE_CAP_SECONDS`) as the tuning-knob home, even though the gate check itself runs in `BootController` (ADR-0009 §5).
+
 ## Implementation Notes
 
 *Derived from ADR-0003 Decision (boot sequence) + ADR-0009 Decision §2, §5:*
 
-**`BootController`** (`res://scenes/boot/boot.gd` on `boot.tscn`, minimal/no visuals): in `_ready()`, follow ADR-0003's steps 2-7 exactly. Capture `H0 = ResourceManager.get_resource(&"Haters")` and `M0 = ResourceManager.get_resource(&"Morale")` (and the initial Morale band) **after** `restore_state` but **before** applying the sim result — these are the baselines the report screen needs (the sim result alone carries only `final_H`/`final_M`). Build the transient payload:
+**`BootController`** (`res://src/core/boot_controller.gd` on `boot.tscn`, minimal/no visuals — script lives in `src/core/` per the project's directory convention, not under `scenes/`): in `_ready()`, follow ADR-0003's steps 2-7 exactly. Capture `H0 = ResourceManager.get_resource(&"Haters")` and `M0 = ResourceManager.get_resource(&"Morale")` (and the initial Morale band) **after** `restore_state` but **before** applying the sim result — these are the baselines the report screen needs (the sim result alone carries only `final_H`/`final_M`). Build the transient payload:
 ```gdscript
 OfflineProgressSystem.last_simulation_result = result.duplicate()
 OfflineProgressSystem.last_simulation_result["elapsed_seconds"] = elapsed
@@ -125,3 +134,12 @@ Confirm the exact `MIN_REPORT_THRESHOLD_SECONDS` constant home (Offline Progress
 
 - Depends on: Story 002 (Offline Report Screen) — routes to it; and its `main.tscn` is the dismiss target — and Story 001 transitively
 - Unlocks: None — final story; completing it makes offline visible end-to-end and establishes the boot→main navigation skeleton
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-29
+**Criteria**: all passing (9 integration tests: threshold boundary 300/299/0, transient payload baselines, sim result applied via apply_delta, restore_state called with the correct save sub-dict, first-session empty save, main.tscn regression guard; + 3 unit tests for the real elapsed-seconds computation `BootController.compute_elapsed_seconds`)
+**Deviations**: (1) ADR-0003's illustrative GDScript sample was stale vs the real implemented APIs — documented in "Discovered Deviations" above (real save keys, only 2 modules have `restore_state`, `simulate_offline` returns absolute finals not a deltas dict). (2) A real crash was caught only via manual headless cold-start testing (not the automated suite, which can't reproduce it — `scene_runner` never instances a scene as the tree's *own root*): `change_scene_to_file()` called synchronously from the Main Scene's own `_ready()` errors ("Parent node is busy adding/removing children"); fixed with `.call_deferred()`. Documented as a permanent manual checklist item in `production/qa/smoke-tests.md` (new file) since no automated test can catch a regression here. (3) Added `OfflineProgressSystem.MIN_REPORT_THRESHOLD_SECONDS` constant (didn't exist in code, only as GDD prose).
+**Test Evidence**: Integration — `tests/integration/offline_report/boot_flow_test.gd` (9 tests) + `tests/unit/offline_report/boot_controller_elapsed_test.gd` (3 tests), full regression 268/268. Manual: 2 real headless cold-start runs (empty save, 2h-aged save) — see `production/qa/smoke-tests.md`.
+**Code Review**: Complete — godot-specialist verdict ISSUES FOUND → fixed (untyped `{}` literal passed to `apply_delta`'s `Dictionary[StringName, float]` param, now built as an explicitly-typed local with `float()` casts; stale doc path corrected). qa-tester verdict GAPS → fixed (elapsed-computation had zero coverage, now unit-tested; "restores without crashing" was a weak assertion, now verifies the actual sub-dict landed in ResourceManager via a known value) + 1 gap correctly identified as inherently non-automatable (the call_deferred bug class), documented as a standing manual smoke-test instead.

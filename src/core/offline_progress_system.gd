@@ -39,6 +39,15 @@ extends Node
 ## beyond this is discarded, not rolled over to a future call.
 const MAX_OFFLINE_CAP_SECONDS: int = 86400
 
+## Minimum elapsed time (seconds) for the Offline Report Screen to appear,
+## per offline-report-screen.md's threshold gate (GDD tuning knob: 300s/5min,
+## safe range 60-900). Below this, BootController routes straight to the main
+## scene with no report -- a short app-switch isn't worth an anticlimactic
+## "+2 Reach" interruption. The gate check itself runs in BootController
+## (ADR-0009 §5); this constant is just the tuning-knob home, mirroring
+## MAX_OFFLINE_CAP_SECONDS above.
+const MIN_REPORT_THRESHOLD_SECONDS: int = 300
+
 ## Fixed simulation step size, in seconds. The final step of a run may be
 ## shorter than this (a partial step) when the remaining duration doesn't
 ## divide evenly.
