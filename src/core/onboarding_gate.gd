@@ -39,6 +39,34 @@ var _completed_types: Dictionary[StringName, bool] = {}
 ## ActionSystem.ACTION_DURATIONS' keys exactly.
 const REQUIRED_TYPES: Array[StringName] = [&"nagraj_vloga", &"zrob_drame", &"przeprosiny"]
 
+func _ready() -> void:
+	ActionSystem.action_completed.connect(_on_action_completed_signal)
+
+
+## Real signal handler (Story 002). Detects the exact PURE_ACTION ->
+## FIRST_CARD_PENDING transition via a before/after phase comparison, rather
+## than embedding the cross-module call inside on_action_completed() itself --
+## keeps that method's Story 001 unit tests free of any DecisionCardSystem
+## dependency. [param _rewards] is unused -- onboarding only cares which
+## action completed, never its reward payload.
+##
+## force_cooldown_zero() is called DEFERRED, not directly. Both OnboardingGate
+## and DecisionCardSystem subscribe to the same ActionSystem.action_completed
+## signal; phase flips synchronously, so DecisionCardSystem's own handler for
+## THIS SAME transition-causing action would already see is_card_suppressed()
+## == false (regardless of which Autoload connected first) and could decrement/
+## trigger a pool check on the transition action itself -- violating the GDD's
+## "first card appears after the NEXT completed action (4th overall, at
+## minimum)". Deferring the cooldown-zero write guarantees it lands strictly
+## AFTER this event's full synchronous handler chain, affecting only the
+## action after the transition -- independent of Autoload connection order.
+func _on_action_completed_signal(action_id: StringName, _rewards: Dictionary) -> void:
+	var was_pure_action: bool = phase == Phase.PURE_ACTION
+	on_action_completed(action_id)
+	if was_pure_action and phase == Phase.FIRST_CARD_PENDING:
+		DecisionCardSystem.call_deferred(&"force_cooldown_zero")
+
+
 ## Called once per completed action. Story 002 wires this to the real
 ## ActionSystem.action_completed signal; this story's tests call it directly
 ## with synthetic IDs. [param action_id] is ignored once in

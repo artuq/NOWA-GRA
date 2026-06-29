@@ -71,12 +71,22 @@ func set_seed(s: int) -> void:
 
 
 func _on_action_completed(_action_id: StringName, _rewards: Dictionary) -> void:
+	if OnboardingGate.is_card_suppressed():
+		return  # Phase 1: don't even decrement, per onboarding-tutorial.md
 	if state != State.COOLDOWN:
 		return  # a card is already being checked/presented/resolved — do not double-trigger
 	_actions_until_check -= 1
 	if _actions_until_check <= 0:
 		state = State.CHECKING
 		_check_pool()
+
+
+## Forces the cooldown counter to 0 -- called only by OnboardingGate, at the
+## Phase 1->2 transition (architecture.md Decision: ownership-clear direct
+## write, OnboardingGate owns this call, ADR-0005). The next completed action
+## triggers an immediate pool check.
+func force_cooldown_zero() -> void:
+	_actions_until_check = 0
 
 
 ## [param cards_override] is a test-only seam, default `null` (unused —

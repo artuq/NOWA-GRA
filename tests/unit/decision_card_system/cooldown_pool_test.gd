@@ -32,11 +32,21 @@ const _TEST_MILESTONE: StringName = &"test.decision_card_pool.fixture"
 var _instances: Array[Node] = []
 
 
+var _onboarding_phase_snapshot: int
+
 func before_test() -> void:
+	# This suite tests DecisionCardSystem's OWN cooldown/pool logic in
+	# isolation -- _on_action_completed() now reads the real global
+	# OnboardingGate.is_card_suppressed() (Story 002, additive), so force it
+	# to NORMAL (un-suppressed) here, independent of whatever other tests left
+	# the real OnboardingGate in. Restored in after_test().
+	_onboarding_phase_snapshot = OnboardingGate.phase
+	OnboardingGate.phase = OnboardingGate.Phase.NORMAL
 	_instances = []
 
 
 func after_test() -> void:
+	OnboardingGate.phase = _onboarding_phase_snapshot
 	# Real apply_delta/set_milestone/increment_counter calls in this suite now
 	# mark the real SaveSystem dirty (since the 2026-06-29 mark_dirty fix) --
 	# stop its debounce timer so a delayed save_now() doesn't fire mid-suite

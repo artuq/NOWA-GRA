@@ -12,7 +12,14 @@ const DecisionCardSystemScript: GDScript = preload("res://src/core/decision_card
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
 
+var _onboarding_phase_snapshot: int
+
 func before_test() -> void:
+	# See cooldown_pool_test.gd's before_test() comment: force the real
+	# OnboardingGate un-suppressed so resolve()'s real resolve_choice() call
+	# isn't affected by onboarding state. Restored in after_test().
+	_onboarding_phase_snapshot = OnboardingGate.phase
+	OnboardingGate.phase = OnboardingGate.Phase.NORMAL
 	_resource_snapshot[&"Reach"] = ResourceManager.get_resource(&"Reach")
 	_resource_snapshot[&"Cringe"] = ResourceManager.get_resource(&"Cringe")
 	_resource_snapshot[&"Morale"] = ResourceManager.get_resource(&"Morale")
@@ -21,6 +28,7 @@ func before_test() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.COOLDOWN
 
 func after_test() -> void:
+	OnboardingGate.phase = _onboarding_phase_snapshot
 	var restore: Dictionary[StringName, float] = {}
 	for key: StringName in _resource_snapshot:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)

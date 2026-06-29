@@ -14,13 +14,28 @@ config/name="King of Cringe"
 run/main_scene="res://scenes/boot/boot.tscn"
 config/features=PackedStringArray("4.6")
 
+[autoload]
+
+ResourceManager="*res://src/core/resource_manager.gd"
+HistoryFlagManager="*res://src/core/history_flag_manager.gd"
+CardContentDatabase="*res://src/core/card_content_database.gd"
+SaveSystem="*res://src/core/save_system.gd"
+ActionSystem="*res://src/core/action_system.gd"
+OfflineProgressSystem="*res://src/core/offline_progress_system.gd"
+OnboardingGate="*res://src/core/onboarding_gate.gd"
+DecisionCardSystem="*res://src/core/decision_card_system.gd"
+
 [display]
 
 window/size/viewport_width=720
 window/size/viewport_height=1280
-window/handheld/orientation=1
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
 [gui]
 
@@ -30,17 +45,3 @@ theme/default_font_size=20
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true
-
-[autoload]
-
-ResourceManager="*res://src/core/resource_manager.gd"
-HistoryFlagManager="*res://src/core/history_flag_manager.gd"
-CardContentDatabase="*res://src/core/card_content_database.gd"
-SaveSystem="*res://src/core/save_system.gd"
-ActionSystem="*res://src/core/action_system.gd"
-DecisionCardSystem="*res://src/core/decision_card_system.gd"
-OfflineProgressSystem="*res://src/core/offline_progress_system.gd"
-
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")

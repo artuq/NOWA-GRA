@@ -1,7 +1,7 @@
 # Story 002: Live Wiring — ActionSystem & DecisionCardSystem Integration
 
 > **Epic**: Onboarding/Tutorial
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: M (2-3h)
@@ -154,3 +154,12 @@ func _on_action_completed_signal(action_id: StringName, _rewards: Dictionary) ->
 
 - Depends on: Story 001 (OnboardingGate State Machine) — extends its `_ready()` and phase-transition detection
 - Unlocks: Story 003 (Persistence) — the live-wired system this story produces is what gets saved/restored
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-29
+**Criteria**: all passing (5 interaction tests: suppression blocks decrement, force_cooldown_zero fires at transition, next action triggers immediate PRESENTING, phase_normal zero intervention, resources never gated) + 5 pre-existing DecisionCardSystem-related test files updated to force `OnboardingGate.phase = NORMAL` in their setup/teardown
+**Deviations**: a real cross-subscriber signal-ordering bug was found and fixed during testing — both `OnboardingGate` and `DecisionCardSystem` subscribe to `ActionSystem.action_completed`; calling `force_cooldown_zero()` synchronously (direct call) from the transition handler let `DecisionCardSystem`'s own handler for the SAME transition-causing action see suppression already lifted, immediately triggering a pool check on the 3rd action instead of the 4th (violating the GDD's explicit "4th overall, at minimum" AC). Fixed via `DecisionCardSystem.call_deferred(&"force_cooldown_zero")`, landing strictly after the event's full synchronous handler chain, independent of Autoload connection order.
+**Test Evidence**: Integration — `tests/integration/onboarding/onboarding_live_wiring_test.gd`, 5/5 passing (full regression 286/286, stable across multiple consecutive clean runs + 2 real headless cold-start runs verifying the Autoload reorder)
+**Code Review**: Complete — godot-specialist verdict ISSUES FOUND → fixed (1 real gap: `test_next_action_after_transition_triggers_immediate_check` lacked the `await get_tree().process_frame` needed for the deferred call to land, making its OR-assertion a tautology proving nothing — fixed with the await + tightened to assert `State.PRESENTING` specifically, since `CardContentDatabase`'s pool is never empty). `call_deferred` confirmed the correct, idiomatic Godot 4.6 fix; suppression-check ordering confirmed correct; Autoload reorder confirmed safe.

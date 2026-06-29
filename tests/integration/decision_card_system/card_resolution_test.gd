@@ -36,7 +36,14 @@ var _instances: Array[Node] = []
 var _risky_counter_snapshot: int = 0
 
 
+var _onboarding_phase_snapshot: int
+
 func before_test() -> void:
+	# See cooldown_pool_test.gd's before_test() comment: force the real
+	# OnboardingGate un-suppressed so this suite's resolution tests aren't
+	# affected by onboarding state. Restored in after_test().
+	_onboarding_phase_snapshot = OnboardingGate.phase
+	OnboardingGate.phase = OnboardingGate.Phase.NORMAL
 	_resource_snapshot[&"Reach"] = ResourceManager.get_resource(&"Reach")
 	_resource_snapshot[&"Cringe"] = ResourceManager.get_resource(&"Cringe")
 	_resource_snapshot[&"Morale"] = ResourceManager.get_resource(&"Morale")
@@ -46,6 +53,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	OnboardingGate.phase = _onboarding_phase_snapshot
 	for instance: Node in _instances:
 		if is_instance_valid(instance):
 			instance.queue_free()

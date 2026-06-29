@@ -43,12 +43,20 @@ var _resource_snapshot: Dictionary[StringName, float] = {}
 var _instances: Array[Node] = []
 
 
+var _onboarding_phase_snapshot: int
+
 func before_test() -> void:
+	# See cooldown_pool_test.gd's before_test() comment: force the real
+	# OnboardingGate un-suppressed so this suite's own weighting logic isn't
+	# affected by onboarding state. Restored in after_test().
+	_onboarding_phase_snapshot = OnboardingGate.phase
+	OnboardingGate.phase = OnboardingGate.Phase.NORMAL
 	_resource_snapshot[&"Cringe"] = ResourceManager.get_resource(&"Cringe")
 	_instances = []
 
 
 func after_test() -> void:
+	OnboardingGate.phase = _onboarding_phase_snapshot
 	# See cooldown_pool_test.gd's after_test() comment: real mutation call
 	# sites now mark the real SaveSystem dirty (2026-06-29 fix) -- stop its
 	# debounce timer so a delayed save_now() can't fire mid-suite.

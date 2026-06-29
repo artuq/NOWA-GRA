@@ -9,10 +9,18 @@
 ## the gesture wiring (state machine, latch, bounce-back) are what's verified.
 extends GdUnitTestSuite
 
+var _onboarding_phase_snapshot: int
+
 func before_test() -> void:
+	# See cooldown_pool_test.gd's before_test() comment: force the real
+	# OnboardingGate un-suppressed so committed swipes' resolve_choice() calls
+	# aren't affected by onboarding state. Restored in after_test().
+	_onboarding_phase_snapshot = OnboardingGate.phase
+	OnboardingGate.phase = OnboardingGate.Phase.NORMAL
 	DecisionCardSystem.state = DecisionCardSystem.State.COOLDOWN
 
 func after_test() -> void:
+	OnboardingGate.phase = _onboarding_phase_snapshot
 	DecisionCardSystem.state = DecisionCardSystem.State.COOLDOWN
 	# Committed swipes in this suite resolve real cards, marking the real
 	# SaveSystem dirty (2026-06-29 fix) -- stop its debounce timer so a delayed
