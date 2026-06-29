@@ -23,6 +23,10 @@ func after_test() -> void:
 	for key: StringName in _resource_snapshot:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)
 	ResourceManager.apply_delta(restore)
+	# apply_delta marks the real SaveSystem dirty (2026-06-29 fix) -- stop its
+	# debounce timer so a delayed save_now() can't fire mid-suite. See
+	# cooldown_pool_test.gd.
+	SaveSystem._debounce_timer.stop()
 
 ## AC: Resource HUD zone is present and shows all 5 resources simultaneously,
 ## correctly formatted, immediately on scene load (initial state, not just

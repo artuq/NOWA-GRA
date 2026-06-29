@@ -52,6 +52,10 @@ func after_test() -> void:
 	for key: StringName in _snapshot:
 		restore[key] = _snapshot[key] - ResourceManager.get_resource(key)
 	ResourceManager.apply_delta(restore)
+	# apply_delta marks the real SaveSystem dirty (2026-06-29 fix) -- stop its
+	# debounce timer so a delayed save_now() can't fire mid-suite. See
+	# cooldown_pool_test.gd.
+	SaveSystem._debounce_timer.stop()
 
 
 ## Sets [param name] on the real ResourceManager Autoload to exactly

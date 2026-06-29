@@ -12,16 +12,25 @@ var _haters_before: float
 var _morale_before: float
 
 func before_test() -> void:
+	# boot_with() calls the real ResourceManager.apply_delta(), which (since the
+	# mark_dirty wiring fix, 2026-06-29) starts SaveSystem's real debounce timer.
+	# Stopping it before/after every test prevents it from firing mid-suite and
+	# writing a real user://save.json with test data -- a real, observed bug:
+	# an unstopped timer here polluted card_resolution_test.gd's milestone
+	# assertions in a later, unrelated test file via a stale on-disk save.
+	SaveSystem._debounce_timer.stop()
 	_reach_before = ResourceManager.get_resource(&"Reach")
 	_haters_before = ResourceManager.get_resource(&"Haters")
 	_morale_before = ResourceManager.get_resource(&"Morale")
 
 func after_test() -> void:
+	SaveSystem._debounce_timer.stop()
 	ResourceManager.apply_delta({
 		&"Reach": _reach_before - ResourceManager.get_resource(&"Reach"),
 		&"Haters": _haters_before - ResourceManager.get_resource(&"Haters"),
 		&"Morale": _morale_before - ResourceManager.get_resource(&"Morale"),
 	})
+	SaveSystem._debounce_timer.stop()  # the restore above re-triggers mark_dirty
 	OfflineProgressSystem.last_simulation_result = {}
 
 ## AC: elapsed=300 (threshold, inclusive) routes to the Offline Report Screen.

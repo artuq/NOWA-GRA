@@ -24,6 +24,13 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	# A fresh _action_system's reward application still calls the real global
+	# ResourceManager.apply_delta() -> SaveSystem.mark_dirty() (autoload access
+	# is by global name, not `self`). This suite waits on real Timers (action
+	# durations up to 9s), so the 2s debounce can fire mid-test -- stop it so
+	# a delayed save_now() can't write live state to a real user://save.json.
+	# See cooldown_pool_test.gd.
+	SaveSystem._debounce_timer.stop()
 	# Guard against double-free if GdUnit4's own GC frees tree-added nodes
 	# between stages when a test awaits (see resource_system tests' note).
 	if is_instance_valid(_action_system):

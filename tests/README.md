@@ -55,3 +55,40 @@ Any test exercising `DecisionCardSystem`'s weighted-random pick must call
 `set_seed()` on its RNG before asserting on outcomes — never rely on
 `randomize()`'s OS-entropy seed in a test, per `coding-standards.md`'s
 "no random seeds" determinism rule.
+
+## Local dev gotcha: delete the real save file before repeated test runs
+
+**Symptom**: re-running the full suite locally (not in CI) intermittently fails
+a test that asserts a milestone/flag starts `false` (e.g.
+`card_resolution_test.gd`'s `test_resolution_applies_resources_before_history_flags`),
+even though the same test passes cleanly the first time or in isolation.
+
+**Root cause**: `SaveSystem._ready()` unconditionally calls `load_save()` +
+`restore_state()` on the real `ResourceManager`/`HistoryFlagManager` Autoloads
+at Autoload init — this runs automatically for *every* Godot process,
+including every `runtest.sh` invocation, regardless of `run/main_scene` or the
+`-s` script override, and **before any test code can run**. Since the
+2026-06-29 `mark_dirty()` wiring fix, many tests that mutate the real
+Autoloads (`ResourceManager.apply_delta`, `HistoryFlagManager.set_milestone`/
+`increment_counter`) arm `SaveSystem`'s real 2-second debounce timer; most
+test files now stop that timer in `after_test()` as a defensive measure, but
+a few real-`Timer`-driven tests (action durations of several real seconds)
+can still let it fire *mid-test*, writing live (test-fixture-polluted) state to
+the real `user://save.json`. The *next* local test invocation then inherits
+that stale save file at Autoload init, before its own tests get a chance to
+isolate themselves.
+
+This is **not a production bug** (loading the real save at boot is correct)
+and **not a CI bug** (CI runners start from a clean `user://` every time) —
+it is a local, repeated-manual-run artifact only.
+
+**Fix**: delete the real save file before re-running the suite locally:
+
+```bash
+# macOS
+rm -f "$HOME/Library/Application Support/Godot/app_userdata/King of Cringe/save.json" \
+      "$HOME/Library/Application Support/Godot/app_userdata/King of Cringe/save.tmp"
+```
+
+(On Linux: `~/.local/share/godot/app_userdata/King of Cringe/`. On Windows:
+`%APPDATA%/Godot/app_userdata/King of Cringe/`.)

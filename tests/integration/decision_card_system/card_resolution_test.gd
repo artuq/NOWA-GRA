@@ -59,6 +59,12 @@ func after_test() -> void:
 			"risky_choices_count": _risky_counter_snapshot,
 		},
 	})
+	# resolve_choice()/apply_delta() above mark the real SaveSystem dirty
+	# (2026-06-29 fix) -- stop its debounce timer so a delayed save_now()
+	# can't fire mid-suite and serialize this test's milestone-fixture flag
+	# (which has no unset API) into a real user://save.json that would then
+	# pollute a later process's tests. See cooldown_pool_test.gd.
+	SaveSystem._debounce_timer.stop()
 
 
 func _new_decision_card_system() -> Node:

@@ -93,6 +93,13 @@ func after_test() -> void:
 		restored_temp.store_string(_temp_file_backup)
 		restored_temp.close()
 
+	# The apply_delta() restore above marks the real SaveSystem dirty
+	# (2026-06-29 fix). Stop its debounce timer LAST, after the on-disk
+	# save.json/save.tmp backup/restore above, so a delayed save_now() can't
+	# fire later in the suite and overwrite the just-restored backup with
+	# live test state. See cooldown_pool_test.gd.
+	SaveSystem._debounce_timer.stop()
+
 
 ## Instantiates a fresh SaveSystem and adds it to the tree (triggers
 ## _ready() -> load_save() + restore_state() on the real peer Autoloads).

@@ -49,6 +49,10 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	# See cooldown_pool_test.gd's after_test() comment: real mutation call
+	# sites now mark the real SaveSystem dirty (2026-06-29 fix) -- stop its
+	# debounce timer so a delayed save_now() can't fire mid-suite.
+	SaveSystem._debounce_timer.stop()
 	for instance: Node in _instances:
 		if is_instance_valid(instance):
 			instance.queue_free()
@@ -56,6 +60,7 @@ func after_test() -> void:
 	for key: StringName in _resource_snapshot:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)
 	ResourceManager.apply_delta(restore)
+	SaveSystem._debounce_timer.stop()  # the restore above re-arms it
 
 
 func _new_decision_card_system() -> Node:

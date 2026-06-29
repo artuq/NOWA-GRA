@@ -14,6 +14,10 @@ func before_test() -> void:
 
 func after_test() -> void:
 	DecisionCardSystem.state = DecisionCardSystem.State.COOLDOWN
+	# Committed swipes in this suite resolve real cards, marking the real
+	# SaveSystem dirty (2026-06-29 fix) -- stop its debounce timer so a delayed
+	# save_now() can't fire mid-suite. See cooldown_pool_test.gd.
+	SaveSystem._debounce_timer.stop()
 
 func _present_card() -> Dictionary:
 	var card: Dictionary = {

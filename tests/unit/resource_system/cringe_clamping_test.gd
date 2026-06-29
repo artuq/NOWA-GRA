@@ -27,6 +27,11 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	# A fresh _rm instance's apply_delta() still calls the real global
+	# SaveSystem.mark_dirty() (autoload access is by global name, not `self`)
+	# -- stop its debounce timer (2026-06-29 fix) so a delayed save_now() can't
+	# fire mid-suite. See cooldown_pool_test.gd's after_test() for the full note.
+	SaveSystem._debounce_timer.stop()
 	# GdUnit4's own GC can free tree-added nodes between stages when a test
 	# awaits — guard against double-free (see core_mutation_test.gd, 2026-06-23).
 	if is_instance_valid(_rm):

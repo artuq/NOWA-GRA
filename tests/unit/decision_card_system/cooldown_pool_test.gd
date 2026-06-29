@@ -37,6 +37,12 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	# Real apply_delta/set_milestone/increment_counter calls in this suite now
+	# mark the real SaveSystem dirty (since the 2026-06-29 mark_dirty fix) --
+	# stop its debounce timer so a delayed save_now() doesn't fire mid-suite
+	# and write live state to a real user://save.json (observed bug: this
+	# polluted an unrelated later test's milestone assertions).
+	SaveSystem._debounce_timer.stop()
 	for instance: Node in _instances:
 		if is_instance_valid(instance):
 			instance.queue_free()

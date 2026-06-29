@@ -26,6 +26,10 @@ func after_test() -> void:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)
 	ResourceManager.apply_delta(restore)
 	DecisionCardSystem.state = DecisionCardSystem.State.COOLDOWN
+	# Real apply_delta calls in this suite (here and during resolve()) now mark
+	# the real SaveSystem dirty (2026-06-29 fix) -- stop its debounce timer so
+	# a delayed save_now() can't fire mid-suite. See cooldown_pool_test.gd.
+	SaveSystem._debounce_timer.stop()
 
 func _single_card_pool(card: Dictionary) -> Array[Dictionary]:
 	var pool: Array[Dictionary] = [card]

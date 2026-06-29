@@ -16,10 +16,15 @@ func before_test() -> void:
 	_resource_snapshot[&"Morale"] = ResourceManager.get_resource(&"Morale")
 
 func after_test() -> void:
+	# See cooldown_pool_test.gd's after_test() comment: stop the real
+	# SaveSystem's debounce timer (armed by apply_delta below) so a delayed
+	# save_now() can't fire mid-suite.
+	SaveSystem._debounce_timer.stop()
 	var restore: Dictionary[StringName, float] = {}
 	for key: StringName in _resource_snapshot:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)
 	ResourceManager.apply_delta(restore)
+	SaveSystem._debounce_timer.stop()  # the restore above re-arms it
 
 func _set_resources(cringe: float, haters: float, morale: float) -> void:
 	var delta: Dictionary[StringName, float] = {
