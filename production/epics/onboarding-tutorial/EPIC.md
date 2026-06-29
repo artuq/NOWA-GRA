@@ -3,8 +3,8 @@
 > **Layer**: Core
 > **GDD**: design/gdd/onboarding-tutorial.md
 > **Architecture Module**: OnboardingGate (per `architecture.md` — contract already fully designed, not yet implemented)
-> **Status**: Ready
-> **Stories**: 3 stories created — see table below
+> **Status**: Complete
+> **Stories**: 3 stories — all Complete (see table below)
 
 ## Overview
 
@@ -42,7 +42,7 @@ This epic is complete when:
 |---|-------|------|--------|-----|
 | 001 | OnboardingGate State Machine | Logic | Complete | ADR-0001, ADR-0005 |
 | 002 | Live Wiring — ActionSystem & DecisionCardSystem | Integration | Complete | ADR-0005, ADR-0001 |
-| 003 | Persistence — Save/Load & Boot Wiring | Integration | Ready | ADR-0003, ADR-0002 |
+| 003 | Persistence — Save/Load & Boot Wiring | Integration | Complete | ADR-0003, ADR-0002 |
 
 **Build order**: strictly sequential — 001 (pure state machine, mockable) → 002 (real signal wiring, Autoload reorder) → 003 (persistence, depends on 002's fully-wired system). Story 002 includes a real risk: reordering `project.godot`'s Autoload list, verified via a real headless cold-start run (not just `scene_runner`), per the lesson from Offline Report Screen Story 003.
 

@@ -14,6 +14,10 @@ const APOLOGY: StringName = &"przeprosiny"
 var _instances: Array[Node] = []
 
 func after_test() -> void:
+	# on_action_completed() now calls the real SaveSystem.mark_dirty() (Story
+	# 003) -- stop its debounce timer so a delayed save_now() can't fire
+	# mid-suite. See cooldown_pool_test.gd in decision_card_system tests.
+	SaveSystem._debounce_timer.stop()
 	for instance: Node in _instances:
 		if is_instance_valid(instance):
 			instance.free()

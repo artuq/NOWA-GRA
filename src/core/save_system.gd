@@ -59,6 +59,7 @@ func _ready() -> void:
 	var data: Dictionary = load_save()
 	ResourceManager.restore_state(data.get("resources", {}))
 	HistoryFlagManager.restore_state(data.get("history_flags", {}))
+	OnboardingGate.restore_state(data.get("onboarding", {}))
 	state = State.READY
 
 	_debounce_timer = Timer.new()
@@ -110,6 +111,7 @@ func save_now() -> void:
 		"resources": ResourceManager.serialize_state(),
 		"history_flags": HistoryFlagManager.serialize_state(),
 		"decision_card_state": {"cooldown_actions_remaining": 0, "resolved_milestone_cards": []},
+		"onboarding": OnboardingGate.serialize_state(),
 	}
 	var file: FileAccess = FileAccess.open(TEMP_PATH, FileAccess.WRITE)
 	if file == null:

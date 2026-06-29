@@ -41,12 +41,17 @@ static func compute_elapsed_seconds(data: Dictionary, now: float) -> int:
 ## [param data] is the save Dictionary from SaveSystem.load_save() ({} on first
 ## session). [param elapsed_seconds] is the offline duration to simulate.
 func boot_with(data: Dictionary, elapsed_seconds: int) -> void:
-	# Restore module state, in ADR-0001 dependency order. Only ResourceManager
-	# and HistoryFlagManager implement restore_state -- see this story's
-	# "Discovered Deviations" note; ActionSystem/DecisionCardSystem/OnboardingGate
-	# have no persisted state to restore (existing gap, out of scope here).
+	# Restore module state, in ADR-0001 dependency order. ResourceManager,
+	# HistoryFlagManager, and (as of Onboarding/Tutorial Story 003) OnboardingGate
+	# implement restore_state; ActionSystem/DecisionCardSystem have no persisted
+	# state to restore (existing gap, out of scope here). Note: SaveSystem._ready()
+	# already calls these same three restore_state() methods automatically at
+	# Autoload init (every process, not just this boot path) -- this is a
+	# harmless, idempotent re-restore from the same data, matching the existing
+	# pattern already established for ResourceManager/HistoryFlagManager.
 	ResourceManager.restore_state(data.get("resources", {}))
 	HistoryFlagManager.restore_state(data.get("history_flags", {}))
+	OnboardingGate.restore_state(data.get("onboarding", {}))
 
 	# Baselines captured BEFORE the sim result is applied -- both for computing
 	# the deltas below (apply_delta is the only write ResourceManager exposes)

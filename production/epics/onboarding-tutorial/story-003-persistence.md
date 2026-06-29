@@ -1,7 +1,7 @@
 # Story 003: Persistence — Save/Load & Boot Wiring
 
 > **Epic**: Onboarding/Tutorial
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: M (2-3h)
@@ -136,3 +136,12 @@ The phase-mutating method (`on_action_completed` from Story 001, or wherever the
 
 - Depends on: Story 002 (Live Wiring) — persists the fully-wired system's state
 - Unlocks: None — final story; completing it makes the Onboarding/Tutorial epic fully done (last unbuilt MVP system)
+
+---
+
+## Completion Notes
+**Completed**: 2026-06-30
+**Criteria**: all passing (9 interaction tests: mid-phase 1-type/2-type round trip, FIRST_CARD_PENDING survives restore + correctly advances after, empty restore = fresh state, corrupted out-of-range phase falls back to PURE_ACTION, save_now() payload shape, BootController restores phase, BootController handles missing key, mark_dirty fires only on real mutation)
+**Deviations**: discovered `SaveSystem._ready()` itself (not just `BootController`) auto-restores all persisted modules at every process start — added `OnboardingGate.restore_state()` there too (the real production boot path), in addition to `BootController.boot_with()`'s own call (pre-existing idempotent double-restore pattern, confirmed harmless by code review). Verified end-to-end via a real headless cold-start with an injected save containing mid-phase onboarding data (phase=1, 2 completed types) — survived with zero crash and round-tripped correctly on the next debounced write.
+**Test Evidence**: Integration — `tests/integration/onboarding/onboarding_persistence_test.gd`, 9/9 passing (full regression 295/295, stable across multiple consecutive clean runs + 1 real cold-start verification)
+**Code Review**: Complete — godot-gdscript-specialist verdict CLEAN, one advisory applied: `restore_state()`'s `as Phase` cast performed no range validation (a corrupted save with an out-of-enum phase would silently no-op every match arm) — fixed with explicit range validation falling back to PURE_ACTION, matching SaveSystem's own "corruption → first-session defaults, never crash" contract; guarded mark_dirty and the double-restore idempotency both confirmed correct.

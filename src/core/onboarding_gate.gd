@@ -71,16 +71,25 @@ func _on_action_completed_signal(action_id: StringName, _rewards: Dictionary) ->
 ## ActionSystem.action_completed signal; this story's tests call it directly
 ## with synthetic IDs. [param action_id] is ignored once in
 ## FIRST_CARD_PENDING or NORMAL -- only PURE_ACTION's variety gate reads it.
+##
+## Marks the save dirty (Story 003) only when something actually changes --
+## a repeat-type call in PURE_ACTION or any call in NORMAL is a true no-op and
+## must not mark dirty (same guarded-mutation stance as ResourceManager.
+## apply_delta's non-empty-deltas guard, 2026-06-29 fix).
 func on_action_completed(action_id: StringName) -> void:
 	match phase:
 		Phase.PURE_ACTION:
+			if _completed_types.has(action_id):
+				return  # repeat of an already-seen type -- no real mutation
 			_completed_types[action_id] = true
 			if _completed_types.size() >= REQUIRED_TYPES.size():
 				phase = Phase.FIRST_CARD_PENDING
+			SaveSystem.mark_dirty()
 		Phase.FIRST_CARD_PENDING:
 			phase = Phase.NORMAL
+			SaveSystem.mark_dirty()
 		Phase.NORMAL:
-			pass  # terminal, no further transitions
+			pass  # terminal, no further transitions, no mutation
 
 
 ## True only during PURE_ACTION -- the only phase where Decision Card System's
@@ -88,3 +97,41 @@ func on_action_completed(action_id: StringName) -> void:
 ## (ownership-clear read, ADR-0005) before any cooldown decrement.
 func is_card_suppressed() -> bool:
 	return phase == Phase.PURE_ACTION
+
+
+## Returns this module's persisted state, per the established sibling
+## convention (ResourceManager.serialize_state(), HistoryFlagManager.
+## serialize_state()) -- plain String keys/values only (JSON-serializable;
+## StringName is not a JSON type, per save_system.gd's own convention).
+##
+## Example:
+##   var snapshot: Dictionary = OnboardingGate.serialize_state()
+func serialize_state() -> Dictionary:
+	var types: Array[String] = []
+	for key: StringName in _completed_types:
+		types.append(String(key))
+	return {
+		"phase": phase,
+		"completed_types": types,
+	}
+
+
+## Restores from [param data] (the "onboarding" sub-dict from the save file,
+## or `{}` on first session / a save predating this story). Does NOT call
+## SaveSystem.mark_dirty() -- a load must never re-trigger a save (same rule
+## as ResourceManager.restore_state()/HistoryFlagManager.restore_state()).
+##
+## Example:
+##   OnboardingGate.restore_state(data.get("onboarding", {}))
+func restore_state(data: Dictionary) -> void:
+	# `as Phase` performs no range validation -- a corrupted/hand-edited save
+	# with an out-of-enum value would silently fall through every match arm as
+	# a no-op (code-review note, 2026-06-29). Validate against the enum's real
+	# range explicitly, falling back to PURE_ACTION on any out-of-range value,
+	# matching SaveSystem's own "corruption -> first-session defaults, never
+	# crash" contract.
+	var raw_phase: int = int(data.get("phase", Phase.PURE_ACTION))
+	phase = raw_phase as Phase if raw_phase >= 0 and raw_phase <= Phase.NORMAL else Phase.PURE_ACTION
+	_completed_types.clear()
+	for type_str: String in data.get("completed_types", []):
+		_completed_types[StringName(type_str)] = true
