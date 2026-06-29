@@ -1,6 +1,6 @@
 # Epics Index
 
-Last Updated: 2026-06-26
+Last Updated: 2026-06-29
 Engine: Godot 4.6.3
 
 | Epic | Layer | System | GDD | Stories | Status |
@@ -12,6 +12,7 @@ Engine: Godot 4.6.3
 | Action System | Core | action-system | design/gdd/action-system.md | 2 stories | Ready |
 | Decision Card System | Core | decision-card-system | design/gdd/decision-card-system.md | 3 stories | Complete |
 | Offline Progress System | Core | offline-progress-system | design/gdd/offline-progress-system.md | 1 story | Complete (TR-off-002 deferred) |
+| Onboarding/Tutorial | Core | onboarding-tutorial | design/gdd/onboarding-tutorial.md | 3 stories | Ready |
 | Action UI | Presentation | action-ui | design/gdd/action-ui.md | 4 stories | Complete |
 | Card UI | Presentation | card-ui | design/gdd/card-ui.md | 3 stories | Complete |
 | Offline Report Screen | Presentation | offline-report-screen | design/gdd/offline-report-screen.md | 3 stories | Complete |
