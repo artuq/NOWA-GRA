@@ -33,6 +33,12 @@ const ACTION_DURATIONS: Dictionary[StringName, float] = {
 	&"nagraj_vloga": 6.0,
 	&"zrob_drame": 9.0,
 	&"przeprosiny": 4.0,
+	# Milestone/counter-gated unlocks (slots 4-6) -- see
+	# design/quick-specs/milestone-gated-action-slots-2026-06-30.md (DDR-0001 #3).
+	# Unlock conditions live in ActionGrid (ActionUnlocks), not this reward table.
+	&"nagraj_kolaba": 12.0,
+	&"udziel_wywiadu": 15.0,
+	&"wydaj_kurs": 20.0,
 }
 
 ## Per-action base reward deltas, keyed by action_id. `Reach` is scaled by
@@ -50,6 +56,12 @@ const ACTION_REWARDS: Dictionary[StringName, Dictionary] = {
 	&"nagraj_vloga": {&"Reach": 5.0, &"Cringe": 2.0, &"Morale": 0.0},
 	&"zrob_drame": {&"Reach": 10.0, &"Cringe": 20.0, &"Morale": -3.0},
 	&"przeprosiny": {&"Reach": 6.0, &"Cringe": -15.0, &"Morale": 5.0},
+	# Gated unlocks (slots 4-6) -- higher reward than the base 3, each self-balanced
+	# by a Cringe cost feeding the Cringe->Haters->Morale chain. No Sponsors delta
+	# (that faucet stays on sponsor/brand cards). Source: the quick spec above.
+	&"nagraj_kolaba": {&"Reach": 16.0, &"Cringe": 8.0, &"Morale": -2.0},
+	&"udziel_wywiadu": {&"Reach": 24.0, &"Cringe": 4.0, &"Morale": 3.0},
+	&"wydaj_kurs": {&"Reach": 40.0, &"Cringe": 18.0, &"Morale": -5.0},
 }
 
 ## English UI display names, keyed by action_id. The game's UI language is
@@ -63,6 +75,9 @@ const ACTION_DISPLAY_NAMES: Dictionary[StringName, String] = {
 	&"nagraj_vloga": "Record a Vlog",
 	&"zrob_drame": "Make Drama",
 	&"przeprosiny": "Apologize Online",
+	&"nagraj_kolaba": "Record a Collab",
+	&"udziel_wywiadu": "Give an Interview",
+	&"wydaj_kurs": "Launch a Course",
 }
 
 ## The currently running action's id, or `&""` when idle. This is the sole

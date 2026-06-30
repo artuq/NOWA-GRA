@@ -10,15 +10,30 @@
 ## single-concurrency gate.
 extends GdUnitTestSuite
 
+var _risky_snapshot: int
+var _safe_snapshot: int
+
 func before_test() -> void:
 	# Force idle: if a prior test left an action running, resolve it before
 	# this test begins. ActionSystem has no public "force idle" seam, so
 	# directly clear current_action_id -- acceptable here since this is test
 	# setup, not production code touching another system's internals.
 	ActionSystem.current_action_id = &""
+	# The grid now gates slots 4-6 on the real HistoryFlagManager (DDR-0001 #3).
+	# Reset the two gating counters to 0 so these "3 locked" assertions are not
+	# polluted by counters another suite left set. The slot-6 milestones
+	# (card.staged_drama.chosen_risky / card.cancel_threat.apologized) are only
+	# ever set by resolving those exact real cards -- no test does that -- so
+	# they need no reset (and HistoryFlagManager has no unset API by design).
+	_risky_snapshot = HistoryFlagManager.get_counter(&"risky_choices_count")
+	_safe_snapshot = HistoryFlagManager.get_counter(&"safe_choices_count")
+	HistoryFlagManager.restore_state({"counters": {"risky_choices_count": 0, "safe_choices_count": 0}})
 
 func after_test() -> void:
 	ActionSystem.current_action_id = &""
+	HistoryFlagManager.restore_state({"counters": {
+		"risky_choices_count": _risky_snapshot, "safe_choices_count": _safe_snapshot,
+	}})
 
 ## AC: exactly 6 slots, 3 unlocked + 3 locked.
 func test_action_grid_renders_six_slots_three_unlocked_three_locked() -> void:
