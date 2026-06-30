@@ -47,8 +47,13 @@ Gracz czuje kontrolę i przewidywalność — wybiera akcję wiedząc dokładnie
 | Nagraj vloga | 6s | +5 | +2 | 0 | 0.83 |
 | Zrób dramę | 9s | +10 | +20 (ceiling) | -3 | 1.11 |
 | Przeproś w internecie | 4s | +6 | -15 (floor) | +5 | 1.50 |
+| Record a Collab (slot 4) * | 12s | +16 | +8 | -2 | 1.33 |
+| Give an Interview (slot 5) * | 15s | +24 | +4 | +3 | 1.60 |
+| Launch a Course (slot 6) * | 20s | +40 | +18 | -5 | 2.00 |
 
-(Zasięgi ratio 10/6 = 1.67x, within the locked 1.4-1.8x registry range. Duration was tuned — per `systems-designer` review — to 9s rather than the original 12s: at 12s, drama's Zasięgi/s tied exactly with the neutral baseline (0.83/s), making the risky action strictly dominated for a player optimizing Zasięgi/time, with all downside and no upside. At 9s, drama clears the baseline (1.11 > 0.83/s) while Przeproś remains the fastest per-second — correct, since its premium is conditional on actually needing Cringe/Morale relief, not a flat advantage.)
+\* **Milestone/counter-gated unlocks (slots 4-6).** These 3 actions occupy the 3 reserved locked Action Grid slots and become available only through the player's decision history — the *unlock conditions* are owned by `design/quick-specs/milestone-gated-action-slots-2026-06-30.md` (per DDR-0001 #3), not this reward table. They pay a higher Zasięgi/s than the base 3, appropriate for gated progression content; each is self-balanced by a Cringe cost feeding the Cringe→Haters→Morale chain (slot 6's +18 is the apex-grift cost). No Sponsors delta — that faucet stays tied to sponsor/brand cards. The Collab→Interview→Course arc is the archetypal influencer monetization escalation ending in the "sell a course" grift (Pillar 3: critique through what the game rewards).
+
+(Zasięgi ratio 10/6 = 1.67x for the base risky/safe pair, within the locked 1.4-1.8x registry range; the 1.4-1.8x rule binds risky/safe *pairs*, not the gated escalation actions above. Duration was tuned — per `systems-designer` review — to 9s rather than the original 12s: at 12s, drama's Zasięgi/s tied exactly with the neutral baseline (0.83/s), making the risky action strictly dominated for a player optimizing Zasięgi/time, with all downside and no upside. At 9s, drama clears the baseline (1.11 > 0.83/s) while Przeproś remains the fastest per-second — correct, since its premium is conditional on actually needing Cringe/Morale relief, not a flat advantage.)
 
 ### States and Transitions
 
