@@ -18,6 +18,13 @@
 ## action. All queue UI connects to ActionSystem.queue_changed and
 ## ActionSystem.queue_suspended_changed — no polling.
 ##
+## Locked slot preview (Story 005): locked gated slots 4-6 show a preview
+## card: grayed icon at LOCKED_MODULATE alpha, action name at full opacity
+## with a lock prefix, unlock requirement in the stats label, and a live
+## ProgressBar for counter-gated slots (4/5). Tapping a locked slot shows a
+## transient 2s toast. Progress bars update event-driven only (on
+## action_completed) — no _process().
+##
 ## No `_process()` in this zone -- RunningActionOverlay is the sole
 ## `_process()`-using zone, per ADR-0007.
 ##
@@ -86,6 +93,16 @@ var _queue_bar: HBoxContainer
 ## (suspend by card) so the player cannot clear the queue while choosing.
 var _clear_btn: Button
 
+## ProgressBar nodes for gated slots 0/1 (counter-gated).
+## Null for slot 2 (milestone-gated -- no numeric progress bar).
+var _slot_progress_bars: Array[ProgressBar] = [null, null, null]
+
+## Bound callables for the locked-slot pressed handlers, stored so they can be
+## cleanly disconnected in _activate_gated_slot(). A .bind(g) call creates a
+## unique Callable object; we must hold a reference to disconnect it later.
+var _locked_pressed_callables: Array[Callable] = [Callable(), Callable(), Callable()]
+
+
 func _ready() -> void:
 	ActionSystem.action_completed.connect(_on_action_completed)
 	_configure_unlocked_slots()
@@ -110,27 +127,65 @@ func _configure_unlocked_slots() -> void:
 		_slot_buttons[i].pressed.connect(_on_unlocked_button_pressed.bind(action_id))
 
 
-## Visual dimming for locked slots -- distinct from the `disabled` StyleBox
-## (which only changes the button's background/border), this mutes the icon
-## itself so a locked slot reads as visually muted, not just inert. Uses
-## reduced alpha (a "ghosted" look) rather than darkening toward black --
-## against this dark-mode UI (2026-06-25 revision), darkening an already-dark
-## icon would make it nearly invisible; translucency reads as "inactive"
-## clearly on both light and dark surfaces.
+## Visual dimming for locked slot icons -- reduced alpha reads as "inactive"
+## clearly on both light and dark surfaces without making the icon invisible.
+## Title label is kept at full opacity (lock prefix makes intent clear).
 const LOCKED_MODULATE: Color = Color(1.0, 1.0, 1.0, 0.45)
 
-## Renders the 3 gated slots as locked placeholders (ghosted padlock, disabled).
-## This is the initial/default state; _refresh_gated_slots() then activates any
-## whose decision-history unlock condition is already met.
+## Renders the 3 gated slots as locked preview cards: grayed action icon,
+## full-opacity title with lock prefix, unlock requirement in stats label,
+## and a ProgressBar for counter-gated slots (g=0, g=1). Slots are enabled
+## so tap -> toast works. _refresh_gated_slots() then activates any slot
+## whose unlock condition is already met.
 func _configure_locked_slots() -> void:
-	for i in range(GATED_BASE_INDEX, _slot_buttons.size()):
-		_slot_icons[i].texture = LOCKED_ICON
-		_slot_icons[i].modulate = LOCKED_MODULATE
-		_slot_titles[i].text = ""
-		_slot_stats[i].text = ""
-		_slot_buttons[i].disabled = true
-		# No pressed connection while locked -- a disabled button never fires
-		# pressed; _activate_gated_slot() adds the connection on unlock.
+	for g in ActionUnlocks.GATED_ACTION_IDS.size():
+		var slot_index: int = GATED_BASE_INDEX + g
+		var action_id: StringName = ActionUnlocks.GATED_ACTION_IDS[g]
+
+		# Icon: show the action's own icon at LOCKED_MODULATE alpha (grayed preview).
+		_slot_icons[slot_index].texture = ACTION_ICONS.get(action_id)
+		_slot_icons[slot_index].modulate = LOCKED_MODULATE
+
+		# Title: full opacity with lock prefix so it reads as locked but legible.
+		_slot_titles[slot_index].text = "🔒 " + ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+		_slot_titles[slot_index].modulate = Color.WHITE
+
+		# Stats label: unlock requirement string at 0.45 alpha.
+		if ActionUnlocks.is_milestone_gated(g):
+			_slot_stats[slot_index].text = "Reach a story moment"
+		else:
+			var progress: Dictionary = ActionUnlocks.get_choice_progress(
+				g,
+				HistoryFlagManager.get_counter(&"risky_choices_count"),
+				HistoryFlagManager.get_counter(&"safe_choices_count"),
+			)
+			_slot_stats[slot_index].text = "%d / %d choices" % [progress["current"], progress["required"]]
+		_slot_stats[slot_index].modulate = Color(1.0, 1.0, 1.0, 0.45)
+
+		# Enable for tap -> toast (locked slots are not disabled).
+		_slot_buttons[slot_index].disabled = false
+
+		# Store and connect the bound callable so we can disconnect it cleanly on unlock.
+		var locked_callable: Callable = _on_locked_button_pressed.bind(g)
+		_locked_pressed_callables[g] = locked_callable
+		_slot_buttons[slot_index].pressed.connect(locked_callable)
+
+		# ProgressBar for counter-gated slots only (g=0, g=1). None for g=2 (milestone).
+		if not ActionUnlocks.is_milestone_gated(g):
+			var bar_progress: Dictionary = ActionUnlocks.get_choice_progress(
+				g,
+				HistoryFlagManager.get_counter(&"risky_choices_count"),
+				HistoryFlagManager.get_counter(&"safe_choices_count"),
+			)
+			var bar: ProgressBar = ProgressBar.new()
+			bar.min_value = 0
+			bar.max_value = float(bar_progress["required"])
+			bar.value = float(bar_progress["current"])
+			bar.show_percentage = false
+			# TextGroup VBoxContainer is the direct parent of the title label.
+			var text_group: VBoxContainer = _slot_titles[slot_index].get_parent() as VBoxContainer
+			text_group.add_child(bar)
+			_slot_progress_bars[g] = bar
 
 
 ## Evaluates the 3 gated slots' unlock conditions against the live decision
@@ -153,16 +208,33 @@ func _refresh_gated_slots() -> void:
 
 
 ## Turns gated slot [param g] (0-based across the 3 gated slots) from a locked
-## placeholder into a live, tappable action: real icon, title + stats, enabled,
-## pressed -> start_action(). Marks it live so it's never re-activated and is
-## re-enabled after future actions complete.
+## preview into a live, tappable action: disconnects the locked handler, frees
+## any ProgressBar, restores icon to full opacity, sets real title (no lock
+## prefix) and stats at full alpha, re-enables, and connects to start_action().
 func _activate_gated_slot(g: int) -> void:
 	var slot_index: int = GATED_BASE_INDEX + g
 	var action_id: StringName = ActionUnlocks.GATED_ACTION_IDS[g]
+
+	# Disconnect the locked tap handler using the stored bound callable.
+	if _locked_pressed_callables[g].is_valid():
+		_slot_buttons[slot_index].pressed.disconnect(_locked_pressed_callables[g])
+		_locked_pressed_callables[g] = Callable()
+
+	# Free the ProgressBar if present (counter-gated slots only).
+	if _slot_progress_bars[g] != null:
+		_slot_progress_bars[g].queue_free()
+		_slot_progress_bars[g] = null
+
+	# Restore icon to full opacity with the action's real icon.
 	_slot_icons[slot_index].texture = ACTION_ICONS.get(action_id)
-	_slot_icons[slot_index].modulate = Color.WHITE  # un-ghost the locked dimming
+	_slot_icons[slot_index].modulate = Color.WHITE
+
+	# Remove lock prefix; restore title and stats to full opacity.
 	_slot_titles[slot_index].text = ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+	_slot_titles[slot_index].modulate = Color.WHITE
 	_slot_stats[slot_index].text = _stats_text(action_id)
+	_slot_stats[slot_index].modulate = Color.WHITE
+
 	_slot_buttons[slot_index].disabled = false
 	_slot_buttons[slot_index].pressed.connect(_on_unlocked_button_pressed.bind(action_id))
 	_gated_live[g] = true
@@ -196,14 +268,74 @@ func _on_unlocked_button_pressed(action_id: StringName) -> void:
 		_set_all_slots_disabled(true)
 
 
+## Handles a tap on a locked gated slot [param g] (0-based). Shows a transient
+## informational toast instead of starting an action. For counter-gated slots
+## the remaining count is clamped to >= 0 in case of edge-case over-progress.
+func _on_locked_button_pressed(g: int) -> void:
+	var slot_index: int = GATED_BASE_INDEX + g
+	var toast_text: String
+	if ActionUnlocks.is_milestone_gated(g):
+		toast_text = "Unlock by reaching a key story moment"
+	else:
+		var risky: int = HistoryFlagManager.get_counter(&"risky_choices_count")
+		var safe: int = HistoryFlagManager.get_counter(&"safe_choices_count")
+		var progress: Dictionary = ActionUnlocks.get_choice_progress(g, risky, safe)
+		var remaining: int = maxi(0, progress["required"] - progress["current"])
+		toast_text = "Make %d more choices to unlock" % remaining
+	_show_locked_toast(slot_index, toast_text)
+
+
+## Shows a transient Label (toast) as a child of the slot button, auto-dismissed
+## after 2 seconds. Any existing toast on the same slot is removed first to
+## avoid stacking. The label sits within the slot bounds and does not affect
+## neighbouring slots.
+func _show_locked_toast(slot_index: int, text: String) -> void:
+	# Remove any existing toast on this slot to avoid stacking.
+	var existing: Node = _slot_buttons[slot_index].find_child("LockedToast", false, false)
+	if existing != null:
+		existing.queue_free()
+
+	var toast: Label = Label.new()
+	toast.name = "LockedToast"
+	toast.text = text
+	toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_slot_buttons[slot_index].add_child(toast)
+	# Button is not a Container — explicitly fill the slot rect so autowrap works
+	# and the toast doesn't stack at (0,0) over the icon.
+	toast.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	get_tree().create_timer(2.0).timeout.connect(func() -> void:
+		if is_instance_valid(toast):
+			toast.queue_free()
+	)
+
+
 func _on_action_completed(_action_id: StringName, _rewards: Dictionary) -> void:
 	# A card resolved between actions may have just met a gated slot's unlock
 	# condition -- evaluate before re-enabling so a freshly-unlocked slot comes
 	# back interactive immediately.
 	_refresh_gated_slots()
-	# Re-enable base + live gated slots, unless queue is at cap (in which case
-	# buttons stay disabled until the player clears some queue slots).
+	# Update progress bars for any slots still locked after the refresh.
+	for g in _gated_live.size():
+		if not _gated_live[g]:
+			_update_locked_slot_progress(g)
+	# Re-enable base + live gated slots (and still-locked slots for toast),
+	# unless queue is at cap.
 	_refresh_action_buttons()
+
+
+## Updates the ProgressBar value and stats label text for a still-locked
+## counter-gated slot [param g]. No-op for milestone-gated slots (bar is null).
+## Called event-driven only (on action_completed) — no _process().
+func _update_locked_slot_progress(g: int) -> void:
+	if _slot_progress_bars[g] == null:
+		return
+	var risky: int = HistoryFlagManager.get_counter(&"risky_choices_count")
+	var safe: int = HistoryFlagManager.get_counter(&"safe_choices_count")
+	var progress: Dictionary = ActionUnlocks.get_choice_progress(g, risky, safe)
+	_slot_progress_bars[g].value = float(progress["current"])
+	var slot_index: int = GATED_BASE_INDEX + g
+	_slot_stats[slot_index].text = "%d / %d choices" % [progress["current"], progress["required"]]
 
 
 ## Creates the queue bar HBoxContainer and appends it as a child. The bar is
@@ -257,9 +389,9 @@ func _on_queue_suspended_changed(is_suspended: bool) -> void:
 	_clear_btn.visible = not is_suspended
 
 
-## Re-enables the base 3 slots and any live gated slots, unless the queue is
-## at cap — in that case all action buttons stay disabled until the queue drains
-## below QUEUE_CAP. Still-locked gated slots are never re-enabled here.
+## Re-enables the base 3 slots, live gated slots, and still-locked gated slots
+## (so tap -> toast continues to work after an action completes). All slots
+## stay disabled only when the queue is at cap.
 func _refresh_action_buttons() -> void:
 	var at_cap: bool = ActionSystem.get_queue_size() >= ActionSystem.QUEUE_CAP
 	for i in UNLOCKED_ACTION_IDS.size():
@@ -267,6 +399,9 @@ func _refresh_action_buttons() -> void:
 	for g in _gated_live.size():
 		if _gated_live[g]:
 			_slot_buttons[GATED_BASE_INDEX + g].disabled = at_cap
+		else:
+			# Still locked — re-enable so tap -> toast works.
+			_slot_buttons[GATED_BASE_INDEX + g].disabled = false
 
 
 func _set_all_slots_disabled(disabled: bool) -> void:

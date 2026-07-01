@@ -45,9 +45,19 @@ goal: "Build Card UI — make decision cards actually visible and playable."
 start: "2026-07-21"
 end: "2026-07-25"
 generated: "2026-06-25"
-updated: "2026-06-25"
+updated: "2026-07-01"
 
 stories:
+  - id: "7-2"
+    name: "Action UI — Locked Slot Preview (Story 005)"
+    file: "production/epics/action-ui/story-005-locked-slot-preview.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 0.3
+    blocker: ""
+    completed: "2026-07-01"
+
   - id: "7-1"
     name: "Card UI — epic-level (provisional, pending /create-stories breakdown)"
     file: "design/gdd/card-ui.md"

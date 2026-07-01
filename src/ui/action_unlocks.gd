@@ -48,3 +48,19 @@ static func unlocked_slots(risky_count: int, safe_count: int, has_slot6_risky: b
 		has_slot6_risky or has_slot6_safe,
 	]
 	return result
+
+
+## Returns the max(risky, safe) choice count and the required threshold for
+## counter-gated slot [param g] (0-based, where 0=slot4, 1=slot5).
+## Returns empty Dictionary for slot 2 (milestone-gated -- no numeric progress).
+static func get_choice_progress(g: int, risky_count: int, safe_count: int) -> Dictionary:
+	match g:
+		0: return {"current": maxi(risky_count, safe_count), "required": SLOT_4_COUNTER_THRESHOLD}
+		1: return {"current": maxi(risky_count, safe_count), "required": SLOT_5_COUNTER_THRESHOLD}
+		_: return {}
+
+
+## Returns true if gated slot [param g] (0-based) uses a milestone gate
+## (binary pass/fail) rather than a counter threshold.
+static func is_milestone_gated(g: int) -> bool:
+	return g == 2
