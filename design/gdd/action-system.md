@@ -91,7 +91,8 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 
 > *Specialist not consulted — Lean mode (section is not D/H).*
 
-- **If the player tries to choose an action while `running`**: request rejected — UI must disable action buttons while in the `running` state (confirmed by both prototypes).
+- **If the player tries to choose an action while `running`**: the action is added to the queue (not started immediately). Queue cap is `QUEUE_CAP` (default 10); when the queue is full, action buttons are disabled with a "Queue full" tooltip. See quick-spec `design/quick-specs/action-queue-auto-repeat-2026-06-30.md` for full queue rules.
+- **If the queue is suspended** (Decision Card visible OR Morale ≤ Critical): the current action runs to completion, but the next queued action does not auto-start until the suspend condition clears.
 - **If the game is closed mid-`running`**: on return, Offline Progress System must resolve whether the action "completed" during offline time (closed duration ≥ remaining action time) — this is a dependency, not resolved here; flagged as an Open Question for Offline Progress System.
 - **If Morale is 0% (Critical) at resolution**: `Mult(M) = 0.50` applies normally — no special penalty beyond what Resource System's Formula C already defines.
 - **If Cringe is already at 100 when `Zrób dramę` resolves**: Resource System's `cringe_delta_from_actions` formula naturally clamps the gain (soft brake) — Action System does nothing extra, it just passes the declared delta (+20) to Resource System.
@@ -115,6 +116,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 | Per-action Zasięgi (base) | 5 / 10 / 6 | tied to risky:safe ratio (1.4-1.8x) | Changing one value without checking Zasięgi/s against the others can recreate the dominated-action bug found in this GDD's review |
 | Per-action Cringe Δ | +2 / +20 / -15 | within Resource System's -15 to +20 range | Exceeding the registered ceiling/floor breaks the locked Resource System contract |
 | Per-action Morale Δ | 0 / -3 / +5 | -10 to +10 | Too high: a single action can jump a full Morale band, undermining gradual escalation (Pillar 1) |
+| `QUEUE_CAP` | 10 | 5–20 | Too low: frustrating for offline play (Pillar 4). Too high: trivialises resource management |
 
 **Knob interaction:** changing any action's duration or base Zasięgi requires recomputing all 3 actions' Zasięgi/s — this GDD's own review found that a naive duration change (12s for drama) created a dominated strategy. Always check per-second rates together, not in isolation.
 
@@ -147,10 +149,17 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 - **GIVEN** `resolved`, **WHEN** the reward write completes, **THEN** state → `idle` immediately, no player-visible delay.
 - **GIVEN** `idle` with no action ever selected, **WHEN** rendered, **THEN** no progress bar shown, all 3 choices enabled.
 
-**Single-concurrency rule:**
-- **GIVEN** an action is `running`, **WHEN** the player selects any action (same or different), **THEN** rejected, the running action continues unaffected.
-- **GIVEN** `running`, **WHEN** the UI renders, **THEN** all 3 action controls are disabled (non-interactive), not just visually de-emphasized.
-- **GIVEN** an action just returned to `idle`, **WHEN** the player immediately selects the same action again, **THEN** accepted with no cooldown.
+**Queue rules (replaces single-concurrency reject):**
+- **GIVEN** an action is `running`, **WHEN** the player selects any action, **THEN** it is added to the queue; the running action continues unaffected.
+- **GIVEN** queue length = `QUEUE_CAP`, **WHEN** the player selects any action, **THEN** rejected (queue full); UI shows "Queue full" tooltip.
+- **GIVEN** `resolved` → `idle` transition, **WHEN** queue is non-empty AND not suspended, **THEN** `queue.pop_front()` starts immediately → `running`.
+- **GIVEN** `resolved` → `idle`, **WHEN** queue is empty, **THEN** state stays `idle`; no auto-start.
+- **GIVEN** an action just returned to `idle` with empty queue, **WHEN** the player immediately selects the same action again, **THEN** accepted with no cooldown.
+
+**Queue suspend rules:**
+- **GIVEN** a Decision Card is presented, **WHEN** queue is non-empty, **THEN** queue is suspended (frozen); current action finishes, next does not auto-start until card is dismissed.
+- **GIVEN** Morale ≤ Critical, **WHEN** `resolved` → `idle`, **THEN** queue is suspended; does not auto-start. Resumes when Morale exits Critical.
+- **GIVEN** queue is suspended, **WHEN** suspend condition clears, **THEN** auto-start resumes from the front of the queue on the next `resolved` → `idle` transition.
 
 **Reward formula at each Morale band:**
 - **GIVEN** High Morale (Mult=1.00), **WHEN** `Zrób dramę` (base=10) resolves, **THEN** final = 10.
@@ -165,7 +174,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 - **GIVEN** `Przeproś w internecie` resolves, **THEN** Cringe -15 (subject to clamp), Morale +5.
 
 **Defined edge cases:**
-- **GIVEN** `running`, **WHEN** the player taps any other action, **THEN** rejected, no partial reward applied.
+- **GIVEN** `running`, **WHEN** the player taps any other action, **THEN** added to queue (not rejected); no partial reward applied to the running action.
 - **GIVEN** Critical Morale at resolution, **THEN** Mult=0.50 applies, no separate "Critical penalty" stacks on top.
 - **GIVEN** Cringe=100, **WHEN** `Zrób dramę` (ΔCringe=+20) resolves, **THEN** Action System passes +20 unmodified; resulting Cringe is governed solely by Resource System's clamp (`clamp(120,0,100)-100=0` — derived from Formula E, not separately re-tested here).
 
