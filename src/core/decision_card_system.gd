@@ -42,12 +42,18 @@ enum State { COOLDOWN, CHECKING, PRESENTING, RESOLVING }
 var state: State = State.COOLDOWN
 
 ## Emitted by present_next_card() when a card enters PRESENTING, carrying the
-## chosen card Dictionary. The only signal on this system. Card UI's entry
-## trigger (ADR-0008) -- an additive notification mirroring ActionSystem's
-## action_started (ADR-0007); never emitted on an empty pool (present_next_card
-## is only ever called with a non-empty pool, see _check_pool). Lets Card UI
-## react without polling state or reading the private _presented_card.
+## chosen card Dictionary. Card UI's entry trigger (ADR-0008) -- an additive
+## notification mirroring ActionSystem's action_started (ADR-0007); never
+## emitted on an empty pool (present_next_card is only ever called with a
+## non-empty pool, see _check_pool). Lets Card UI react without polling state
+## or reading the private _presented_card.
 signal card_presented(card: Dictionary)
+
+## Emitted after the player resolves a presented card and _presented_card is
+## cleared. ActionSystem connects to this to lift card-based queue suspension
+## (Action System Story 003 — Action Queue). Emitted before the cooldown
+## counter resets so listeners observe the card-gone state cleanly.
+signal card_resolved()
 
 var _actions_until_check: int = COOLDOWN_ACTIONS
 
@@ -237,5 +243,6 @@ func resolve_choice(option_index: int) -> void:
 		HistoryFlagManager.set_milestone(option["milestone_to_set"])
 
 	_presented_card = {}
+	card_resolved.emit()
 	_actions_until_check = COOLDOWN_ACTIONS
 	state = State.COOLDOWN

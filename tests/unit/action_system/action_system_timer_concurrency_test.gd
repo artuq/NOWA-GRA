@@ -34,6 +34,14 @@ func after_test() -> void:
 	# Guard against double-free if GdUnit4's own GC frees tree-added nodes
 	# between stages when a test awaits (see resource_system tests' note).
 	if is_instance_valid(_action_system):
+		# Disconnect this instance's Autoload subscriptions before freeing it
+		# (queue_free() defers actual removal — see action_queue_test.gd's
+		# after_test() for why this matters once a later test in this suite
+		# emits DecisionCardSystem signals or mutates ResourceManager).
+		DecisionCardSystem.card_presented.disconnect(_action_system._on_card_presented)
+		DecisionCardSystem.card_resolved.disconnect(_action_system._on_card_resolved)
+		ResourceManager.resource_changed.disconnect(_action_system._on_resource_changed)
+		_action_system._timer.stop()
 		_action_system.queue_free()
 
 
@@ -87,20 +95,22 @@ func test_start_action_with_unknown_id_returns_false_and_does_not_mutate_state()
 	assert_bool(_action_system._timer.is_stopped()).is_true()
 
 
-## AC-2: an action is already running -> a second start_action() call
-## (same OR different id) is rejected, current_action_id unchanged, the
-## running Timer's time_left is not reset/restarted.
-func test_start_action_while_running_returns_false_and_does_not_interrupt_running_timer() -> void:
+## AC-2 (superseded by Story 003's queue): an action is already running ->
+## a second start_action() call (same OR different id) is queued rather than
+## rejected, current_action_id unchanged, the running Timer's time_left is
+## not reset/restarted. See action_queue_test.gd for the full queue contract.
+func test_start_action_while_running_enqueues_and_does_not_interrupt_running_timer() -> void:
 	_action_system.start_action(&"zrob_drame")
 	var time_left_before: float = _action_system._timer.time_left
 
 	var accepted_same: bool = _action_system.start_action(&"zrob_drame")
 	var accepted_different: bool = _action_system.start_action(&"przeprosiny")
 
-	assert_bool(accepted_same).is_false()
-	assert_bool(accepted_different).is_false()
+	assert_bool(accepted_same).is_true()
+	assert_bool(accepted_different).is_true()
 	assert_that(_action_system.current_action_id).is_equal(&"zrob_drame")
 	assert_float(_action_system._timer.time_left).is_equal_approx(time_left_before, 0.0001)
+	assert_int(_action_system.get_queue_size()).is_equal(2)
 
 
 ## AC-3: Timer elapsing -> _on_action_timeout() resets current_action_id to

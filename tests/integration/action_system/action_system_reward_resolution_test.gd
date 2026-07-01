@@ -45,6 +45,16 @@ func after_test() -> void:
 	# Guard against double-free if GdUnit4's own GC frees tree-added nodes
 	# between stages when a test awaits (see resource_system tests' note).
 	if is_instance_valid(_action_system):
+		# Disconnect this instance's Autoload subscriptions before freeing it.
+		# queue_free() defers actual node removal to the end of the frame, so
+		# without an explicit disconnect these connections (and the instance's
+		# still-running Timer) can fire during a later test in this suite and
+		# react to that test's own _set_resource() calls (cross-test signal
+		# leak — see action_queue_test.gd's after_test() for the same fix).
+		DecisionCardSystem.card_presented.disconnect(_action_system._on_card_presented)
+		DecisionCardSystem.card_resolved.disconnect(_action_system._on_card_resolved)
+		ResourceManager.resource_changed.disconnect(_action_system._on_resource_changed)
+		_action_system._timer.stop()
 		_action_system.queue_free()
 	# Restore the real ResourceManager Autoload to its pre-test values so
 	# this suite's resource mutations never leak into another test.

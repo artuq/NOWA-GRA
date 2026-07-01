@@ -11,6 +11,13 @@
 ## from "Icons Essential" v1.2 (see assets/ui/icons/ATTRIBUTION.md) -- swap
 ## for bespoke pixel art later without redesigning this layout.
 ##
+## Queue bar (Story 003): a programmatic HBoxContainer added below the grid
+## shows queued action icons in order. The bar dims (alpha 0.5) while the
+## queue is suspended (card presenting or Morale Critical). A Clear button
+## (Button, "X") lets the player empty the queue without stopping the running
+## action. All queue UI connects to ActionSystem.queue_changed and
+## ActionSystem.queue_suspended_changed — no polling.
+##
 ## No `_process()` in this zone -- RunningActionOverlay is the sole
 ## `_process()`-using zone, per ADR-0007.
 ##
@@ -69,6 +76,16 @@ const LOCKED_ICON: Texture2D = preload("res://assets/ui/icons/icon_locked.png")
 ## permanent (milestones/counters never decrease), so this only flips false→true.
 var _gated_live: Array[bool] = [false, false, false]
 
+## HBoxContainer appended below the grid, showing one icon per queued action
+## plus the clear button. Created programmatically in `_setup_queue_bar()` so
+## no scene edit is required for this Story 003 addition.
+var _queue_bar: HBoxContainer
+
+## "X" button at the trailing end of the queue bar. Calls
+## `ActionSystem.clear_queue()` on press. Hidden during card presentation
+## (suspend by card) so the player cannot clear the queue while choosing.
+var _clear_btn: Button
+
 func _ready() -> void:
 	ActionSystem.action_completed.connect(_on_action_completed)
 	_configure_unlocked_slots()
@@ -76,6 +93,9 @@ func _ready() -> void:
 	# Then activate any gated slot whose decision-history condition is already
 	# met (e.g. restored from a save mid/late game).
 	_refresh_gated_slots()
+	_setup_queue_bar()
+	ActionSystem.queue_changed.connect(_on_queue_changed)
+	ActionSystem.queue_suspended_changed.connect(_on_queue_suspended_changed)
 
 
 ## Wires the first 3 slots to the 3 currently-unlocked actions: icon, title +
@@ -181,13 +201,72 @@ func _on_action_completed(_action_id: StringName, _rewards: Dictionary) -> void:
 	# condition -- evaluate before re-enabling so a freshly-unlocked slot comes
 	# back interactive immediately.
 	_refresh_gated_slots()
-	# Re-enable the 3 base slots + any live gated slots (all 6 were disabled on
-	# action start). Still-locked gated slots stay disabled.
+	# Re-enable base + live gated slots, unless queue is at cap (in which case
+	# buttons stay disabled until the player clears some queue slots).
+	_refresh_action_buttons()
+
+
+## Creates the queue bar HBoxContainer and appends it as a child. The bar is
+## hidden until the queue becomes non-empty. The Clear button ("X") is always
+## the last child and calls ActionSystem.clear_queue() on press. Uses Button
+## per ADR-0007 (no TouchScreenButton).
+func _setup_queue_bar() -> void:
+	_queue_bar = HBoxContainer.new()
+	_queue_bar.visible = false
+	add_child(_queue_bar)
+	_clear_btn = Button.new()
+	_clear_btn.text = "X"
+	_clear_btn.tooltip_text = "Clear queue"
+	_clear_btn.pressed.connect(ActionSystem.clear_queue)
+	_queue_bar.add_child(_clear_btn)
+
+
+## Rebuilds the queue bar from [param snapshot]: removes all existing icon
+## nodes (keeps _clear_btn), creates one TextureRect (or Label fallback) per
+## queued action id, then moves _clear_btn to the trailing position. Shows or
+## hides the entire bar based on whether the snapshot is empty. Disables all
+## action buttons when the queue is at cap (QUEUE_CAP reached).
+func _on_queue_changed(snapshot: Array[StringName]) -> void:
+	# Remove icon children (all children that are not _clear_btn).
+	for child: Node in _queue_bar.get_children():
+		if child != _clear_btn:
+			child.queue_free()
+	# Rebuild icon nodes from the snapshot.
+	for action_id: StringName in snapshot:
+		if ACTION_ICONS.has(action_id):
+			var icon: TextureRect = TextureRect.new()
+			icon.texture = ACTION_ICONS[action_id]
+			_queue_bar.add_child(icon)
+		else:
+			# Fallback: Label with the display name when no icon is registered.
+			var lbl: Label = Label.new()
+			lbl.text = ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+			_queue_bar.add_child(lbl)
+	# Keep _clear_btn as the last child regardless of how many icons were added.
+	_queue_bar.move_child(_clear_btn, -1)
+	_queue_bar.visible = not snapshot.is_empty()
+	# Enforce cap-disable: buttons stay off when the queue is full.
+	_refresh_action_buttons()
+
+
+## Dims the queue bar (alpha 0.5) and hides the Clear button while suspended
+## (card presenting). Restores full opacity and shows the Clear button when
+## the suspend lifts.
+func _on_queue_suspended_changed(is_suspended: bool) -> void:
+	_queue_bar.modulate.a = 0.5 if is_suspended else 1.0
+	_clear_btn.visible = not is_suspended
+
+
+## Re-enables the base 3 slots and any live gated slots, unless the queue is
+## at cap — in that case all action buttons stay disabled until the queue drains
+## below QUEUE_CAP. Still-locked gated slots are never re-enabled here.
+func _refresh_action_buttons() -> void:
+	var at_cap: bool = ActionSystem.get_queue_size() >= ActionSystem.QUEUE_CAP
 	for i in UNLOCKED_ACTION_IDS.size():
-		_slot_buttons[i].disabled = false
+		_slot_buttons[i].disabled = at_cap
 	for g in _gated_live.size():
 		if _gated_live[g]:
-			_slot_buttons[GATED_BASE_INDEX + g].disabled = false
+			_slot_buttons[GATED_BASE_INDEX + g].disabled = at_cap
 
 
 func _set_all_slots_disabled(disabled: bool) -> void:
