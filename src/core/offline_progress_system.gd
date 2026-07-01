@@ -96,38 +96,34 @@ func simulate_offline(elapsed_seconds: int) -> Dictionary:
 	var m: float = ResourceManager.get_resource(&"Morale")
 	var z_gained: float = 0.0
 
-	while remaining > 0:
-		var dt: int = min(OFFLINE_STEP_SECONDS, remaining)
-		var dt_minutes: float = dt / 60.0
+	# Sponsor Shield: if active at sim start, first N seconds use the elevated
+	# buffer (shield segment), remainder uses the base M_BUFFER. This is a
+	# 2-segment approximation — per quick-spec sponsor-network-shield-2026-06-30.md
+	# (DDR-0001 #6). Shield state is read once at sim start (snapshot), not
+	# per-tick — avoids branching inside the 1440-iteration worst-case loop.
+	var shield_seconds: int = clampi(int(ResourceManager.get_shield_remaining_seconds()), 0, remaining)
+	var segments: Array[Dictionary] = [
+		{"seconds": shield_seconds, "buffer": ResourceManager.get_shield_effective_buffer()},
+		{"seconds": remaining - shield_seconds, "buffer": ResourceFormulas.M_BUFFER},
+	]
 
-		# Fixed order per offline-progress-system.md Core Rules: H, then M,
-		# then Mult, then Z. Never reorder -- Z depends on the post-update H
-		# and the multiplier computed from the post-update M, not the
-		# step's starting values.
-		var h_rate: float = ResourceFormulas.haters_growth_rate(cringe_fixed)
-		h += h_rate * dt_minutes
+	for seg: Dictionary in segments:
+		var seg_remaining: int = seg["seconds"]
+		var effective_buffer: int = seg["buffer"]
+		while seg_remaining > 0:
+			var dt: int = min(OFFLINE_STEP_SECONDS, seg_remaining)
+			var dt_minutes: float = dt / 60.0
 
-		# morale_drain_rate() takes an int (Hatersi count is a whole-number
-		# variable per resource-system.md's Formula B), but h accumulates as
-		# a float across steps. Truncating via int() rather than rounding --
-		# h only ever grows, so this is equivalent to floor(h), consistent
-		# with "count of Haters" semantics (a partial Hater doesn't drain
-		# Morale yet). No existing live-play call site to match against this
-		# story (ActionSystem doesn't call ResourceFormulas yet -- that
-		# migration is separate scope, see story's Out of Scope).
-		var m_drain: float = ResourceFormulas.morale_drain_rate(int(h))
-		m = max(0.0, m - m_drain * dt_minutes)
+			var h_rate: float = ResourceFormulas.haters_growth_rate(cringe_fixed)
+			h += h_rate * dt_minutes
 
-		var mult: float = ResourceFormulas.action_effectiveness_multiplier(m)
-		# ADR-0006's Decision pseudocode predates ResourceFormulas.
-		# passive_zasiegi_income() (added by Resource System Story 005) and
-		# inlines the Z_PER_HATER multiplication directly -- using the real,
-		# already-tested function here instead keeps this loop free of any
-		# duplicated formula math, consistent with ADR-0006's own stated goal
-		# of a single shared implementation.
-		z_gained += ResourceFormulas.passive_zasiegi_income(h, mult, float(dt))
+			var m_drain: float = ResourceFormulas.morale_drain_rate(int(h), effective_buffer)
+			m = max(0.0, m - m_drain * dt_minutes)
 
-		remaining -= dt
+			var mult: float = ResourceFormulas.action_effectiveness_multiplier(m)
+			z_gained += ResourceFormulas.passive_zasiegi_income(h, mult, float(dt))
+
+			seg_remaining -= dt
 
 	var result: Dictionary = {
 		"final_H": h,

@@ -105,8 +105,10 @@ Rdzeń (nagrody z akcji) jest zawsze przewidywalny i niezmienny — to "nieuczci
 | Escalation exponent | M_drain_exp | float (tuning) | 1.3 | Mild escalation past buffer |
 | Elapsed time | Δt | float (s) | ≥0 | — |
 
-**Output Range:** 0 at N≤3; unbounded growth beyond, self-limiting via Critical-band multiplier feedback.
+**Output Range:** 0 at N≤N_buffer; unbounded growth beyond, self-limiting via Critical-band multiplier feedback.
 **Example:** M_drain_per_hater=0.15, N_buffer=3: N=2 → 0%/min (free); N=10 → 0.15×7^1.3≈1.88%/min; N=25 → 0.15×22^1.3≈8.34%/min. (Corrected 2026-06-23 — original worked examples here had an arithmetic error, caught during Story 003's implementation; the formula and constants were always correct, only this prose example was wrong.)
+
+**Sponsor Shield override (DDR-0001 #6):** While the Sponsor Shield is active, the effective N_buffer passed to this formula is `M_BUFFER + SHIELD_BUFFER_BONUS` (= 8, default) rather than `M_BUFFER` (= 3). This is a temporary override — when the shield expires, N_buffer reverts to M_BUFFER. Implementation: `morale_drain_rate(N, effective_buffer)` accepts an optional second parameter; callers that need the shield effect pass `ResourceManager.get_shield_effective_buffer()`.
 
 ---
 
@@ -163,9 +165,14 @@ Mult(M) = 1.00  if 70 ≤ M ≤ 100
 
 ---
 
-**Sponsorzy Acquisition (placeholder)**
+**Sponsorzy Acquisition and Consumption (DDR-0001 #6)**
 
-Flat 1–3 Sponsorzy per qualifying Decision Card, not scaled to card tier or Zasięgi reward. No consumption formula yet — explicitly a placeholder pending Team/Staff Management GDD (Alpha tier). Documented as unvalidated against any sink.
+Flat 1–3 Sponsorzy per qualifying Decision Card, not scaled to card tier or Zasięgi reward.
+
+**Consumption — Sponsor Shield (first sink, quick-spec `sponsor-network-shield-2026-06-30.md`):**
+The player may spend SHIELD_COST Sponsors (default: 5) to activate the Sponsor Shield for SHIELD_DURATION seconds (default: 300 s). While the shield is active, Formula B uses an elevated N_buffer (`M_BUFFER + SHIELD_BUFFER_BONUS = 8`), reducing Morale drain from Hatersi. Activating while already active adds SHIELD_DURATION to the remaining timer (additive stacking). Shield state persists across sessions.
+
+**Future sink:** Full Sponsors economy (spending on Team/Staff) is deferred to Team/Staff Management GDD (Alpha tier).
 
 ## Edge Cases
 
@@ -196,6 +203,9 @@ Flat 1–3 Sponsorzy per qualifying Decision Card, not scaled to card tier or Za
 | `H_exp` | 2.0 | 1.5–2.5 | Too low (≤1): linear escalation, early game too harsh. Too high (>3): late game too forgiving |
 | `H_max_add` | 1.0 | 0.5–2.0 | Too high: Hatersi explode at max Cringe, Morale unsustainable |
 | `N_buffer` | 3 | 2–5 | Too high: Hatersi become practically harmless, Morale never drains |
+| SHIELD_COST | 5 Sponsors | 3–10 | Too low: shield trivially maintained, Sponsors pile up; too high: shield rarely used |
+| SHIELD_DURATION | 300 s | 60–900 | Too long: effectively permanent (DDR-0001 forbidden); too short: not worth buying |
+| SHIELD_BUFFER_BONUS | +5 | +2 to +7 | Too high (e.g. +8 with N_buffer=3 → effective 11): dominant strategy per DDR-0001; +7 ceiling safe |
 | `M_drain_per_hater` | 0.15 | 0.05–0.3 | Too high: death-spiral Morale even at low Hatersi counts |
 | `M_drain_exp` | 1.3 | 1.1–1.6 | Too high: drain explodes, Critical band reached within minutes |
 | `Z_per_hater` | 0.2 | 0.1–0.5 | Too high: passive income overtakes active (violates economy-designer's MVP rule that active must dominate) |

@@ -105,6 +105,11 @@ const M_DRAIN_EXP: float = 1.3
 ## current Morale and always returns its full, unclamped value, even when N
 ## is large enough that the implied drain would exceed current Morale.
 ##
+## [param effective_buffer] overrides the default M_BUFFER when a caller
+## (e.g. the Sponsor Shield via ResourceManager.get_shield_effective_buffer())
+## needs an elevated buffer. Defaults to M_BUFFER so all existing call sites
+## that omit the argument are unaffected.
+##
 ## NaN-safety: M_DRAIN_EXP is a fractional exponent (1.3), which would be
 ## unsafe (NaN) on a negative base via pow() — but max(0, N - N_buffer)
 ## guarantees the base passed to pow() is always >= 0 regardless of what N
@@ -118,12 +123,13 @@ const M_DRAIN_EXP: float = 1.3
 ##
 ## Usage example:
 ##   var rate: float = ResourceFormulas.morale_drain_rate(10)  # -> ~1.882
-static func morale_drain_rate(hatersi_count: int) -> float:
+##   var rate_shielded: float = ResourceFormulas.morale_drain_rate(10, 8)  # elevated buffer
+static func morale_drain_rate(hatersi_count: int, effective_buffer: int = M_BUFFER) -> float:
 	# NOTE: `pow()`/`max()` builtin results must be explicitly typed `float`
 	# here — `:=` type inference on these calls has silently degraded to
 	# Variant in this project before (see haters_growth_rate() above).
 	# Always use explicit `var result: float = ...`, never `:=`.
-	var excess: float = max(0.0, float(hatersi_count) - float(M_BUFFER))
+	var excess: float = max(0.0, float(hatersi_count) - float(effective_buffer))
 	var curve: float = pow(excess, M_DRAIN_EXP)
 	var result: float = M_DRAIN_PER_HATER * curve
 	return result

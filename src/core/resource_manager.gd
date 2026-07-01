@@ -37,9 +37,81 @@ var _resources: Dictionary[StringName, float] = {
 ## Reach/Haters/Sponsors are intentionally unbounded — see resource-system.md.
 const _CLAMPED_KEYS: Array[StringName] = [&"Cringe", &"Morale"]
 
+## Cost in Sponsors to activate the Sponsor Shield. Source: quick-spec
+## sponsor-network-shield-2026-06-30.md (DDR-0001 #6).
+const SHIELD_COST: int = 5
+
+## Duration added to the shield timer per activation, in seconds. Additive
+## stacking: activating while already active extends the remaining time.
+const SHIELD_DURATION: float = 300.0
+
+## Bonus added to Formula B's N_buffer while the shield is active. Effective
+## buffer = M_BUFFER (3) + SHIELD_BUFFER_BONUS (5) = 8. Source: quick-spec.
+const SHIELD_BUFFER_BONUS: int = 5
+
 ## Emitted once per key after apply_delta() commits that key's new value.
 ## Notification only — never the write mechanism itself (ADR-0001).
 signal resource_changed(name: StringName, new_value: float, old_value: float)
+
+## Emitted when the shield activates (is_active=true) and when it expires
+## (is_active=false). remaining_seconds is the timer value at emission.
+## HUD wires to this for the countdown indicator (separate UI story).
+signal shield_changed(is_active: bool, remaining_seconds: float)
+
+## Seconds remaining on the active shield. 0.0 = inactive. Ticked down in
+## _process(); never goes negative. Persisted via serialize_state().
+var _shield_remaining_seconds: float = 0.0
+
+## Ticks the shield timer down by [param delta] seconds. Emits
+## shield_changed(false, 0.0) exactly once on the frame the timer hits 0.
+func _process(delta: float) -> void:
+	if _shield_remaining_seconds <= 0.0:
+		return
+	_shield_remaining_seconds = maxf(0.0, _shield_remaining_seconds - delta)
+	if _shield_remaining_seconds == 0.0:
+		shield_changed.emit(false, 0.0)
+
+
+## Spends SHIELD_COST Sponsors to add SHIELD_DURATION seconds to the shield
+## timer. Returns true if the cost was paid; false if Sponsors < SHIELD_COST
+## (no mutation on rejection). If the shield was already inactive and this
+## activation succeeds, emits shield_changed(true, new_remaining). If already
+## active, stacks duration (no signal — caller can read _shield_remaining_seconds
+## directly for display).
+##
+## Example:
+##   var ok: bool = ResourceManager.activate_sponsor_shield()
+func activate_sponsor_shield() -> bool:
+	if _resources.get(&"Sponsors", 0.0) < float(SHIELD_COST):
+		return false
+	var was_inactive: bool = _shield_remaining_seconds <= 0.0
+	apply_delta({&"Sponsors": -float(SHIELD_COST)})
+	_shield_remaining_seconds += SHIELD_DURATION
+	if was_inactive:
+		shield_changed.emit(true, _shield_remaining_seconds)
+	return true
+
+
+## Returns the effective N_buffer for Formula B (morale_drain_rate()). While
+## the shield is active this is M_BUFFER + SHIELD_BUFFER_BONUS (= 8); when
+## inactive it equals ResourceFormulas.M_BUFFER (= 3), the default constant.
+## Offline Progress System and any live-drain caller use this instead of
+## the raw M_BUFFER constant.
+##
+## Example:
+##   var buf: int = ResourceManager.get_shield_effective_buffer()
+func get_shield_effective_buffer() -> int:
+	if _shield_remaining_seconds > 0.0:
+		return ResourceFormulas.M_BUFFER + SHIELD_BUFFER_BONUS
+	return ResourceFormulas.M_BUFFER
+
+
+## Returns the shield timer's remaining seconds (0.0 = inactive). Read-only
+## accessor for callers that need to snapshot shield state (e.g. OfflineProgressSystem)
+## without coupling to the private field name.
+func get_shield_remaining_seconds() -> float:
+	return _shield_remaining_seconds
+
 
 ## Returns the current value of [param name], or 0.0 if the key is unknown.
 ##
@@ -79,6 +151,7 @@ func serialize_state() -> Dictionary:
 	var result: Dictionary = {}
 	for key: StringName in _resources:
 		result[String(key)] = _resources[key]
+	result["shield_remaining_seconds"] = _shield_remaining_seconds
 	return result
 
 
@@ -92,4 +165,7 @@ func serialize_state() -> Dictionary:
 ##   ResourceManager.restore_state({"Reach": 25.0, "Cringe": 10.0})
 func restore_state(data: Dictionary) -> void:
 	for key: String in data:
+		if key == "shield_remaining_seconds":
+			_shield_remaining_seconds = float(data[key])
+			continue
 		_resources[StringName(key)] = float(data[key])
