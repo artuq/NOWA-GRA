@@ -80,22 +80,22 @@ stories:
 
   - id: "8-4"
     name: "Action Queue auto-repeat"
-    file: "design/quick-specs/action-queue-auto-repeat-2026-06-30.md"
+    file: "production/epics/action-system/story-003-action-queue.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-06-30"  # was already implemented pre-sprint as action-system story-003; sprint entry was stale
 
   - id: "8-5"
     name: "Soft Reach Cap"
     file: "design/quick-specs/soft-reach-cap-algorithm-barrier-2026-07-01.md"
     priority: nice-to-have
-    status: backlog
+    status: blocked
     owner: ""
     estimate_days: 0.5
-    blocker: ""
+    blocker: "Quick-spec explicitly defers implementation until BurnoutSystem + Prestige/Checkpoint exist (Alpha) — will not be implemented this sprint"
     completed: ""
 
 _sprint_7_archive:

@@ -1,11 +1,15 @@
-## Interaction tests for the Card UI swipe gesture (Story 003). Drives real
-## InputEventScreenTouch/Drag through GdUnit4's scene_runner into CardScreen's
-## _input handler -- the standing UI-evidence method.
+## Interaction tests for the Card UI swipe gesture (Story 003). Injects
+## synthetic InputEventScreenTouch/Drag DIRECTLY into CardScreen._input() --
+## NOT via runner.simulate_screen_touch_*(), whose window-to-viewport
+## coordinate scaling in the headless harness inflates drag deltas (observed
+## 2.5x on 2026-07-05, turning a 20%-width drag into a full-clamp rotation
+## and breaking every distance-threshold assertion). Direct injection keeps
+## positions in the same space the assertions compute in (viewport rect),
+## and synthetic drags carry velocity == 0, making the flick-commit branch
+## structurally unreachable -- no settle-drag workaround needed.
 ##
-## Thresholds are computed relative to the live viewport width (not a hardcoded
-## 720) so the distance-commit assertions hold regardless of the headless
-## window size. Velocity-only commitment is covered by CardSwipeMath's unit
-## tests (Story 001) + flagged manual; here the deterministic distance path and
+## Velocity-only commitment is covered by CardSwipeMath's unit tests
+## (Story 001) + flagged manual; here the deterministic distance path and
 ## the gesture wiring (state machine, latch, bounce-back) are what's verified.
 extends GdUnitTestSuite
 
@@ -26,6 +30,31 @@ func after_test() -> void:
 	# SaveSystem dirty (2026-06-29 fix) -- stop its debounce timer so a delayed
 	# save_now() can't fire mid-suite. See cooldown_pool_test.gd.
 	SaveSystem._debounce_timer.stop()
+
+## Synthetic-event helpers: positions are viewport-space, velocity is 0.
+func _press(screen: Node, index: int, pos: Vector2) -> void:
+	var event := InputEventScreenTouch.new()
+	event.index = index
+	event.pressed = true
+	event.position = pos
+	screen._input(event)
+
+
+func _drag_to(screen: Node, index: int, pos: Vector2) -> void:
+	var event := InputEventScreenDrag.new()
+	event.index = index
+	event.position = pos
+	event.velocity = Vector2.ZERO
+	screen._input(event)
+
+
+func _release(screen: Node, index: int, pos: Vector2) -> void:
+	var event := InputEventScreenTouch.new()
+	event.index = index
+	event.pressed = false
+	event.position = pos
+	screen._input(event)
+
 
 func _present_card() -> Dictionary:
 	var card: Dictionary = {
@@ -50,8 +79,8 @@ func test_drag_enters_dragging_and_rotates_card() -> void:
 	var width: float = screen.get_viewport_rect().size.x
 	var start: Vector2 = Vector2(width / 2.0, 400.0)
 	var moved: Vector2 = start + Vector2(width * 0.2, 0.0)  # +20% width, under commit
-	await runner.simulate_screen_touch_press(0, start)
-	await runner.simulate_screen_touch_drag(0, moved)
+	_press(screen, 0, start)
+	_drag_to(screen, 0, moved)
 	await runner.simulate_frames(1)
 
 	assert_int(screen.state).is_equal(screen.State.DRAGGING)
@@ -76,9 +105,10 @@ func test_commit_right_resolves_option_b() -> void:
 
 	var width: float = screen.get_viewport_rect().size.x
 	var start: Vector2 = Vector2(width / 2.0, 400.0)
-	await runner.simulate_screen_touch_press(0, start)
-	await runner.simulate_screen_touch_drag(0, start + Vector2(width * 0.4, 0.0))  # 40% > 30%
-	await runner.simulate_screen_touch_release(0)
+	var committed: Vector2 = start + Vector2(width * 0.4, 0.0)  # 40% > 30%
+	_press(screen, 0, start)
+	_drag_to(screen, 0, committed)
+	_release(screen, 0, committed)
 	await runner.simulate_frames(2)
 
 	# option_B (index 1) => Reach +5, applied synchronously on release.
@@ -104,9 +134,10 @@ func test_commit_left_resolves_option_a() -> void:
 
 	var width: float = screen.get_viewport_rect().size.x
 	var start: Vector2 = Vector2(width / 2.0, 400.0)
-	await runner.simulate_screen_touch_press(0, start)
-	await runner.simulate_screen_touch_drag(0, start - Vector2(width * 0.4, 0.0))  # left 40%
-	await runner.simulate_screen_touch_release(0)
+	var committed_left: Vector2 = start - Vector2(width * 0.4, 0.0)  # left 40%
+	_press(screen, 0, start)
+	_drag_to(screen, 0, committed_left)
+	_release(screen, 0, committed_left)
 	await runner.simulate_frames(2)
 
 	# option_A (index 0) => Reach +10
@@ -126,14 +157,9 @@ func test_uncommitted_release_bounces_back() -> void:
 	var width: float = screen.get_viewport_rect().size.x
 	var start: Vector2 = Vector2(width / 2.0, 400.0)
 	var held: Vector2 = start + Vector2(width * 0.1, 0.0)  # 10% < 30%
-	await runner.simulate_screen_touch_press(0, start)
-	await runner.simulate_screen_touch_drag(0, held)
-	# Settle: a second drag to the SAME point yields a zero-movement drag event,
-	# forcing release velocity to 0 (InputEventScreenDrag.velocity is otherwise
-	# timing-dependent in the headless harness and can spuriously exceed the
-	# 800px/s flick threshold, making this a velocity-commit instead of a bounce).
-	await runner.simulate_screen_touch_drag(0, held)
-	await runner.simulate_screen_touch_release(0)
+	_press(screen, 0, start)
+	_drag_to(screen, 0, held)  # synthetic drag: velocity == 0, flick branch unreachable
+	_release(screen, 0, held)
 	await runner.simulate_frames(2)
 
 	assert_bool(screen.visible).is_true()  # not resolved
@@ -147,8 +173,8 @@ func test_tap_without_drag_bounces_back() -> void:
 	await runner.simulate_frames(2)
 
 	var start: Vector2 = Vector2(screen.get_viewport_rect().size.x / 2.0, 400.0)
-	await runner.simulate_screen_touch_press(0, start)
-	await runner.simulate_screen_touch_release(0)
+	_press(screen, 0, start)
+	_release(screen, 0, start)
 	await runner.simulate_frames(2)
 
 	assert_bool(screen.visible).is_true()
@@ -167,17 +193,16 @@ func test_drag_emphasises_direction_label_and_resets() -> void:
 	var width: float = screen.get_viewport_rect().size.x
 	var start: Vector2 = Vector2(width / 2.0, 400.0)
 	var held: Vector2 = start + Vector2(width * 0.15, 0.0)  # heading right -> option_B
-	await runner.simulate_screen_touch_press(0, start)
-	await runner.simulate_screen_touch_drag(0, held)
+	_press(screen, 0, start)
+	_drag_to(screen, 0, held)
 	await runner.simulate_frames(1)
 
 	# Right drag: B emphasised (scale > 1, full alpha), A dimmed (alpha < 1).
 	assert_float(label_b.scale.x).is_greater(1.0)
 	assert_float(label_a.modulate.a).is_less(1.0)
 
-	# Settle to zero velocity then release -> bounce-back resets both labels.
-	await runner.simulate_screen_touch_drag(0, held)
-	await runner.simulate_screen_touch_release(0)
+	# Release under threshold (velocity 0) -> bounce-back resets both labels.
+	_release(screen, 0, held)
 	await runner.simulate_frames(2)
 	assert_float(label_a.scale.x).is_equal_approx(1.0, 0.001)
 	assert_float(label_b.scale.x).is_equal_approx(1.0, 0.001)
@@ -194,19 +219,16 @@ func test_second_touch_is_ignored_while_dragging() -> void:
 
 	var width: float = screen.get_viewport_rect().size.x
 	var start: Vector2 = Vector2(width / 2.0, 400.0)
-	await runner.simulate_screen_touch_press(0, start)  # latch index 0
-	await runner.simulate_screen_touch_drag(0, start + Vector2(width * 0.15, 0.0))
+	_press(screen, 0, start)  # latch index 0
+	_drag_to(screen, 0, start + Vector2(width * 0.15, 0.0))
 	await runner.simulate_frames(1)
 
 	# A second finger (index 1) starts and drags -- must be ignored entirely.
-	await runner.simulate_screen_touch_press(1, start)
-	await runner.simulate_screen_touch_drag(1, start + Vector2(width * 0.4, 0.0))
+	_press(screen, 1, start)
+	_drag_to(screen, 1, start + Vector2(width * 0.4, 0.0))
 	await runner.simulate_frames(1)
 
-	# Assert the latch DIRECTLY: index 0 is still tracked (the second finger did
-	# not steal tracking), and we're still mid-drag. Asserting on _tracked_index
-	# rather than card position avoids the emulate_touch_from_mouse artifact
-	# (GdUnit's cursor warp emits index-0 micro-drags that nudge the card a few
-	# px) while still proving the real invariant: index 1 was rejected.
+	# Assert the latch DIRECTLY: index 0 is still tracked (the second finger
+	# did not steal tracking), and we're still mid-drag.
 	assert_int(screen._tracked_index).is_equal(0)
 	assert_int(screen.state).is_equal(screen.State.DRAGGING)

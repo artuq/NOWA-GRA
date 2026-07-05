@@ -35,7 +35,9 @@ func after_test() -> void:
 		"risky_choices_count": _risky_snapshot, "safe_choices_count": _safe_snapshot,
 	}})
 
-## AC: exactly 6 slots, 3 unlocked + 3 locked.
+## AC: exactly 6 slots, 3 unlocked + 3 locked. Since Story 005 (locked slot
+## preview), locked slots are NOT disabled (enabled for tap -> toast) -- the
+## locked/unlocked distinction is the icon's LOCKED_MODULATE gray-out.
 func test_action_grid_renders_six_slots_three_unlocked_three_locked() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
@@ -43,8 +45,8 @@ func test_action_grid_renders_six_slots_three_unlocked_three_locked() -> void:
 	var unlocked_count: int = 0
 	var locked_count: int = 0
 	for i in range(1, 7):
-		var button: Button = grid.find_child("Slot%dButton" % i) as Button
-		if button.disabled:
+		var icon: TextureRect = grid.find_child("Slot%dIcon" % i) as TextureRect
+		if icon.modulate == ActionGrid.LOCKED_MODULATE:
 			locked_count += 1
 		else:
 			unlocked_count += 1
@@ -52,20 +54,25 @@ func test_action_grid_renders_six_slots_three_unlocked_three_locked() -> void:
 	assert_int(unlocked_count).is_equal(3)
 	assert_int(locked_count).is_equal(3)
 
-## AC: locked slot shows a generic lock icon, no number (unlock_threshold is
-## null for all 3 placeholder locked slots in this story's scope). Icon moved
-## from Button.text to a TextureRect child during the 2026-06-25 redesign.
-func test_locked_slots_show_generic_lock_with_no_number() -> void:
+## AC (revised by Story 005 locked slot preview): a locked slot shows a
+## PREVIEW of its real action -- the action's own icon grayed to
+## LOCKED_MODULATE, the real display name with a lock prefix, and the unlock
+## requirement in the stats label ("N / M choices" for counter-gated slots
+## 4-5, "Reach a story moment" for the milestone-gated slot 6).
+func test_locked_slots_show_action_preview_with_unlock_requirement() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 
 	for i in range(4, 7):
 		var icon: TextureRect = grid.find_child("Slot%dIcon" % i) as TextureRect
 		var title: Label = grid.find_child("Slot%dTitle" % i) as Label
-		var stats: Label = grid.find_child("Slot%dStats" % i) as Label
-		assert_object(icon.texture).is_equal(ActionGrid.LOCKED_ICON)
-		assert_str(title.text).is_equal("")
-		assert_str(stats.text).is_equal("")
+		assert_object(icon.texture).is_not_equal(ActionGrid.LOCKED_ICON)  # real action icon, not padlock
+		assert_object(icon.modulate).is_equal(ActionGrid.LOCKED_MODULATE)
+		assert_bool(title.text.begins_with("🔒")).is_true()
+
+	assert_str((grid.find_child("Slot4Stats") as Label).text).is_equal("0 / 3 choices")
+	assert_str((grid.find_child("Slot5Stats") as Label).text).is_equal("0 / 6 choices")
+	assert_str((grid.find_child("Slot6Stats") as Label).text).is_equal("Reach a story moment")
 
 ## Coverage gap closed (flagged by playtest feedback): locked slots must be
 ## visually dimmed, not just disabled -- the disabled StyleBox alone reads
@@ -110,8 +117,8 @@ func test_tapping_unlocked_button_starts_the_action() -> void:
 
 	assert_str(String(ActionSystem.current_action_id)).is_equal("nagraj_vloga")
 
-## AC: idle state -- tapping a locked slot is a no-op (it has no pressed
-## connection at all, so emitting pressed on it changes nothing).
+## AC (revised by Story 005): tapping a locked slot shows an informational
+## toast but never starts an action -- current_action_id must stay empty.
 func test_tapping_locked_slot_is_a_noop() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var slot4: Button = runner.scene().find_child("Slot4Button") as Button
@@ -132,9 +139,11 @@ func test_starting_an_action_disables_all_six_buttons() -> void:
 		var button: Button = grid.find_child("Slot%dButton" % i) as Button
 		assert_bool(button.disabled).is_true()
 
-## AC: running->resolved->idle transition re-enables the 3 unlocked buttons,
-## but the 3 locked slots stay disabled.
-func test_action_completed_reenables_unlocked_but_not_locked_slots() -> void:
+## AC (revised by Story 005): running->resolved->idle transition re-enables
+## ALL six buttons -- the base 3 for starting actions, and the still-locked
+## gated slots for tap -> toast. Locked slots remain visually grayed
+## (LOCKED_MODULATE) even though their buttons are enabled.
+func test_action_completed_reenables_all_slots_locked_stay_grayed() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 	var slot1: Button = grid.find_child("Slot1Button") as Button
@@ -142,10 +151,10 @@ func test_action_completed_reenables_unlocked_but_not_locked_slots() -> void:
 
 	ActionSystem.action_completed.emit(&"nagraj_vloga", {&"Reach": 5.0, &"Cringe": 2.0, &"Morale": 0.0})
 
-	for i in range(1, 4):
+	for i in range(1, 7):
 		assert_bool((grid.find_child("Slot%dButton" % i) as Button).disabled).is_false()
 	for i in range(4, 7):
-		assert_bool((grid.find_child("Slot%dButton" % i) as Button).disabled).is_true()
+		assert_object((grid.find_child("Slot%dIcon" % i) as TextureRect).modulate).is_equal(ActionGrid.LOCKED_MODULATE)
 
 ## AC: button anatomy -- now split into a primary Title label (action name)
 ## and a secondary Stats label (duration + rewards), for typographic hierarchy

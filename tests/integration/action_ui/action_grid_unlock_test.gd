@@ -37,12 +37,26 @@ func _set_counters(risky: int, safe: int) -> void:
 func _gated_button(grid: Node, slot: int) -> Button:
 	return grid.find_child("Slot%dButton" % slot) as Button
 
-## AC: fresh game (0 decisions) -> all 3 gated slots (4/5/6) locked (disabled).
+## Locked-state predicate per the Story 005 (locked slot preview) contract:
+## locked slots are NOT disabled (they stay enabled for tap -> toast) -- the
+## observable locked state is the grayed icon (LOCKED_MODULATE alpha) plus
+## the lock-prefixed title.
+func _assert_slot_locked(grid: Node, slot: int) -> void:
+	assert_object((grid.find_child("Slot%dIcon" % slot) as TextureRect).modulate).is_equal(ActionGrid.LOCKED_MODULATE)
+	assert_bool((grid.find_child("Slot%dTitle" % slot) as Label).text.begins_with("🔒")).is_true()
+
+func _assert_slot_unlocked(grid: Node, slot: int) -> void:
+	assert_object((grid.find_child("Slot%dIcon" % slot) as TextureRect).modulate).is_equal(Color.WHITE)
+	assert_bool((grid.find_child("Slot%dTitle" % slot) as Label).text.begins_with("🔒")).is_false()
+	assert_bool(_gated_button(grid, slot).disabled).is_false()
+
+## AC: fresh game (0 decisions) -> all 3 gated slots (4/5/6) locked (grayed
+## preview with lock prefix; buttons stay enabled for tap -> toast, Story 005).
 func test_fresh_game_gated_slots_locked() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 	for slot in [4, 5, 6]:
-		assert_bool(_gated_button(grid, slot).disabled).is_true()
+		_assert_slot_locked(grid, slot)
 
 ## AC: slot 4 unlocks via the risky path alone (risky_choices_count >= 3).
 func test_slot4_unlocks_via_risky_path() -> void:
@@ -50,11 +64,10 @@ func test_slot4_unlocks_via_risky_path() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 
-	assert_bool(_gated_button(grid, 4).disabled).is_false()  # unlocked
+	_assert_slot_unlocked(grid, 4)
 	assert_str((grid.find_child("Slot4Title") as Label).text).is_equal("Record a Collab")
-	assert_object((grid.find_child("Slot4Icon") as TextureRect).texture).is_not_equal(ActionGrid.LOCKED_ICON)
 	# Slot 5 (threshold 6) still locked at risky=3.
-	assert_bool(_gated_button(grid, 5).disabled).is_true()
+	_assert_slot_locked(grid, 5)
 
 ## AC: slot 4 unlocks via the safe path alone (DDR-0001 either-path constraint --
 ## the clean-path player is never locked out).
@@ -62,14 +75,14 @@ func test_slot4_unlocks_via_safe_path() -> void:
 	_set_counters(0, 3)
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
-	assert_bool(_gated_button(grid, 4).disabled).is_false()
+	_assert_slot_unlocked(grid, 4)
 
 ## AC: slot 5 unlocks at the higher threshold (>= 6), either path.
 func test_slot5_unlocks_at_higher_threshold() -> void:
 	_set_counters(0, 6)
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
-	assert_bool(_gated_button(grid, 5).disabled).is_false()
+	_assert_slot_unlocked(grid, 5)
 	assert_str((grid.find_child("Slot5Title") as Label).text).is_equal("Give an Interview")
 
 ## AC: an unlocked gated slot is tappable and starts its action.
@@ -88,12 +101,12 @@ func test_unlocked_gated_slot_starts_its_action() -> void:
 func test_slot_unlocks_mid_session_on_action_completed() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
-	assert_bool(_gated_button(grid, 4).disabled).is_true()  # starts locked at 0
+	_assert_slot_locked(grid, 4)  # starts locked at 0
 
 	# Simulate a card resolution between actions bumping risky to the threshold,
 	# then an action completing.
 	_set_counters(3, 0)
 	ActionSystem.action_completed.emit(&"nagraj_vloga", {&"Reach": 5.0, &"Cringe": 2.0, &"Morale": 0.0})
 
-	assert_bool(_gated_button(grid, 4).disabled).is_false()  # now unlocked + enabled
+	_assert_slot_unlocked(grid, 4)  # now unlocked + enabled
 	assert_str((grid.find_child("Slot4Title") as Label).text).is_equal("Record a Collab")
