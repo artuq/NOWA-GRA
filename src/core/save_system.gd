@@ -60,6 +60,7 @@ func _ready() -> void:
 	ResourceManager.restore_state(data.get("resources", {}))
 	HistoryFlagManager.restore_state(data.get("history_flags", {}))
 	OnboardingGate.restore_state(data.get("onboarding", {}))
+	ClassPathSystem.restore_state(data.get("class_path", {}))
 	state = State.READY
 
 	_debounce_timer = Timer.new()
@@ -112,6 +113,7 @@ func save_now() -> void:
 		"history_flags": HistoryFlagManager.serialize_state(),
 		"decision_card_state": {"cooldown_actions_remaining": 0, "resolved_milestone_cards": []},
 		"onboarding": OnboardingGate.serialize_state(),
+		"class_path": ClassPathSystem.serialize_state(),
 	}
 	var file: FileAccess = FileAccess.open(TEMP_PATH, FileAccess.WRITE)
 	if file == null:

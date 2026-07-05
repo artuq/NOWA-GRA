@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/action_screen/resource_hud.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/action_grid.tscn" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/icons/icon_avatar.png" id="4"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/icon_settings.png" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/card_screen/card_screen.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/class_path_hud_indicator.tscn" id="7"]
 
 [sub_resource type="StyleBoxFlat" id="AppBackground"]
 bg_color = Color(0.082353, 0.082353, 0.101961, 1)
@@ -54,6 +55,9 @@ texture = ExtResource("4")
 expand_mode = 1
 stretch_mode = 5
 texture_filter = 1
+
+[node name="ClassPathHudIndicator" parent="MainLayout/TopBar" instance=ExtResource("7")]
+layout_mode = 2
 
 [node name="TopBarSpacer" type="Control" parent="MainLayout/TopBar"]
 layout_mode = 2

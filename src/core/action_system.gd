@@ -168,7 +168,7 @@ func _on_card_presented(_card: Dictionary) -> void:
 	_set_card_suspended(true)
 
 
-func _on_card_resolved() -> void:
+func _on_card_resolved(_card_id: StringName, _path_tag: StringName, _option: StringName) -> void:
 	_set_card_suspended(false)
 
 
@@ -250,6 +250,9 @@ func _on_action_timeout() -> void:
 	var morale: float = ResourceManager.get_resource(&"Morale")
 	var multiplier: float = ResourceFormulas.action_effectiveness_multiplier(morale)
 	var scaled_reach: float = roundf(base_rewards[&"Reach"] * multiplier)
+	# Class path tier bonus (ADR-0010 pull model): 1.0 when no active path.
+	var path_bonus: float = ClassPathSystem.get_active_multiplier(completed_id)
+	scaled_reach = roundf(scaled_reach * path_bonus)
 	var deltas: Dictionary[StringName, float] = {
 		&"Reach": scaled_reach,
 		&"Cringe": base_rewards[&"Cringe"],

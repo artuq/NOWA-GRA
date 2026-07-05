@@ -94,6 +94,14 @@ func counter_above_threshold(counter_name: StringName, threshold: int) -> bool:
 	return get_counter(counter_name) >= threshold
 
 
+## Resets counter [param counter_name] to 0. Intended only for era-local path
+## counters (`pato_streamer_choices_count` etc.) during ClassPathSystem.reset_era_state().
+## All other counters remain monotonically increasing per GDD Pillar 2.
+func reset_counter(counter_name: StringName) -> void:
+	_counters.erase(counter_name)
+	SaveSystem.mark_dirty()
+
+
 ## Class Path registrations for resolve_path_eligibility(): each entry's
 ## `threshold_min` is the inclusive minimum (per counter_above_threshold()'s
 ## `>=` semantics) a path's counter must reach to be eligible at all. Future

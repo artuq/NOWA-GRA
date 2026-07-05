@@ -45,6 +45,12 @@ state_ownership:
     source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
     referenced_by: []
 
+  - state: "path affiliation floats [0.0-100.0], tier ints [0-5], active path StringName"
+    owner: ClassPathSystem
+    interface: "get_affiliation(path_id), get_tier(path_id), get_active_path(), get_active_multiplier(action_id), invest(path_id, resource_id, amount), restore_state(data), reset_era_state()"
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
 interfaces:
   - name: force_cooldown_zero
     signature: "force_cooldown_zero() -> void"
@@ -84,8 +90,43 @@ interfaces:
     type: signal
     emitter: DecisionCardSystem
     subscribers: [CardScreen]
-    note: "Emitted by present_next_card() when state becomes PRESENTING; the only signal on DecisionCardSystem. Card UI's entry trigger (ADR-0008)"
+    note: "Emitted by present_next_card() when state becomes PRESENTING. Card UI's entry trigger (ADR-0008)"
     source: docs/architecture/adr-0008-card-ui-modal-swipe-integration.md
+    referenced_by: []
+
+  - name: card_resolved
+    signature: "card_resolved(card_id: StringName, path_tag: StringName, option_chosen: StringName)"
+    type: signal
+    emitter: DecisionCardSystem
+    subscribers: [ClassPathSystem]
+    note: "Emitted at end of resolve_choice(), after HistoryFlagManager.increment_counter() — subscribers must assume counter IS already incremented. Added by ADR-0010 (same additive precedent as card_presented). path_tag is '' for neutral cards — ClassPathSystem ignores empty-tag events."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: tier_unlocked
+    signature: "tier_unlocked(path_id: StringName, tier: int)"
+    type: signal
+    emitter: ClassPathSystem
+    subscribers: [ClassPathUI, HUD]
+    note: "Fired exactly once per tier crossing — never from a getter. Fires during _on_card_resolved() handler, not deferred."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: active_path_changed
+    signature: "active_path_changed(path_id: StringName)"
+    type: signal
+    emitter: ClassPathSystem
+    subscribers: [HUD indicator]
+    note: "Empty string means no active path (all paths at Tier 0, or a tie). Fired after each card resolution that shifts the active path."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: get_active_multiplier
+    signature: "get_active_multiplier(action_id: StringName) -> float"
+    type: method
+    owner: ClassPathSystem
+    note: "Called by ActionSystem at reward resolution. Returns 1.0 if no active path or action not modified by current path tier. O(1) Dictionary lookup. ActionSystem must NOT import ClassPathSystem — uses the global Autoload name only."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
     referenced_by: []
 
 api_decisions:

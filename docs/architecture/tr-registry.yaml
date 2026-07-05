@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-06-26
-version: 4
+last_updated: 2026-07-01
+version: 5
 
 requirements:
   - id: TR-res-001
@@ -105,3 +105,57 @@ requirements:
     adr: [ADR-0009]
     status: covered
     note: ADR-0009 Accepted 2026-06-26 (independent architecture-review, verdict PASS) — standalone scene, reads OfflineProgressSystem.last_simulation_result (+elapsed_seconds added by BootController), dismiss via scene swap to main; boot orchestration already covered by ADR-0003
+
+  - id: TR-cps-001
+    system: class-path-system
+    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    requirement: ClassPathSystem Autoload owns per-path affiliation floats [0-100], tier ints [0-5], and active path resolution
+    adr: [ADR-0010]
+    status: covered
+    note: Registered 2026-07-01 (architecture-review). ADR-0010 Proposed — Class Path stories gated until Accepted.
+
+  - id: TR-cps-002
+    system: class-path-system
+    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    requirement: Card resolution drives path counter increment and affiliation recalc via additive card_resolved signal on DecisionCardSystem
+    adr: [ADR-0010]
+    status: covered
+    note: Additive signal precedent from ADR-0008 (card_presented) / ADR-0007 (action_started). Fires after HistoryFlagManager.increment_counter in resolve_choice().
+
+  - id: TR-cps-003
+    system: class-path-system
+    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    requirement: ActionSystem applies path tier multiplier via pull-model get_active_multiplier(action_id), no ClassPathSystem->ActionSystem dependency
+    adr: [ADR-0010]
+    status: covered
+
+  - id: TR-cps-004
+    system: class-path-system
+    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    requirement: ClassPathSystem save/restore of affiliation and tier via restore_state(data) per ADR-0003 boot protocol
+    adr: [ADR-0010]
+    status: covered
+
+  - id: TR-cps-005
+    system: class-path-system
+    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    requirement: reset_era_state resets era-local affiliation/tier/counters, preserves meta milestone flags
+    adr: [ADR-0010]
+    status: partial
+    note: ADR-0010 defines the reset_era_state API contract; BurnoutSystem era_transitioned wiring deferred to Alpha BurnoutSystem ADR.
+
+  - id: TR-cps-006
+    system: class-path-system
+    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    requirement: Tier-5 signature card add/remove to DecisionCardSystem pool (signature_card_unlocked/removed signals)
+    adr: []
+    status: gap
+    note: Alpha scope. Signals named in quick-spec Affected Systems but not specified in ADR-0010 interface. Needs a follow-up ADR when Tier 5 / signature cards are implemented.
+
+  - id: TR-cps-007
+    system: class-path-system
+    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    requirement: Path multipliers excluded from offline progress by default (Pillar 4); PATH_MULTIPLIER_OFFLINE flag off by default
+    adr: [ADR-0006, ADR-0010]
+    status: partial
+    note: Behaviour correct — ADR-0006 offline loop owns its formula and never calls get_active_multiplier. ADR-0010 does not state the exclusion explicitly; recommend a one-line clarification before acceptance.

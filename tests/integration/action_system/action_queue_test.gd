@@ -135,7 +135,7 @@ func test_decision_card_suspends_queue() -> void:
 	assert_int(_action_system._queue.size()).is_equal(1)
 
 	# Clean up: lift suspension via card_resolved so the signal is balanced.
-	DecisionCardSystem.card_resolved.emit()
+	DecisionCardSystem.card_resolved.emit(&"", &"", &"")
 
 
 ## AC-4: after the Decision Card is resolved, card suspension lifts and the
@@ -157,7 +157,7 @@ func test_suspend_clears_on_card_resolved() -> void:
 	assert_that(_action_system.current_action_id).is_equal(&"")
 
 	# Resolve the card — suspension lifts and B should auto-start.
-	DecisionCardSystem.card_resolved.emit()
+	DecisionCardSystem.card_resolved.emit(&"", &"", &"")
 
 	assert_that(_action_system.current_action_id).is_equal(&"zrob_drame")
 	assert_int(_action_system._queue.size()).is_equal(0)

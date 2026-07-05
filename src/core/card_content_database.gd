@@ -32,6 +32,7 @@ extends Node
 const CARDS: Array[Dictionary] = [
 	{
 		"id": "exposed_friend",
+		"path_tag": "pato_streamer",
 		"trigger_condition": "always",
 		"text": "Your bestie trauma-dumped on a call. That's content gold... and a betrayal.",
 		"options": [
@@ -41,6 +42,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "sponsor_offer_shady",
+		"path_tag": "guru_celebryta",
 		"trigger_condition": "always",
 		"text": "A 'wellness' brand pays you to push gummies that 'cure anxiety.' Lab results: missing.",
 		"options": [
@@ -50,6 +52,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "hater_callout",
+		"path_tag": "pato_streamer",
 		"trigger_condition": "always",
 		"text": "A hater dropped a 12-tweet thread calling you a fraud. It's gaining traction.",
 		"options": [
@@ -59,6 +62,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "staged_drama",
+		"path_tag": "pato_streamer",
 		"trigger_condition": "always",
 		"text": "Your manager pitches a fake feud with another creator. Drama = views.",
 		"options": [
@@ -68,6 +72,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "competitor_drama",
+		"path_tag": "pato_streamer",
 		"trigger_condition": "always",
 		"text": "A rival creator is getting dragged. Easy engagement if you pile on.",
 		"options": [
@@ -77,6 +82,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "leaked_dm",
+		"path_tag": "pato_streamer",
 		"trigger_condition": "always",
 		"text": "Someone leaks spicy DMs about a celeb to you. Posting them would break the internet.",
 		"options": [
@@ -86,6 +92,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "cancel_threat",
+		"path_tag": "pato_streamer",
 		"trigger_condition": "always",
 		"text": "An old problematic clip resurfaced. #YouAreCancelled is trending.",
 		"options": [
@@ -95,6 +102,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "apology_tour",
+		"path_tag": "",
 		"trigger_condition": "always",
 		"text": "Time for the apology video. Ring light on. Question is how... real... to make it.",
 		"options": [
@@ -104,6 +112,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "fan_in_trouble",
+		"path_tag": "",
 		"trigger_condition": "always",
 		"text": "A young fan DMs you in a real crisis, asking for help.",
 		"options": [
@@ -113,6 +122,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "brand_deal_choice",
+		"path_tag": "guru_celebryta",
 		"trigger_condition": "always",
 		"text": "Two deals: a cringe fast-fashion mega-corp, or a small ethical label that pays less.",
 		"options": [
@@ -122,6 +132,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "algorithm_hack",
+		"path_tag": "",
 		"trigger_condition": "always",
 		"text": "A growth guru sells an 'algorithm exploit' that floods feeds with your clips.",
 		"options": [
@@ -131,6 +142,7 @@ const CARDS: Array[Dictionary] = [
 	},
 	{
 		"id": "burnout_warning",
+		"path_tag": "",
 		"trigger_condition": "always",
 		"text": "40 hours, no sleep. The grind's working, but your hands are shaking.",
 		"options": [

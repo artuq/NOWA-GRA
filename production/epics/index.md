@@ -1,6 +1,6 @@
 # Epics Index
 
-Last Updated: 2026-06-29
+Last Updated: 2026-07-01
 Engine: Godot 4.6.3
 
 | Epic | Layer | System | GDD | Stories | Status |
@@ -16,3 +16,4 @@ Engine: Godot 4.6.3
 | Action UI | Presentation | action-ui | design/gdd/action-ui.md | 4 stories | Complete |
 | Card UI | Presentation | card-ui | design/gdd/card-ui.md | 3 stories | Complete |
 | Offline Report Screen | Presentation | offline-report-screen | design/gdd/offline-report-screen.md | 3 stories | Complete |
+| Class Path System | Core | class-path-system | design/quick-specs/class-path-system-2026-07-01.md | 2 stories | Complete (MVP scope) |

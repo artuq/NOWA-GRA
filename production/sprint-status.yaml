@@ -40,14 +40,65 @@
 # backend has been complete since Sprint 4 but nothing in any UI consumes
 # it, so cards never appear in actual play. Sprint 7 targets this directly.
 
-sprint: 7
-goal: "Build Card UI — make decision cards actually visible and playable."
-start: "2026-07-21"
-end: "2026-07-25"
-generated: "2026-06-25"
-updated: "2026-07-01"
+sprint: 8
+goal: "Class Path System MVP — player identity visible from minute 1 (2 paths, card affiliation, HUD indicator)."
+start: "2026-07-02"
+end: "2026-07-08"
+generated: "2026-07-01"
+updated: "2026-07-01"  # stories 8-2/8-3 file paths set; 8-1 marked done
 
 stories:
+  - id: "8-1"
+    name: "Class Path — ADR + Epic + Stories (design day)"
+    file: "design/quick-specs/class-path-system-2026-07-01.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-07-01"
+
+  - id: "8-2"
+    name: "Class Path Core — affiliation tracking"
+    file: "production/epics/class-path/story-001-class-path-core.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1.5
+    blocker: ""
+    completed: "2026-07-05"
+
+  - id: "8-3"
+    name: "Class Path HUD — active path indicator"
+    file: "production/epics/class-path/story-002-class-path-hud.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-07-05"
+
+  - id: "8-4"
+    name: "Action Queue auto-repeat"
+    file: "design/quick-specs/action-queue-auto-repeat-2026-06-30.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+
+  - id: "8-5"
+    name: "Soft Reach Cap"
+    file: "design/quick-specs/soft-reach-cap-algorithm-barrier-2026-07-01.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+
+_sprint_7_archive:
   - id: "7-2"
     name: "Action UI — Locked Slot Preview (Story 005)"
     file: "production/epics/action-ui/story-005-locked-slot-preview.md"
@@ -62,11 +113,11 @@ stories:
     name: "Card UI — epic-level (provisional, pending /create-stories breakdown)"
     file: "design/gdd/card-ui.md"
     priority: must-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 2.5
-    blocker: "Epic-level estimate, pending /create-epics + /create-stories breakdown before treated as committed; no epic exists yet"
-    completed: ""
+    blocker: ""
+    completed: "2026-06-25"
 
 _sprint_6_archive:
   - id: "6-1a"

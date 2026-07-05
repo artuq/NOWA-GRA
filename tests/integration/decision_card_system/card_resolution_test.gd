@@ -34,6 +34,7 @@ var _instances: Array[Node] = []
 
 
 var _risky_counter_snapshot: int = 0
+var _pato_counter_snapshot: int = 0
 
 
 var _onboarding_phase_snapshot: int
@@ -49,6 +50,7 @@ func before_test() -> void:
 	_resource_snapshot[&"Morale"] = ResourceManager.get_resource(&"Morale")
 	_counter_snapshot = HistoryFlagManager.get_counter(_TEST_COUNTER)
 	_risky_counter_snapshot = HistoryFlagManager.get_counter(&"risky_choices_count")
+	_pato_counter_snapshot = HistoryFlagManager.get_counter(&"pato_streamer_choices_count")
 	_instances = []
 
 
@@ -65,6 +67,7 @@ func after_test() -> void:
 		"counters": {
 			String(_TEST_COUNTER): _counter_snapshot,
 			"risky_choices_count": _risky_counter_snapshot,
+			"pato_streamer_choices_count": _pato_counter_snapshot,
 		},
 	})
 	# resolve_choice()/apply_delta() above mark the real SaveSystem dirty
@@ -234,3 +237,56 @@ func test_resolve_choice_is_noop_when_no_card_presented() -> void:
 	dcs.resolve_choice(0)
 
 	assert_int(dcs.state).is_equal(DecisionCardSystemScript.State.COOLDOWN)
+
+
+## Class Path Core AC-1 (TR-cps-002, ADR-0010 §2): resolving a path-tagged
+## card through the REAL resolve_choice() must (a) increment the path's
+## `{path_tag}_choices_count` counter in HistoryFlagManager, (b) emit
+## card_resolved with the correct (card_id, path_tag, option_chosen) payload,
+## and (c) have already incremented the counter BY the time the signal fires
+## — the ordering contract every card_resolved subscriber may rely on.
+func test_resolve_choice_increments_path_counter_and_emits_tagged_card_resolved() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var card: Dictionary = _synthetic_card("test_path_tagged_card")
+	card["path_tag"] = "pato_streamer"
+	card["options"][0]["label"] = "Risky pick"
+	dcs.present_next_card(_single_card_pool(card))
+
+	var payloads: Array = []
+	var counter_at_emit: Array = [-1]
+	var _on_card_resolved := func(card_id: StringName, path_tag: StringName, option_chosen: StringName) -> void:
+		payloads.append([card_id, path_tag, option_chosen])
+		counter_at_emit[0] = HistoryFlagManager.get_counter(&"pato_streamer_choices_count")
+	dcs.card_resolved.connect(_on_card_resolved)
+
+	dcs.resolve_choice(0)
+
+	dcs.card_resolved.disconnect(_on_card_resolved)
+	assert_int(payloads.size()).is_equal(1)
+	assert_that(payloads[0][0]).is_equal(&"test_path_tagged_card")
+	assert_that(payloads[0][1]).is_equal(&"pato_streamer")
+	assert_that(payloads[0][2]).is_equal(&"Risky pick")
+	# Counter was already incremented when the signal fired (ADR-0010 §2).
+	assert_int(counter_at_emit[0]).is_equal(_pato_counter_snapshot + 1)
+	assert_int(HistoryFlagManager.get_counter(&"pato_streamer_choices_count")).is_equal(_pato_counter_snapshot + 1)
+
+
+## Companion: a neutral card (path_tag == "") emits card_resolved with an
+## empty tag and increments NO path counter.
+func test_resolve_choice_neutral_card_emits_empty_tag_no_counter() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var card: Dictionary = _synthetic_card("test_neutral_path_card")
+	card["path_tag"] = ""
+	dcs.present_next_card(_single_card_pool(card))
+
+	var payloads: Array = []
+	var _on_card_resolved := func(card_id: StringName, path_tag: StringName, option_chosen: StringName) -> void:
+		payloads.append([card_id, path_tag, option_chosen])
+	dcs.card_resolved.connect(_on_card_resolved)
+
+	dcs.resolve_choice(0)
+
+	dcs.card_resolved.disconnect(_on_card_resolved)
+	assert_int(payloads.size()).is_equal(1)
+	assert_that(payloads[0][1]).is_equal(&"")
+	assert_int(HistoryFlagManager.get_counter(&"pato_streamer_choices_count")).is_equal(_pato_counter_snapshot)

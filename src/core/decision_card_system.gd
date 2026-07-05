@@ -51,9 +51,13 @@ signal card_presented(card: Dictionary)
 
 ## Emitted after the player resolves a presented card and _presented_card is
 ## cleared. ActionSystem connects to this to lift card-based queue suspension
-## (Action System Story 003 — Action Queue). Emitted before the cooldown
+## (Action System Story 003 — Action Queue; its zero-param handler is valid —
+## Godot 4 drops extra signal args for narrower handlers). ClassPathSystem
+## connects to update path affiliation (ADR-0010). Emitted before the cooldown
 ## counter resets so listeners observe the card-gone state cleanly.
-signal card_resolved()
+## [param path_tag] is &"" for neutral cards; subscribers must assume the path
+## counter in HistoryFlagManager IS already incremented when this fires.
+signal card_resolved(card_id: StringName, path_tag: StringName, option_chosen: StringName)
 
 var _actions_until_check: int = COOLDOWN_ACTIONS
 
@@ -226,6 +230,10 @@ func resolve_choice(option_index: int) -> void:
 		return  # no card presented, or already resolving/resolved — no-op, not a crash
 	state = State.RESOLVING
 	var option: Dictionary = _presented_card["options"][option_index]
+	# Captured before _presented_card is cleared below — carried on card_resolved (ADR-0010).
+	var resolved_card_id: StringName = StringName(_presented_card.get("id", ""))
+	var resolved_path_tag: StringName = StringName(_presented_card.get("path_tag", ""))
+	var resolved_option_label: StringName = StringName(option.get("label", ""))
 
 	# option["resource_deltas"] is an untyped Dictionary at runtime (card data
 	# is stored as plain Dictionary literals, even when nested inside a typed
@@ -242,7 +250,12 @@ func resolve_choice(option_index: int) -> void:
 	if option.has("milestone_to_set"):
 		HistoryFlagManager.set_milestone(option["milestone_to_set"])
 
+	# Path counter increments BEFORE card_resolved fires, so ClassPathSystem's
+	# handler reads the already-incremented value (ADR-0010 §2 ordering contract).
+	if resolved_path_tag != &"":
+		HistoryFlagManager.increment_counter(StringName(String(resolved_path_tag) + "_choices_count"))
+
 	_presented_card = {}
-	card_resolved.emit()
+	card_resolved.emit(resolved_card_id, resolved_path_tag, resolved_option_label)
 	_actions_until_check = COOLDOWN_ACTIONS
 	state = State.COOLDOWN
