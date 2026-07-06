@@ -125,11 +125,11 @@ stories:
     name: "First-card hook implementation (from 10-5 quick-spec)"
     file: "design/quick-specs/first-card-hook-onboarding-2026-07-06.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-07-06"  # onboarding_gate restore_state({}) -> FIRST_CARD_PENDING + deferred force_cooldown_zero; GDD revised; 2 tests updated + 1 new; 402/402; web rebuilt
 
 _sprint_9_archive:
   - id: "9-1"

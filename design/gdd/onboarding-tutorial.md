@@ -34,9 +34,11 @@ This GDD resolves Action System's Open Question: "the first 3 actions without ca
 
 ### States and Transitions
 
+> **REVISION (2026-07-06, quick-spec `first-card-hook-onboarding-2026-07-06.md`, user decision)**: a FRESH session now skips `phase_pure_action` entirely — new games boot directly in `phase_first_card_pending` with the cooldown pre-zeroed, so the **first card lands right after action #1** (~6–10 s, inside web portals' 15–20 s judgment window; motivation: `design/reference/web-publishing-best-practices-2026-07-06.md`). The variety-gate machinery is RETAINED in code (corrupted-save fallback + future tutorial layer; `_completed_types` keeps recording) but no longer gates the first card. The Tuning Knobs' "Required action types before first card: All 3" design lock is superseded by this revision.
+
 | State | Description | Transition |
 |---|---|---|
-| `phase_pure_action` | Decision Card System suppressed, not all 3 action types tried yet | → `phase_first_card_pending` when all 3 action types have each completed ≥1 time |
+| `phase_pure_action` | Decision Card System suppressed, not all 3 action types tried yet | → `phase_first_card_pending` when all 3 action types have each completed ≥1 time. **Fresh sessions skip this phase (2026-07-06 revision)** — reachable only via legacy/corrupted-save fallback |
 | `phase_first_card_pending` | Cooldown forced to 0, awaiting next completed action | → `phase_normal` once the first card appears |
 | `phase_normal` | Onboarding complete, Decision Card System fully autonomous | (terminal — no further transitions) |
 

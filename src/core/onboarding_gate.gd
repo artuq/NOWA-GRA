@@ -121,9 +121,24 @@ func serialize_state() -> Dictionary:
 ## SaveSystem.mark_dirty() -- a load must never re-trigger a save (same rule
 ## as ResourceManager.restore_state()/HistoryFlagManager.restore_state()).
 ##
+## First-card hook (quick-spec first-card-hook-onboarding-2026-07-06, user
+## decision): a FRESH session skips PURE_ACTION entirely -- phase starts at
+## FIRST_CARD_PENDING with the card cooldown pre-zeroed, so the first card
+## lands right after action #1 (~6-10s in), inside the web portals' 15-20s
+## judgment window. The variety gate machinery stays for corrupted-save
+## fallback and future tutorial use; restored mid-run saves keep their
+## persisted phase unchanged. force_cooldown_zero() is deferred (same
+## ordering rationale as the Phase 1->2 call) and idempotent -- the double
+## restore_state() call at boot (SaveSystem._ready + BootController) is safe.
+##
 ## Example:
 ##   OnboardingGate.restore_state(data.get("onboarding", {}))
 func restore_state(data: Dictionary) -> void:
+	if data.is_empty():
+		phase = Phase.FIRST_CARD_PENDING
+		_completed_types.clear()
+		DecisionCardSystem.call_deferred(&"force_cooldown_zero")
+		return
 	# `as Phase` performs no range validation -- a corrupted/hand-edited save
 	# with an out-of-enum value would silently fall through every match arm as
 	# a no-op (code-review note, 2026-06-29). Validate against the enum's real

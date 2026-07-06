@@ -91,15 +91,36 @@ func test_corrupted_out_of_range_phase_falls_back_to_pure_action() -> void:
 	assert_int(gate.phase).is_equal(OnboardingGateScript.Phase.PURE_ACTION)
 	gate.free()
 
-## AC: fresh install / no save data -- restore_state({}) is identical to a
-## brand-new instance.
-func test_empty_restore_is_fresh_state() -> void:
+## AC (revised by first-card-hook-onboarding-2026-07-06): fresh install /
+## no save data -- restore_state({}) enters the HOOK state: FIRST_CARD_PENDING
+## with the card cooldown pre-zeroed (deferred), so the first card lands right
+## after action #1. PURE_ACTION is no longer the fresh-session entry point.
+func test_empty_restore_enters_first_card_hook() -> void:
 	var gate: Node = OnboardingGateScript.new()
 	gate.restore_state({})
 
-	assert_int(gate.phase).is_equal(OnboardingGateScript.Phase.PURE_ACTION)
+	assert_int(gate.phase).is_equal(OnboardingGateScript.Phase.FIRST_CARD_PENDING)
 	assert_bool(gate._completed_types.is_empty()).is_true()
+	assert_bool(gate.is_card_suppressed()).is_false()  # cards live from action #1
 	gate.free()
+	# Consume the deferred force_cooldown_zero aimed at the real Autoload,
+	# then restore its cooldown so later suites see the default state.
+	await get_tree().process_frame
+	DecisionCardSystem._actions_until_check = DecisionCardSystem.COOLDOWN_ACTIONS
+
+
+## AC (first-card hook, end-to-end contract): after a fresh restore, the very
+## first completed action triggers the card pool check -- the cooldown was
+## pre-zeroed by the deferred call.
+func test_fresh_session_first_action_triggers_card_check() -> void:
+	var gate: Node = OnboardingGateScript.new()
+	gate.restore_state({})
+	await get_tree().process_frame  # deferred force_cooldown_zero lands on the Autoload
+
+	assert_int(DecisionCardSystem._actions_until_check).is_equal(0)
+
+	gate.free()
+	DecisionCardSystem._actions_until_check = DecisionCardSystem.COOLDOWN_ACTIONS
 
 ## AC: SaveSystem.save_now()'s payload contains an "onboarding" key matching
 ## OnboardingGate.serialize_state()'s shape.
@@ -149,17 +170,21 @@ func test_boot_controller_restores_onboarding_phase() -> void:
 	assert_bool(OnboardingGate._completed_types.has(VLOG)).is_true()
 	bc.queue_free()
 
-## AC: BootController wiring -- a save Dictionary with no "onboarding" key
-## (older save format / first session) falls back to fresh state, no crash.
+## AC (revised by first-card-hook 2026-07-06): BootController wiring -- a save
+## Dictionary with no "onboarding" key (older save format / first session)
+## enters the first-card HOOK state (FIRST_CARD_PENDING), no crash.
 func test_boot_controller_handles_missing_onboarding_key() -> void:
 	var bc: Node = preload("res://src/core/boot_controller.gd").new()
 	add_child(bc)
 
 	bc.boot_with({}, 0)  # no "onboarding" key at all
 
-	assert_int(OnboardingGate.phase).is_equal(OnboardingGate.Phase.PURE_ACTION)
+	assert_int(OnboardingGate.phase).is_equal(OnboardingGate.Phase.FIRST_CARD_PENDING)
 	assert_bool(OnboardingGate._completed_types.is_empty()).is_true()
 	bc.queue_free()
+	# Consume the deferred cooldown-zero + restore the Autoload's default.
+	await get_tree().process_frame
+	DecisionCardSystem._actions_until_check = DecisionCardSystem.COOLDOWN_ACTIONS
 
 ## AC: mark_dirty wiring on phase change -- a real variety-advancing call
 ## marks the real SaveSystem dirty; a repeat-type call (no real mutation) and
