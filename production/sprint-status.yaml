@@ -63,23 +63,23 @@ updated: "2026-07-06"
 stories:
   - id: "10-1"
     name: "Web-export spike — Compatibility renderer + size/load measurement (GO/NO-GO)"
-    file: "design/reference/web-publishing-best-practices-2026-07-06.md"
+    file: "docs/spikes/web-export-spike-2026-07-06.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 1
     blocker: ""
-    completed: ""
+    completed: "2026-07-06"  # VERDICT: GO — 6.8 MB brotli initial (bar: 10 MB); 3 real glyph/layout bugs found+fixed via visual pass
 
   - id: "10-2"
     name: "9:16 portrait web presentation (pillarbox + background on desktop)"
-    file: ""
+    file: "docs/spikes/web-export-spike-2026-07-06.md"
     priority: must-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
-    blocker: "Pending 10-1 GO verdict"
-    completed: ""
+    blocker: ""
+    completed: "2026-07-06"  # custom HTML shell (canvas_resize_policy=0 + JS 9:16 lock + gradient pillarbox); user-verified in browser; readability fonts raised 2 passes
 
   - id: "10-3"
     name: "Performance pass on device + memory ceiling + AC-6 recheck (carried x2, escalated)"
@@ -93,31 +93,41 @@ stories:
 
   - id: "10-4"
     name: "Mouse swipe-threshold feel-test (+tuning)"
-    file: ""
+    file: "docs/spikes/web-export-spike-2026-07-06.md"
     priority: should-have
-    status: backlog
-    owner: ""
-    estimate_days: 0.5
-    blocker: "Pending 10-1 GO verdict"
-    completed: ""
-
-  - id: "10-5"
-    name: "15-second onboarding quick-design (first card near-instant on web?)"
-    file: ""
-    priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-07-06"  # remote tunnel test: mouse + finger both PASS, no tuning needed; colleague may add 2nd data point
+
+  - id: "10-5"
+    name: "15-second onboarding quick-design (first card near-instant on web?)"
+    file: "design/quick-specs/first-card-hook-onboarding-2026-07-06.md"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-07-06"  # DECISION: first card after action #1 on new games (hook-first, all platforms); variety gate retained for future tutorial; implementation = separate 0.5d story (touches onboarding contract + tests)
 
   - id: "10-6"
     name: "Bug register bootstrap + retro-file 2 historical fixed bugs"
-    file: ""
+    file: "production/qa/bugs/README.md"
     priority: nice-to-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.1
+    blocker: ""
+    completed: "2026-07-06"  # BUG-001 (S2 save wiring) + BUG-002 (S1 tests deleting player save) filed as Fixed
+
+  - id: "10-7"
+    name: "First-card hook implementation (from 10-5 quick-spec)"
+    file: "design/quick-specs/first-card-hook-onboarding-2026-07-06.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
     blocker: ""
     completed: ""
 

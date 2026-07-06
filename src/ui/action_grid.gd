@@ -102,6 +102,12 @@ var _slot_progress_bars: Array[ProgressBar] = [null, null, null]
 ## unique Callable object; we must hold a reference to disconnect it later.
 var _locked_pressed_callables: Array[Callable] = [Callable(), Callable(), Callable()]
 
+## Small padlock badges (LOCKED_ICON png) shown above a locked slot's title.
+## Replaces the former "🔒 " text prefix — OpenSans has no padlock glyph, so
+## the emoji rendered as a hex box on the web build (10-1 spike finding);
+## a texture badge renders identically on every platform. Freed on unlock.
+var _lock_badges: Array[TextureRect] = [null, null, null]
+
 
 func _ready() -> void:
 	ActionSystem.action_completed.connect(_on_action_completed)
@@ -146,9 +152,43 @@ func _configure_locked_slots() -> void:
 		_slot_icons[slot_index].texture = ACTION_ICONS.get(action_id)
 		_slot_icons[slot_index].modulate = LOCKED_MODULATE
 
-		# Title: full opacity with lock prefix so it reads as locked but legible.
-		_slot_titles[slot_index].text = "🔒 " + ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+		# Title: full opacity, plain display name — the lock signifier is the
+		# padlock badge below (texture, not a text glyph — web-safe).
+		_slot_titles[slot_index].text = ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
 		_slot_titles[slot_index].modulate = Color.WHITE
+
+		# Padlock badge: small LOCKED_ICON texture placed NEXT TO the title
+		# text (user direction 2026-07-06). The title Label is reparented into
+		# a centered HBox wrapper: [badge][title]. The wrapper stays after
+		# unlock (harmless container); only the badge is freed.
+		var badge: TextureRect = TextureRect.new()
+		badge.name = "Slot%dLockBadge" % (slot_index + 1)
+		badge.texture = LOCKED_ICON
+		badge.custom_minimum_size = Vector2(22, 22)
+		badge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		badge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var title: Label = _slot_titles[slot_index]
+		# Autowrap OFF while locked: an autowrapping Label inside an HBox
+		# collapses to its minimum width and wraps one character per line
+		# (found on the web build 2026-07-06). Locked display names are short;
+		# WORD_SMART is restored on unlock, where the label returns to living
+		# directly in the VBox.
+		title.autowrap_mode = TextServer.AUTOWRAP_OFF
+		var title_group: VBoxContainer = title.get_parent() as VBoxContainer
+		var title_index_in_group: int = title.get_index()
+		var wrap: HBoxContainer = HBoxContainer.new()
+		wrap.alignment = BoxContainer.ALIGNMENT_CENTER
+		wrap.add_theme_constant_override("separation", 6)
+		title_group.add_child(wrap)
+		title_group.move_child(wrap, title_index_in_group)
+		var scene_owner: Node = title.owner  # reparent() clears owner — capture first
+		wrap.owner = scene_owner  # the whole chain must be owned, or an owned
+		title.reparent(wrap)      # find_child() prunes traversal at the wrapper
+		title.owner = scene_owner
+		wrap.add_child(badge)
+		wrap.move_child(badge, 0)  # badge to the LEFT of the title text
+		_lock_badges[g] = badge
 
 		# Stats label: unlock requirement string at 0.45 alpha.
 		if ActionUnlocks.is_milestone_gated(g):
@@ -182,9 +222,9 @@ func _configure_locked_slots() -> void:
 			bar.max_value = float(bar_progress["required"])
 			bar.value = float(bar_progress["current"])
 			bar.show_percentage = false
-			# TextGroup VBoxContainer is the direct parent of the title label.
-			var text_group: VBoxContainer = _slot_titles[slot_index].get_parent() as VBoxContainer
-			text_group.add_child(bar)
+			# TextGroup VBox — captured BEFORE the title was reparented into
+			# the badge HBox above (title.get_parent() is the HBox now).
+			title_group.add_child(bar)
 			_slot_progress_bars[g] = bar
 
 
@@ -224,6 +264,13 @@ func _activate_gated_slot(g: int) -> void:
 	if _slot_progress_bars[g] != null:
 		_slot_progress_bars[g].queue_free()
 		_slot_progress_bars[g] = null
+
+	# Free the padlock badge — the slot is live now — and restore the title's
+	# word wrapping (disabled while locked for the single-line badge row).
+	if _lock_badges[g] != null:
+		_lock_badges[g].queue_free()
+		_lock_badges[g] = null
+	_slot_titles[slot_index].autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	# Restore icon to full opacity with the action's real icon.
 	_slot_icons[slot_index].texture = ACTION_ICONS.get(action_id)

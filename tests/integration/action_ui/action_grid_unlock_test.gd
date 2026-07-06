@@ -40,14 +40,15 @@ func _gated_button(grid: Node, slot: int) -> Button:
 ## Locked-state predicate per the Story 005 (locked slot preview) contract:
 ## locked slots are NOT disabled (they stay enabled for tap -> toast) -- the
 ## observable locked state is the grayed icon (LOCKED_MODULATE alpha) plus
-## the lock-prefixed title.
+## the padlock badge (texture, replaced the 🔒 text prefix 2026-07-06 --
+## OpenSans has no padlock glyph, it rendered as a hex box on web).
 func _assert_slot_locked(grid: Node, slot: int) -> void:
 	assert_object((grid.find_child("Slot%dIcon" % slot) as TextureRect).modulate).is_equal(ActionGrid.LOCKED_MODULATE)
-	assert_bool((grid.find_child("Slot%dTitle" % slot) as Label).text.begins_with("🔒")).is_true()
+	assert_object(grid._lock_badges[slot - 4]).is_not_null()
 
 func _assert_slot_unlocked(grid: Node, slot: int) -> void:
 	assert_object((grid.find_child("Slot%dIcon" % slot) as TextureRect).modulate).is_equal(Color.WHITE)
-	assert_bool((grid.find_child("Slot%dTitle" % slot) as Label).text.begins_with("🔒")).is_false()
+	assert_object(grid._lock_badges[slot - 4]).is_null()
 	assert_bool(_gated_button(grid, slot).disabled).is_false()
 
 ## AC: fresh game (0 decisions) -> all 3 gated slots (4/5/6) locked (grayed

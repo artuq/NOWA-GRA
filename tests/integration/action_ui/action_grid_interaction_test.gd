@@ -65,10 +65,12 @@ func test_locked_slots_show_action_preview_with_unlock_requirement() -> void:
 
 	for i in range(4, 7):
 		var icon: TextureRect = grid.find_child("Slot%dIcon" % i) as TextureRect
-		var title: Label = grid.find_child("Slot%dTitle" % i) as Label
 		assert_object(icon.texture).is_not_equal(ActionGrid.LOCKED_ICON)  # real action icon, not padlock
 		assert_object(icon.modulate).is_equal(ActionGrid.LOCKED_MODULATE)
-		assert_bool(title.text.begins_with("🔒")).is_true()
+		# Padlock badge (texture, not a text glyph — web-safe, 2026-07-06)
+		var badge: TextureRect = grid.find_child("Slot%dLockBadge" % i, true, false) as TextureRect
+		assert_object(badge).is_not_null()
+		assert_object(badge.texture).is_equal(ActionGrid.LOCKED_ICON)
 
 	assert_str((grid.find_child("Slot4Stats") as Label).text).is_equal("0 / 3 choices")
 	assert_str((grid.find_child("Slot5Stats") as Label).text).is_equal("0 / 6 choices")
@@ -190,7 +192,13 @@ func test_title_labels_wrap_text_and_buttons_have_minimum_size() -> void:
 	for i in range(1, 7):
 		var button: Button = grid.find_child("Slot%dButton" % i) as Button
 		var title: Label = grid.find_child("Slot%dTitle" % i) as Label
-		assert_int(title.autowrap_mode).is_equal(TextServer.AUTOWRAP_WORD_SMART)
+		if i <= 3:
+			assert_int(title.autowrap_mode).is_equal(TextServer.AUTOWRAP_WORD_SMART)
+		else:
+			# Locked slots run autowrap OFF while the padlock badge shares the
+			# title row (an autowrapping Label in an HBox collapses to 1 char
+			# per line — 2026-07-06 web finding); WORD_SMART returns on unlock.
+			assert_int(title.autowrap_mode).is_equal(TextServer.AUTOWRAP_OFF)
 		assert_vector(button.custom_minimum_size).is_equal(Vector2(100, 160))
 
 ## AC (coverage gap closed, flagged by code review): start_action() returning

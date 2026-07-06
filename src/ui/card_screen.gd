@@ -264,8 +264,11 @@ func _populate(card: Dictionary) -> void:
 	_situation_label.text = text if not text.is_empty() else String(card.get("id", "???"))
 
 	var options: Array = card.get("options", [])
-	_option_a_label.text = "← %s" % _option_label(options, 0, "Option A")
-	_option_b_label.text = "%s →" % _option_label(options, 1, "Option B")
+	# Doubled guillemets «« »» (U+00AB/BB, Latin-1) instead of arrows ← →
+	# (U+2190/92): OpenSans lacks the arrow glyphs, which rendered as hex boxes
+	# on the web build (10-1 spike); doubled per user readability feedback.
+	_option_a_label.text = "«« %s" % _option_label(options, 0, "Option A")
+	_option_b_label.text = "%s »»" % _option_label(options, 1, "Option B")
 	# Re-show prompts in case the previous card's resolution beat hid them.
 	_option_a_label.visible = true
 	_option_b_label.visible = true

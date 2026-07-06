@@ -126,7 +126,7 @@ texture_filter = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "Reach: 0"
 
 [node name="CringePill" type="PanelContainer" parent="HBoxContainer"]
@@ -150,7 +150,7 @@ texture_filter = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "Cringe: 0"
 
 [node name="HatersPill" type="PanelContainer" parent="HBoxContainer"]
@@ -174,7 +174,7 @@ texture_filter = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "Haters: 0"
 
 [node name="MoralePill" type="PanelContainer" parent="HBoxContainer"]
@@ -198,7 +198,7 @@ texture_filter = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "Morale: High"
 
 [node name="SponsorsPill" type="PanelContainer" parent="HBoxContainer"]
@@ -222,5 +222,5 @@ texture_filter = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 24
 text = "Sponsors: 0"

@@ -80,8 +80,8 @@ func test_modal_appears_and_shows_content_on_signal() -> void:
 
 	assert_bool(screen.visible).is_true()
 	assert_str((screen.find_child("SituationLabel") as Label).text).is_equal("A juicy dilemma appears.")
-	assert_str((screen.find_child("OptionALabel") as Label).text).is_equal("← Sell out")
-	assert_str((screen.find_child("OptionBLabel") as Label).text).is_equal("Stay true →")
+	assert_str((screen.find_child("OptionALabel") as Label).text).is_equal("«« Sell out")
+	assert_str((screen.find_child("OptionBLabel") as Label).text).is_equal("Stay true »»")
 
 ## AC: empty placeholder copy falls back to the card id (title) and neutral
 ## "Option A/B" arrow labels (CardContentDatabase's text/labels are empty,
@@ -98,8 +98,8 @@ func test_modal_falls_back_for_empty_placeholder_copy() -> void:
 	DecisionCardSystem.card_presented.emit(empty_card)
 
 	assert_str((screen.find_child("SituationLabel") as Label).text).is_equal("hater_callout")
-	assert_str((screen.find_child("OptionALabel") as Label).text).is_equal("← Option A")
-	assert_str((screen.find_child("OptionBLabel") as Label).text).is_equal("Option B →")
+	assert_str((screen.find_child("OptionALabel") as Label).text).is_equal("«« Option A")
+	assert_str((screen.find_child("OptionBLabel") as Label).text).is_equal("Option B »»")
 
 ## AC: resolving calls DecisionCardSystem.resolve_choice with the right index
 ## and hides the modal. Driven against a fresh DCS so resolve_choice has a
