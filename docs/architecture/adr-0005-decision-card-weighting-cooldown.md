@@ -3,7 +3,7 @@
 ## Status
 Accepted (2026-06-20, following independent /architecture-review — verdict CONCERNS overall but no conflicts or blockers against this ADR specifically)
 
-**Implementation Note (2026-06-24, Story 001 of Decision Card System)**: the `Implementation Guidelines` code sample below is stale relative to what was actually built. It assumes cards are `Resource` objects with `.intensity`/`.id`/`.get_effects(option)`, and that `HistoryFlagManager.record_choice()` and `OnboardingGate.is_card_suppressed()` exist. None of that matches reality: `CardContentDatabase.get_all_cards()` returns `Array[Dictionary]`, `HistoryFlagManager`'s real API is `set_milestone()`/`increment_counter()`, and `OnboardingGate` doesn't exist yet (zero GDD acceptance criteria reference it). See `src/core/decision_card_system.gd`'s header doc comment and `production/epics/decision-card-system/story-001-cooldown-pool-eligibility.md` for the corrected, actually-implemented version. The underlying architectural decisions below (int-counter cooldown not Timer, per-instance RNG with `set_seed()` test hook, weighted cumulative-sum selection, ownership-clear direct calls) remain valid — only the code sample's data-access syntax is stale.
+**Implementation Note (updated 2026-07-06, Sprint 9 story 9-5 — supersedes the 2026-06-24 staleness note)**: the code sample below was rewritten to match the shipped implementation (`src/core/decision_card_system.gd`). The original draft assumed `Resource` cards with `.intensity`, `HistoryFlagManager.record_choice()`, and predated `OnboardingGate` — all corrected. The underlying architectural decisions (int-counter cooldown not Timer, per-instance RNG with `set_seed()` test hook, weighted cumulative-sum selection, ownership-clear direct calls) were valid throughout and remain unchanged. `card_resolved`'s 3-argument signature reflects ADR-0010's additive extension.
 
 ## Date
 2026-06-19
@@ -48,9 +48,12 @@ Accepted (2026-06-20, following independent /architecture-review — verdict CON
 Implement cooldown as an integer counter decremented on every `ActionSystem.action_completed` signal, and card selection as a cumulative-weight roll over `CardContentDatabase.get_all_cards()`, filtered to cards not currently on cooldown-from-recent-use (if such a rule exists — confirmed not needed per `decision-card-system.md`, all 12 cards are always eligible).
 
 ```gdscript
-# DecisionCardSystem (Autoload)
-var _actions_until_next_card: int = DECISION_CARD_COOLDOWN  # 2, from entities.yaml
-var current_card: Resource = null  # null when no card presented
+# DecisionCardSystem (Autoload) — shape matches src/core/decision_card_system.gd
+# Cards are Dictionaries from CardContentDatabase.get_all_cards(), not Resources.
+enum State { COOLDOWN, CHECKING, PRESENTING, RESOLVING }
+var state: State = State.COOLDOWN
+var _actions_until_check: int = COOLDOWN_ACTIONS  # 2, from entities.yaml
+var _presented_card: Dictionary = {}              # {} when no card presented
 var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -58,52 +61,60 @@ func _ready() -> void:
     _rng.randomize()
 
 func set_seed(s: int) -> void:
-    # Test hook only — production code never calls this. Allows tests/unit/
-    # to pin _rng to a fixed seed, satisfying coding-standards.md's
-    # "no random seeds" determinism rule for the weighted-pick statistical test.
+    # Test hook only — pins _rng for the weighted-pick statistical tests
+    # (coding-standards.md "no random seeds" determinism rule).
     _rng.seed = s
 
 func _on_action_completed(_action_id: StringName, _rewards: Dictionary) -> void:
     if OnboardingGate.is_card_suppressed():
-        return  # Phase 1: don't even decrement, per onboarding-tutorial.md's intent
-    if _actions_until_next_card > 0:
-        _actions_until_next_card -= 1
-        return
-    present_next_card()
-
-func present_next_card() -> void:
-    if current_card != null:
-        return  # single-concurrency: a card is already presented
-    current_card = _weighted_pick(CardContentDatabase.get_all_cards())
-    _actions_until_next_card = DECISION_CARD_COOLDOWN  # reset for next cycle
-    card_presented.emit(current_card)
+        return  # Phase 1: don't even decrement (onboarding-tutorial.md)
+    if state != State.COOLDOWN:
+        return  # a card is already in flight — no double-trigger
+    _actions_until_check -= 1
+    if _actions_until_check <= 0:
+        state = State.CHECKING
+        _check_pool()  # builds eligible pool (trigger_condition + milestone
+                       # exclusion); empty pool resets cooldown, never halts
 
 func force_cooldown_zero() -> void:
-    # Called by OnboardingGate at the Phase 1->2 transition (architecture.md Decision: ownership-clear write, OnboardingGate owns this call)
-    _actions_until_next_card = 0
+    # Called ONLY by OnboardingGate at the Phase 1->2 transition
+    # (ownership-clear direct write).
+    _actions_until_check = 0
 
-func _weighted_pick(cards: Array) -> Resource:
+func _weighted_pick(pool: Array[Dictionary]) -> Dictionary:
+    # weight(card) = BASE_WEIGHT + (Cringe / 100) * intensity(card), where
+    # intensity is DERIVED at selection time (the risky option's Cringe delta;
+    # 0.0 for neutral cards) — the Dictionary schema stores no .intensity field.
     var current_cringe: float = ResourceManager.get_resource(&"Cringe")
     var weights: Array[float] = []
     var total: float = 0.0
-    for card in cards:
-        var w: float = BASE_WEIGHT + (current_cringe / 100.0) * card.intensity
+    for card: Dictionary in pool:
+        var w: float = BASE_WEIGHT + (current_cringe / 100.0) * _card_intensity(card)
         weights.append(w)
         total += w
-    var roll := _rng.randf() * total
-    var cumulative := 0.0
-    for i in cards.size():
+    var roll: float = _rng.randf() * total
+    var cumulative: float = 0.0
+    for i in pool.size():
         cumulative += weights[i]
         if roll <= cumulative:
-            return cards[i]
-    return cards[-1]  # float-rounding fallback, never reached in practice
+            return pool[i]
+    return pool[-1]  # float-rounding fallback, never reached in practice
 
-func resolve_choice(option: StringName) -> void:
-    var resolved_card := current_card
-    current_card = null
-    ResourceManager.apply_delta(resolved_card.get_effects(option))
-    HistoryFlagManager.record_choice(resolved_card.id, option)
-    card_resolved.emit(resolved_card.id, option)
+func resolve_choice(option_index: int) -> void:
+    # Guarded: no-ops unless state == PRESENTING (touch double-tap safety).
+    # Resolution order is architecturally locked: resource_deltas ->
+    # ResourceManager BEFORE counter_increments/milestone_to_set ->
+    # HistoryFlagManager; then the path counter (ADR-0010), then the emit.
+    var option: Dictionary = _presented_card["options"][option_index]
+    ResourceManager.apply_delta(option["resource_deltas"])
+    for counter_name: StringName in option["counter_increments"]:
+        HistoryFlagManager.increment_counter(counter_name, option["counter_increments"][counter_name])
+    if option.has("milestone_to_set"):
+        HistoryFlagManager.set_milestone(option["milestone_to_set"])
+    _presented_card = {}
+    card_resolved.emit(card_id, path_tag, option_chosen)  # 3-arg per ADR-0010
+    _actions_until_check = COOLDOWN_ACTIONS
+    state = State.COOLDOWN
 ```
 
 ### Architecture Diagram

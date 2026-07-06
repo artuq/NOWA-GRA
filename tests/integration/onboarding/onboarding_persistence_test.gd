@@ -7,6 +7,7 @@
 extends GdUnitTestSuite
 
 const OnboardingGateScript: GDScript = preload("res://src/core/onboarding_gate.gd")
+const SaveSystemScript: GDScript = preload("res://src/core/save_system.gd")
 
 const VLOG: StringName = &"nagraj_vloga"
 const DRAMA: StringName = &"zrob_drame"
@@ -106,15 +107,15 @@ func test_save_now_payload_contains_onboarding_key() -> void:
 	OnboardingGate.phase = OnboardingGate.Phase.FIRST_CARD_PENDING
 	OnboardingGate._completed_types = {VLOG: true, DRAMA: true, APOLOGY: true}
 
-	var had_save_file: bool = FileAccess.file_exists("user://save.json")
+	var had_save_file: bool = FileAccess.file_exists(SaveSystemScript.SAVE_PATH)
 	var backup: String = ""
 	if had_save_file:
-		var f: FileAccess = FileAccess.open("user://save.json", FileAccess.READ)
+		var f: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.READ)
 		backup = f.get_as_text()
 		f.close()
 
 	SaveSystem.save_now()
-	var f2: FileAccess = FileAccess.open("user://save.json", FileAccess.READ)
+	var f2: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.READ)
 	var written: Dictionary = JSON.parse_string(f2.get_as_text())
 	f2.close()
 
@@ -127,11 +128,11 @@ func test_save_now_payload_contains_onboarding_key() -> void:
 	# Restore the real save file to its prior state (or remove it if it didn't
 	# exist), matching save_core_test.gd's established backup/restore pattern.
 	if had_save_file:
-		var restore_f: FileAccess = FileAccess.open("user://save.json", FileAccess.WRITE)
+		var restore_f: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.WRITE)
 		restore_f.store_string(backup)
 		restore_f.close()
 	else:
-		DirAccess.remove_absolute("user://save.json")
+		DirAccess.remove_absolute(SaveSystemScript.SAVE_PATH)
 
 ## AC: BootController wiring -- boot_with() calls OnboardingGate.restore_state()
 ## with the "onboarding" sub-dict from the save Dictionary.

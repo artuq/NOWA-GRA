@@ -29,9 +29,41 @@
 ##   var data: Dictionary = SaveSystem.load_save()
 extends Node
 
-const SAVE_PATH: String = "user://save.json"
-const TEMP_PATH: String = "user://save.tmp"
+## Test isolation (Sprint 9, story 9-3): a gdUnit4 CLI test run must never
+## read or write the real player save — the developer's live playtest save
+## leaked into test assertions twice (3 false failures 2026-07-05, 2 more
+## 2026-07-06: clamped Cringe/milestones from a real session breaking
+## delta-exactness and pool-eligibility tests). Detected via the command
+## line ("GdUnit" in any arg — the CLI runner passes
+## addons/gdUnit4/bin/GdUnitCmdTool.gd); test processes use a separate
+## save file, deleted fresh at Autoload construction so leftovers from a
+## crashed run can't pollute either. UPPER_SNAKE names kept (were consts)
+## so existing `SaveSystemScript.SAVE_PATH` test references keep working.
+## Known limitation: tests run from the EDITOR's gdUnit panel don't carry
+## the CLI arg and still use the real save — the CLI/CI run is the gate.
+static var SAVE_PATH: String = "user://save.json"
+static var TEMP_PATH: String = "user://save.tmp"
 const SCHEMA_VERSION: int = 1
+
+## Once per PROCESS, not per instance: test suites instantiate fresh
+## SaveSystem instances constantly — a per-instance delete would wipe the
+## test save a previous instance in the SAME run just legitimately wrote.
+static var _test_isolation_done: bool = false
+
+
+func _init() -> void:
+	if _test_isolation_done:
+		return
+	_test_isolation_done = true
+	for arg: String in OS.get_cmdline_args():
+		if arg.contains("GdUnit"):
+			SAVE_PATH = "user://save.test.json"
+			TEMP_PATH = "user://save.test.tmp"
+			if FileAccess.file_exists(SAVE_PATH):
+				DirAccess.remove_absolute(SAVE_PATH)
+			if FileAccess.file_exists(TEMP_PATH):
+				DirAccess.remove_absolute(TEMP_PATH)
+			break
 
 ## Trailing-edge debounce interval (Tuning Knob: `save_debounce_interval_sec`,
 ## safe range 1-5 per `save-persistence-system.md`). `mark_dirty()` restarts

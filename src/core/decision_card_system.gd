@@ -11,12 +11,8 @@
 ## counter and retries on the next action. Empty pool never permanently
 ## halts the action loop.
 ##
-## ADR-0005's Implementation Guidelines pseudocode is stale relative to this
-## implementation: it assumes cards are `Resource` objects with `.intensity`/
-## `.id`, and that `OnboardingGate.is_card_suppressed()` exists. Neither is
-## true — `CardContentDatabase.get_all_cards()` returns `Array[Dictionary]`,
-## and `OnboardingGate` doesn't exist yet (explicitly out of scope, zero GDD
-## acceptance criteria reference it).
+## ADR-0005's code sample was rewritten 2026-07-06 (Sprint 9 story 9-5) to
+## match this implementation — the old staleness caveat no longer applies.
 ##
 ## Registered as a Godot Autoload singleton per ADR-0001, after `ActionSystem`
 ## (depends on `ActionSystem.action_completed` existing and ready).

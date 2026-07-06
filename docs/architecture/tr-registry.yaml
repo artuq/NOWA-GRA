@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-07-01
-version: 5
+last_updated: 2026-07-06
+version: 6
 
 requirements:
   - id: TR-res-001
@@ -159,3 +159,57 @@ requirements:
     adr: [ADR-0006, ADR-0010]
     status: partial
     note: Behaviour correct — ADR-0006 offline loop owns its formula and never calls get_active_multiplier. ADR-0010 does not state the exclusion explicitly; recommend a one-line clarification before acceptance.
+
+  - id: TR-juice-001
+    system: juice-feedback-system
+    gdd: design/gdd/juice-feedback-system.md
+    requirement: Feedback magnitude formula — linear ratio for bounded resources, log-compressed for unbounded, max-of-contributions, hard clamp [0,1]
+    adr: [ADR-0011]
+    status: covered
+    note: Registered 2026-07-06 (architecture-review). FeedbackMath.magnitude() stateless static; ADR-0011 Proposed at registration.
+
+  - id: TR-juice-002
+    system: juice-feedback-system
+    gdd: design/gdd/juice-feedback-system.md
+    requirement: Two mutually-exclusive channels — Action (count-up + flash, no shake) and Card (scale-pulse + shake + audio stinger, magnitude-scaled)
+    adr: [ADR-0011]
+    status: covered
+
+  - id: TR-juice-003
+    system: juice-feedback-system
+    gdd: design/gdd/juice-feedback-system.md
+    requirement: No-valence-coding — same magnitude yields identical feedback params regardless of delta sign; structurally testable
+    adr: [ADR-0011]
+    status: covered
+    note: FeedbackMath reads abs(delta) only; sign structurally cannot influence output — unit-testable as pure-function property.
+
+  - id: TR-juice-004
+    system: juice-feedback-system
+    gdd: design/gdd/juice-feedback-system.md
+    requirement: Zero-magnitude events still play the lowest-tier effect (never silently skipped)
+    adr: [ADR-0011]
+    status: covered
+
+  - id: TR-juice-005
+    system: juice-feedback-system
+    gdd: design/gdd/juice-feedback-system.md
+    requirement: Resolution payoff text duration formula, clamped [1.5, 2.5]s by text length
+    adr: [ADR-0011]
+    status: partial
+    note: ADR-0011 asserts the existing CardScreen resolution beat (resolution_beat_seconds + resolution_beat_per_char) already satisfies this; verify it matches the GDD clamp bounds during Story 9-2. Not rebuilt by ADR-0011.
+
+  - id: TR-juice-006
+    system: juice-feedback-system
+    gdd: design/gdd/juice-feedback-system.md
+    requirement: Backgrounding mid-effect leaves clean state — no persisted state, no restore_state()
+    adr: [ADR-0011]
+    status: covered
+    note: Fire-and-forget tweens; ADR-0011 extends CardScreen._notification() to kill juice tweens in RESOLVING state (was DRAGGING-only).
+
+  - id: TR-juice-007
+    system: juice-feedback-system
+    gdd: design/gdd/juice-feedback-system.md
+    requirement: resolution_reaction content available per card/option for payoff text
+    adr: [ADR-0011]
+    status: covered
+    note: GDD Dependencies flagged this as a schema extension; ADR-0011 codebase check confirms the field already exists with authored content on every option of all 12 cards. Empty-field fallback retained for future cards.

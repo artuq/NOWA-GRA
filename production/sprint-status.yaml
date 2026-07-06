@@ -40,22 +40,144 @@
 # backend has been complete since Sprint 4 but nothing in any UI consumes
 # it, so cards never appear in actual play. Sprint 7 targets this directly.
 
-sprint: 8
-goal: "Class Path System MVP — player identity visible from minute 1 (2 paths, card affiliation, HUD indicator)."
-start: "2026-07-02"
-end: "2026-07-08"
-generated: "2026-07-01"
-updated: "2026-07-01"  # stories 8-2/8-3 file paths set; 8-1 marked done
+# Sprint 8 (Class Path System MVP) is fully closed — record preserved in
+# production/sprints/sprint-8.md, retro-sprint-8-2026-07-05.md,
+# qa-signoff-sprint-8-2026-07-05.md (APPROVED WITH CONDITIONS), and
+# smoke-2026-07-05.md (PASS, 360/360). All 4 executable stories done;
+# 8-5 Soft Reach Cap deferred to Alpha by design (quick-spec caveat).
+
+# Sprint 9 (Juice/Feedback + retro debt) is fully closed — record preserved in
+# production/sprints/sprint-9.md, retro-sprint-9-2026-07-06.md,
+# qa-signoff-sprint-9-2026-07-06.md (APPROVED — first unconditional),
+# smoke-2026-07-06.md (PASS, 401/401 with real-save immunity). All 5 stories
+# done in ONE day, including Should Have and Nice to Have. S1 data-loss bug
+# (tests deleting real player save) found and fixed same-session.
+
+sprint: 10
+goal: "Prove web viability (fail-fast on the 10 MB / load-time gate) + pay the twice-carried performance debt — measurably good in browser at 9:16 and on device."
+start: "2026-07-07"
+end: "2026-07-13"
+generated: "2026-07-06"
+updated: "2026-07-06"
 
 stories:
-  - id: "8-1"
-    name: "Class Path — ADR + Epic + Stories (design day)"
-    file: "design/quick-specs/class-path-system-2026-07-01.md"
+  - id: "10-1"
+    name: "Web-export spike — Compatibility renderer + size/load measurement (GO/NO-GO)"
+    file: "design/reference/web-publishing-best-practices-2026-07-06.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: ""
+
+  - id: "10-2"
+    name: "9:16 portrait web presentation (pillarbox + background on desktop)"
+    file: ""
+    priority: must-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: "Pending 10-1 GO verdict"
+    completed: ""
+
+  - id: "10-3"
+    name: "Performance pass on device + memory ceiling + AC-6 recheck (carried x2, escalated)"
+    file: ""
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+
+  - id: "10-4"
+    name: "Mouse swipe-threshold feel-test (+tuning)"
+    file: ""
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: "Pending 10-1 GO verdict"
+    completed: ""
+
+  - id: "10-5"
+    name: "15-second onboarding quick-design (first card near-instant on web?)"
+    file: ""
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+
+  - id: "10-6"
+    name: "Bug register bootstrap + retro-file 2 historical fixed bugs"
+    file: ""
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: ""
+
+_sprint_9_archive:
+  - id: "9-1"
+    name: "Juice/Feedback — ADR + Epic + Stories (design day)"
+    file: "design/gdd/juice-feedback-system.md"
     priority: must-have
     status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
+    completed: "2026-07-06"
+
+  - id: "9-2"
+    name: "Juice/Feedback — core implementation (3 stories: math, action channel, card channel)"
+    file: "production/epics/juice-feedback/story-001-feedback-math.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1.5
+    blocker: ""
+    completed: "2026-07-06"
+
+  - id: "9-3"
+    name: "Test isolation from user://save.json (retro AI #1)"
+    file: "src/core/save_system.gd"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-07-06"  # + fixed pre-existing bug: save tests were deleting the real player save (hardcoded paths in 3 test files)
+
+  - id: "9-4"
+    name: "Polish→English content audit (carried x3)"
+    file: "production/qa/audit-pl-en-2026-07-06.md"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-07-06"  # verdict PASS — player-facing surface 100% English; 1 cosmetic fix (stale tscn placeholder); recurring retro item closed
+
+  - id: "9-5"
+    name: "ADR-0005 stale code samples fix (carried x4)"
+    file: "docs/architecture/adr-0005-decision-card-weighting-cooldown.md"
+    priority: nice-to-have
+    status: done
+    owner: ""
+    estimate_days: 0.1
+    blocker: ""
+    completed: "2026-07-06"  # sample rewritten to match shipped implementation; DCS header staleness caveat retired
+
+_sprint_8_archive:
+  - id: "8-1"
+    name: "Class Path — ADR + Epic + Stories (design day)"
+    file: "design/quick-specs/class-path-system-2026-07-01.md"
+    priority: must-have
+    status: done
     completed: "2026-07-01"
 
   - id: "8-2"
@@ -63,9 +185,6 @@ stories:
     file: "production/epics/class-path/story-001-class-path-core.md"
     priority: must-have
     status: done
-    owner: ""
-    estimate_days: 1.5
-    blocker: ""
     completed: "2026-07-05"
 
   - id: "8-3"
@@ -73,9 +192,6 @@ stories:
     file: "production/epics/class-path/story-002-class-path-hud.md"
     priority: must-have
     status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
     completed: "2026-07-05"
 
   - id: "8-4"
@@ -83,19 +199,14 @@ stories:
     file: "production/epics/action-system/story-003-action-queue.md"
     priority: should-have
     status: done
-    owner: ""
-    estimate_days: 0.5
-    blocker: ""
-    completed: "2026-06-30"  # was already implemented pre-sprint as action-system story-003; sprint entry was stale
+    completed: "2026-06-30"
 
   - id: "8-5"
     name: "Soft Reach Cap"
     file: "design/quick-specs/soft-reach-cap-algorithm-barrier-2026-07-01.md"
     priority: nice-to-have
     status: blocked
-    owner: ""
-    estimate_days: 0.5
-    blocker: "Quick-spec explicitly defers implementation until BurnoutSystem + Prestige/Checkpoint exist (Alpha) — will not be implemented this sprint"
+    blocker: "Deferred to Alpha per quick-spec (needs BurnoutSystem + Prestige/Checkpoint)"
     completed: ""
 
 _sprint_7_archive:

@@ -55,18 +55,18 @@ func before_test() -> void:
 
 	# Back up any real save file from outside this test run, then clear the
 	# slate so every test starts from a known "no save file" state.
-	_had_save_file = FileAccess.file_exists("user://save.json")
+	_had_save_file = FileAccess.file_exists(SaveSystemScript.SAVE_PATH)
 	if _had_save_file:
-		var existing: FileAccess = FileAccess.open("user://save.json", FileAccess.READ)
+		var existing: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.READ)
 		_save_file_backup = existing.get_as_text()
 		existing.close()
-		DirAccess.remove_absolute("user://save.json")
-	_had_temp_file = FileAccess.file_exists("user://save.tmp")
+		DirAccess.remove_absolute(SaveSystemScript.SAVE_PATH)
+	_had_temp_file = FileAccess.file_exists(SaveSystemScript.TEMP_PATH)
 	if _had_temp_file:
-		var existing_temp: FileAccess = FileAccess.open("user://save.tmp", FileAccess.READ)
+		var existing_temp: FileAccess = FileAccess.open(SaveSystemScript.TEMP_PATH, FileAccess.READ)
 		_temp_file_backup = existing_temp.get_as_text()
 		existing_temp.close()
-		DirAccess.remove_absolute("user://save.tmp")
+		DirAccess.remove_absolute(SaveSystemScript.TEMP_PATH)
 
 
 func after_test() -> void:
@@ -80,16 +80,16 @@ func after_test() -> void:
 	ResourceManager.apply_delta(restore)
 	HistoryFlagManager.restore_state({"counters": {String(_TEST_COUNTER): _counter_snapshot}})
 
-	if FileAccess.file_exists("user://save.json"):
-		DirAccess.remove_absolute("user://save.json")
+	if FileAccess.file_exists(SaveSystemScript.SAVE_PATH):
+		DirAccess.remove_absolute(SaveSystemScript.SAVE_PATH)
 	if _had_save_file:
-		var restored: FileAccess = FileAccess.open("user://save.json", FileAccess.WRITE)
+		var restored: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.WRITE)
 		restored.store_string(_save_file_backup)
 		restored.close()
-	if FileAccess.file_exists("user://save.tmp"):
-		DirAccess.remove_absolute("user://save.tmp")
+	if FileAccess.file_exists(SaveSystemScript.TEMP_PATH):
+		DirAccess.remove_absolute(SaveSystemScript.TEMP_PATH)
 	if _had_temp_file:
-		var restored_temp: FileAccess = FileAccess.open("user://save.tmp", FileAccess.WRITE)
+		var restored_temp: FileAccess = FileAccess.open(SaveSystemScript.TEMP_PATH, FileAccess.WRITE)
 		restored_temp.store_string(_temp_file_backup)
 		restored_temp.close()
 
@@ -230,7 +230,7 @@ func test_save_file_contains_correct_schema_version_and_timestamp() -> void:
 
 	save_system.save_now()
 
-	var file: FileAccess = FileAccess.open("user://save.json", FileAccess.READ)
+	var file: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.READ)
 	var parsed: Dictionary = JSON.parse_string(file.get_as_text())
 	file.close()
 	var after_time: float = Time.get_unix_time_from_system()
@@ -242,7 +242,7 @@ func test_save_file_contains_correct_schema_version_and_timestamp() -> void:
 
 ## AC-10: a corrupted/unparseable save file falls back to defaults, no crash.
 func test_corrupted_save_file_falls_back_to_defaults_no_crash() -> void:
-	var file: FileAccess = FileAccess.open("user://save.json", FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.WRITE)
 	file.store_string("{ this is not valid JSON")
 	file.close()
 
@@ -262,7 +262,7 @@ func test_kill_before_rename_leaves_previous_save_intact() -> void:
 	# Simulate a kill mid-write: write a different snapshot to TEMP_PATH only,
 	# intentionally never renaming it.
 	var temp_data: Dictionary = {"schema_version": SaveSystemScript.SCHEMA_VERSION, "resources": {"Reach": 999.0}}
-	var temp_file: FileAccess = FileAccess.open("user://save.tmp", FileAccess.WRITE)
+	var temp_file: FileAccess = FileAccess.open(SaveSystemScript.TEMP_PATH, FileAccess.WRITE)
 	temp_file.store_string(JSON.stringify(temp_data))
 	temp_file.close()
 
@@ -279,15 +279,15 @@ func test_completed_rename_leaves_full_new_snapshot_no_temp_remnant() -> void:
 
 	save_system.save_now()
 
-	assert_bool(FileAccess.file_exists("user://save.tmp")).is_false()
-	assert_bool(FileAccess.file_exists("user://save.json")).is_true()
+	assert_bool(FileAccess.file_exists(SaveSystemScript.TEMP_PATH)).is_false()
+	assert_bool(FileAccess.file_exists(SaveSystemScript.SAVE_PATH)).is_true()
 
 
 ## AC-13: a schema_version mismatch in an otherwise valid file is discarded
 ## -- defaults initialize, ready reached, no partial migration attempted.
 func test_schema_version_mismatch_falls_back_to_defaults_no_migration() -> void:
 	var mismatched: Dictionary = {"schema_version": 999, "resources": {"Reach": 12345.0}}
-	var file: FileAccess = FileAccess.open("user://save.json", FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.WRITE)
 	file.store_string(JSON.stringify(mismatched))
 	file.close()
 	var before_reach: float = ResourceManager.get_resource(&"Reach")
@@ -307,7 +307,7 @@ func test_stray_temp_file_is_never_loaded() -> void:
 
 	# Leave a stray .tmp file with DIFFERENT content than the real .json.
 	var stray_data: Dictionary = {"schema_version": SaveSystemScript.SCHEMA_VERSION, "resources": {"Reach": 777.0}}
-	var stray_file: FileAccess = FileAccess.open("user://save.tmp", FileAccess.WRITE)
+	var stray_file: FileAccess = FileAccess.open(SaveSystemScript.TEMP_PATH, FileAccess.WRITE)
 	stray_file.store_string(JSON.stringify(stray_data))
 	stray_file.close()
 

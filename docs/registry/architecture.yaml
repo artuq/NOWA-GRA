@@ -220,6 +220,11 @@ api_decisions:
     source: docs/architecture/adr-0009-offline-report-screen-scene-data-handoff.md
     referenced_by: []
 
+  - decision: "Juice/Feedback has NO Autoload and NO new signal: FeedbackMath (res://src/ui/feedback_math.gd, class_name FeedbackMath, stateless static — magnitude(deltas), pulse_scale(m), shake_amplitude_px(m), shake_duration_sec(m), stinger_params(m)) + additive effect code inside ResourceHud (action channel: count-up + self_modulate pill flash) and CardScreen (card channel: scale-pulse + shake + stinger) (ADR-0011)"
+    rationale: "System owns zero state (no restore_state by GDD design) so an Autoload contradicts ADR-0001's rationale; a conductor node would violate ADR-0007 zone ownership; deltas are already in hand at both call sites (action_completed payload, presented card's option), so local computation needs no signal changes"
+    source: docs/architecture/adr-0011-juice-feedback-stateless-math-ui-effects.md
+    referenced_by: []
+
 forbidden_patterns:
   - pattern: "Adding instance vars or @export fields to ResourceFormulas"
     reason: "Must remain stateless — shared by two independent call sites (live play and offline simulation); any state would silently leak across unrelated contexts"
@@ -232,3 +237,7 @@ forbidden_patterns:
   - pattern: "Subscribing to a signal without a declared dependency in architecture.md's Module Ownership table"
     reason: "Connecting 'just in case' breaks traceability — update the Module Ownership table first if a new dependency is needed"
     source: docs/architecture/adr-0001-autoload-singleton-vs-event-bus.md
+
+  - pattern: "Valence-coded feedback: any effect parameter (color token, pitch/harmony, effect type, curve) varying with the SIGN of a resource delta or win/loss outcome"
+    reason: "The GDD's central guarantee (Pillar 2/3): feedback intensity encodes magnitude only, never moral valence — FeedbackMath reads abs(delta) exclusively, and a dedicated sign-invariance unit test enforces it"
+    source: docs/architecture/adr-0011-juice-feedback-stateless-math-ui-effects.md

@@ -15,8 +15,8 @@
 <!-- Written by /setup-engine. Read by /ux-design, /ux-review, /test-setup, /team-ui, and /dev-story -->
 <!-- to scope interaction specs, test helpers, and implementation to the correct input methods. -->
 
-- **Target Platforms**: Mobile (Android, docelowo iOS)
-- **Input Methods**: Touch
+- **Target Platforms**: Mobile (Android, docelowo iOS) + **Web (HTML5, portale typu CrazyGames)** — potwierdzone 2026-07-06 (deklarowane wcześniej przez usera). Uwaga: eksport web w Godot 4.x wymaga renderera **Compatibility** (WebGL2), a projekt jedzie na Forward+ — przed pierwszym buildem web potrzebny spike walidacji renderera. Kandydaci backlogowi (Sprint 10): web-export spike, strategia aspect-ratio dla 16:9 iframe/fullscreen (portrait 720×1280 + canvas_items/expand), feel-test progu commitmentu swipe'a myszą. Haptyka (design idea) = tylko Android.
+- **Input Methods**: Touch (mobile) + mysz przez `emulate_touch_from_mouse=true` (web — swipe działa, próg do feel-testu)
 - **Primary Input**: Touch
 - **Gamepad Support**: None
 - **Touch Support**: Full

@@ -35,8 +35,36 @@ extends Control
 @onready var _morale_pill: Control = %MoralePill
 @onready var _sponsors_pill: Control = %SponsorsPill
 
+## Juice/Feedback Action channel (ADR-0011, Story 002). Count-up: on
+## action_completed the rewarded labels animate from (end - delta) to end over
+## a FIXED duration -- magnitude never scales timing in this channel (GDD rule
+## 2). Flash: one brightness pulse on the pill's self_modulate -- self_modulate
+## (not modulate) so the pulse does not cascade to the child value Label and
+## the number stays legible (engine-specialist finding, 2026-07-06). ONE
+## neutral token for gains and losses alike -- no valence coding (registry
+## forbidden pattern, ADR-0011).
+const COUNTUP_DURATION_SEC: float = 0.6
+const FLASH_DURATION_SEC: float = 0.18
+## Neutral "activity" brightness pulse. # TODO: art-bible-pending
+const FLASH_COLOR: Color = Color(1.35, 1.35, 1.35, 1.0)
+
+## Live count-up tweens per resource. While a resource has a running count-up,
+## the resource_changed snap is skipped -- the count-up owns that label until
+## it settles on the end value (ADR-0011 §2 reconciliation).
+var _countup_tweens: Dictionary[StringName, Tween] = {}
+var _flash_tweens: Dictionary[StringName, Tween] = {}
+## Last value written by a count-up tween, per resource -- lets an interrupting
+## count-up resume from what is actually displayed rather than a stale start.
+var _displayed_countup_values: Dictionary[StringName, float] = {}
+## Pre-change value from the most recent resource_changed, per resource. Used
+## as the count-up's TRUE start: `end - reward` would fabricate a start when
+## ResourceManager clamps Cringe/Morale to [0,100] (the action_completed
+## payload carries pre-clamp deltas -- code-review finding, 2026-07-06).
+var _last_old_values: Dictionary[StringName, float] = {}
+
 func _ready() -> void:
 	ResourceManager.resource_changed.connect(_on_resource_changed)
+	ActionSystem.action_completed.connect(_on_action_completed)
 	# Populate initial state -- resource_changed only fires on subsequent
 	# changes, not on this HUD's own _ready(). No pop animation on initial load.
 	_update_label(&"Reach", ResourceManager.get_resource(&"Reach"))
@@ -46,9 +74,70 @@ func _ready() -> void:
 	_update_label(&"Sponsors", ResourceManager.get_resource(&"Sponsors"))
 
 
-func _on_resource_changed(name: StringName, new_value: float, _old_value: float) -> void:
+func _on_resource_changed(name: StringName, new_value: float, old_value: float) -> void:
+	# Always record the true pre-change value -- even when the snap below is
+	# suppressed -- so a count-up starting this frame animates from what the
+	# resource actually was (post-clamp truth, not payload arithmetic).
+	_last_old_values[name] = old_value
+	if _countup_tweens.has(name) and _countup_tweens[name].is_running():
+		return  # count-up owns this label until it settles (ADR-0011 §2)
 	_update_label(name, new_value)
 	_pop(_pill_for(name))
+
+
+## Juice Action channel entry point: count-up + flash for every rewarded
+## resource. Fires AFTER resource_changed (ActionSystem applies deltas, then
+## emits action_completed synchronously), so the label already shows the end
+## value -- the count-up derives its start from the payload (start = end -
+## delta) instead of reading the label (ADR-0011 §2 / architecture-review
+## advisory). No shake, no audio in this channel -- structurally absent.
+func _on_action_completed(_action_id: StringName, rewards: Dictionary) -> void:
+	for resource_name: StringName in rewards:
+		var end_value: float = ResourceManager.get_resource(resource_name)
+		# True start: the cached pre-change value from resource_changed (handles
+		# clamped Cringe/Morale correctly); payload arithmetic only as fallback
+		# for a resource that somehow never emitted resource_changed.
+		var start_value: float = _last_old_values.get(resource_name, end_value - float(rewards[resource_name]))
+		# Morale renders as a band label, not a number -- a numeric count-up
+		# would flicker the band text through thresholds mid-tween. Flash only.
+		if resource_name != &"Morale":
+			_start_countup(resource_name, start_value, end_value)
+		_start_flash(resource_name)
+
+
+## Animates [param resource_name]'s label from [param start_value] to
+## [param end_value] over the fixed count-up duration. Kills any previous
+## count-up for the same resource first -- if one was mid-flight, the new
+## count-up starts from the currently displayed value (no jump, no stacking).
+func _start_countup(resource_name: StringName, start_value: float, end_value: float) -> void:
+	var from_value: float = start_value
+	if _countup_tweens.has(resource_name) and _countup_tweens[resource_name].is_running():
+		_countup_tweens[resource_name].kill()
+		from_value = _displayed_countup_values.get(resource_name, start_value)
+	var tween: Tween = create_tween()
+	tween.tween_method(
+		func(value: float) -> void:
+			_displayed_countup_values[resource_name] = value
+			_update_label(resource_name, value),
+		from_value, end_value, COUNTUP_DURATION_SEC
+	)
+	_countup_tweens[resource_name] = tween
+
+
+## One brightness pulse on the pill chrome: self_modulate -> FLASH_COLOR ->
+## identity over FLASH_DURATION_SEC. Same single token regardless of the
+## delta's sign or size -- plays even at zero magnitude (TR-juice-004).
+func _start_flash(resource_name: StringName) -> void:
+	var pill: Control = _pill_for(resource_name)
+	if pill == null:
+		return
+	if _flash_tweens.has(resource_name) and _flash_tweens[resource_name].is_running():
+		_flash_tweens[resource_name].kill()
+		pill.self_modulate = Color.WHITE
+	var tween: Tween = create_tween()
+	tween.tween_property(pill, "self_modulate", FLASH_COLOR, FLASH_DURATION_SEC * 0.4)
+	tween.tween_property(pill, "self_modulate", Color.WHITE, FLASH_DURATION_SEC * 0.6)
+	_flash_tweens[resource_name] = tween
 
 
 func _update_label(name: StringName, value: float) -> void:

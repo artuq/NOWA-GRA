@@ -41,12 +41,14 @@ Gracz czuje **wielkość tego, co się właśnie wydarzyło** — niezależnie o
 |---|---|---|
 | `idle` | No active effect | → `pulsing` when `action_completed` or `card_resolved` emits |
 | `pulsing` | Sensory effect in progress (count-up/shake/stinger) | → `idle` once the effect completes (duration depends on channel) |
-| `payoff_showing` | (Decision Card only) reaction text replaces card text | → `idle`, signals Card UI to proceed to closing the modal |
+| `payoff_showing` | (Decision Card only) reaction text replaces card text | → `idle`, Card UI proceeds to closing the modal |
+
+> *Implementation note (ADR-0011, 2026-07-06): these are conceptual states, not a system entity — `pulsing` is realized as fire-and-forget tweens owned by the UI node they animate, and `payoff_showing` already lives in CardScreen's resolution beat. No separate Juice state machine exists.*
 
 ### Interactions with Other Systems
 
 - **Action System** (peer, read) → listens to `action_completed`, reads rewards to compute magnitude
-- **Decision Card System** (peer, read+signal) → listens to `card_resolved`, reads card_id/option to compute magnitude and fetch `resolution_reaction`; sends a "payoff complete" signal to Card UI so it proceeds to closing the modal
+- **Decision Card System** (peer, read+signal) → magnitude is computed from the presented card's option deltas at the resolve call site; the payoff→close sequencing lives entirely inside Card UI's CardScreen (its existing resolution beat) — **no "payoff complete" signal exists** (revised per ADR-0011, 2026-07-06: same-node sequencing, no new signal)
 - **Card Content Database** (hard, read, requires schema extension — see Dependencies) → reads `resolution_reaction` per card/option
 
 ## Formulas
@@ -141,8 +143,8 @@ Per-resource `norm_ref`: **Cringe** = 35 (max of action ceiling 20 and card ceil
 **Visual — screen-shake/scale-pulse (Decision Card System, magnitude-scaled channel):**
 - Single effect family across the full magnitude range — only amplitude/duration scale, never effect type or color.
 - Low magnitude (~0.0-0.3): small scale-pulse only (card scales to ~102-105% and settles), no camera shake.
-- Mid magnitude (~0.3-0.7): scale-pulse + light shake (small amplitude, short duration, e.g. 2-4px, ≤150ms).
-- High magnitude (~0.7-1.0): larger scale-pulse (up to ~110-115%) + stronger shake, capped to avoid motion-sickness/readability loss.
+- Mid magnitude (~0.3-0.7): scale-pulse + light shake (small amplitude, short duration — **retuned 2026-07-06 to 6-8px, 0.30-0.35s**; the original 2-4px/≤150ms placeholder was fully masked by the simultaneous pulse, invisible on video review — QA verdict As Designed / Needs Tweak).
+- High magnitude (~0.7-1.0): larger scale-pulse (up to ~110-115%) + stronger shake (**8-12px, up to 0.40s** after the same retune), capped to avoid motion-sickness/readability loss.
 - Same curve/easing applies whether the card resolved as a triumph or disaster — intensity is the only variable.
 - A reduce-motion consideration should be evaluated now, even before the art bible, given Pillar accessibility intent.
 
@@ -215,7 +217,8 @@ Per-resource `norm_ref`: **Cringe** = 35 (max of action ceiling 20 and card ceil
 
 ## Open Questions
 
-- **`resolution_reaction` content for all 12 cards** — Card Content Database needs this field added and written (narrative-director/writer task). Until then, Edge Cases' empty-field fallback applies. *Owner: revise Card Content Database. Target: before next `/vertical-slice` re-run.*
-- **Reduce-motion toggle** — flagged by `art-director` as worth considering now, before the art bible exists, given the screen-shake channel. Not yet a committed accessibility tier item (see `design/accessibility-requirements.md`'s "Basic" tier, which currently defers full reduced-motion). *Owner: revise `design/accessibility-requirements.md` if this becomes a confirmed need. Target: Polish, or sooner if a playtester flags motion sensitivity.*
+- ~~**`resolution_reaction` content for all 12 cards**~~ — **RESOLVED (verified 2026-07-06, ADR-0011)**: the field exists with authored English content on every option of all 12 cards in CardContentDatabase, and CardScreen's resolution beat already displays it. The empty-field fallback remains as a safety net for future cards.
+- **Device haptics (vibration) on high-magnitude card resolutions** — design idea logged 2026-07-06 (user + QA colleague, high priority for the art-bible/game-feel discussion). Touch-only Android target makes haptic feedback a natural third channel; must follow the same no-valence rule (intensity by magnitude only). Not in ADR-0011 scope — needs its own quick-spec when picked up.
+- **Reduce-motion toggle** — flagged by `art-director` as worth considering now, before the art bible exists, given the screen-shake channel. The 2026-07-06 shake retune (6-12px) makes this MORE relevant, not less. Not yet a committed accessibility tier item (see `design/accessibility-requirements.md`'s "Basic" tier, which currently defers full reduced-motion). *Owner: revise `design/accessibility-requirements.md` if this becomes a confirmed need. Target: Polish, or sooner if a playtester flags motion sensitivity.*
 - **Exact shake amplitude/duration values per tier** — art-director gave ranges (e.g., "2-4px, ≤150ms" for mid-tier) but final values await the art bible. *Owner: `/asset-spec` once art bible exists. Target: before Production implementation.*
 - **No art bible exists yet** — recurring project-level open risk (2nd consecutive gate-check CONCERNS). This GDD's Visual/Audio section works around it with placeholder/data-driven tokens, consistent with the established pattern.

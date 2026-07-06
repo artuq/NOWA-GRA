@@ -38,18 +38,18 @@ func before_test() -> void:
 	_resource_snapshot[&"Reach"] = ResourceManager.get_resource(&"Reach")
 	_save_systems = []
 
-	_had_save_file = FileAccess.file_exists("user://save.json")
+	_had_save_file = FileAccess.file_exists(SaveSystemScript.SAVE_PATH)
 	if _had_save_file:
-		var existing: FileAccess = FileAccess.open("user://save.json", FileAccess.READ)
+		var existing: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.READ)
 		_save_file_backup = existing.get_as_text()
 		existing.close()
-		DirAccess.remove_absolute("user://save.json")
-	_had_temp_file = FileAccess.file_exists("user://save.tmp")
+		DirAccess.remove_absolute(SaveSystemScript.SAVE_PATH)
+	_had_temp_file = FileAccess.file_exists(SaveSystemScript.TEMP_PATH)
 	if _had_temp_file:
-		var existing_temp: FileAccess = FileAccess.open("user://save.tmp", FileAccess.READ)
+		var existing_temp: FileAccess = FileAccess.open(SaveSystemScript.TEMP_PATH, FileAccess.READ)
 		_temp_file_backup = existing_temp.get_as_text()
 		existing_temp.close()
-		DirAccess.remove_absolute("user://save.tmp")
+		DirAccess.remove_absolute(SaveSystemScript.TEMP_PATH)
 
 
 func after_test() -> void:
@@ -62,16 +62,16 @@ func after_test() -> void:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)
 	ResourceManager.apply_delta(restore)
 
-	if FileAccess.file_exists("user://save.json"):
-		DirAccess.remove_absolute("user://save.json")
+	if FileAccess.file_exists(SaveSystemScript.SAVE_PATH):
+		DirAccess.remove_absolute(SaveSystemScript.SAVE_PATH)
 	if _had_save_file:
-		var restored: FileAccess = FileAccess.open("user://save.json", FileAccess.WRITE)
+		var restored: FileAccess = FileAccess.open(SaveSystemScript.SAVE_PATH, FileAccess.WRITE)
 		restored.store_string(_save_file_backup)
 		restored.close()
-	if FileAccess.file_exists("user://save.tmp"):
-		DirAccess.remove_absolute("user://save.tmp")
+	if FileAccess.file_exists(SaveSystemScript.TEMP_PATH):
+		DirAccess.remove_absolute(SaveSystemScript.TEMP_PATH)
 	if _had_temp_file:
-		var restored_temp: FileAccess = FileAccess.open("user://save.tmp", FileAccess.WRITE)
+		var restored_temp: FileAccess = FileAccess.open(SaveSystemScript.TEMP_PATH, FileAccess.WRITE)
 		restored_temp.store_string(_temp_file_backup)
 		restored_temp.close()
 
