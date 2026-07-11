@@ -96,7 +96,7 @@ There are no characters in the traditional sense — the dashboard IS the world.
 
 ## Section 7: UI/HUD Visual Direction
 
-**Icon style spec (32×32 native)**: filled solid silhouettes (not outline — outlines lose legibility at touch scale and read "line-art app icon," not dashboard). Max **3 flat colors per icon** (1 base fill, 1 accent, transparent ground), 1–2 interior cutouts max, zero gradients, zero anti-aliasing.
+**Icon style spec (32×32 native, REVISED 2026-07-11, highlight dropped same day)**: bold dark outline + flat fill, pixel-art register — **supersedes the earlier no-outline rule**. User-confirmed reference set (thick-outline retro game-icon style) read more distinctive and legible at chip scale than the flat no-outline pass; the original "outline reads as line-art app icon" risk did not materialize. **No white highlight/sheen** — tested, but a glossy highlight patch reads as toy/candy-bright and conflicts with the Section 1 anchor ("deadpan... never adopts a good/bad visual register") and the Section 9 Balatro caution (avoid saturated candy-bright joy palette). 2-tone budget per icon: 1 dark outline (near-black/deep shade of the icon's hue family), 1 base fill — transparent ground stays outside the count. Zero gradients, zero anti-aliasing — outline edges stay pixel-hard, not soft AA. 1–2 interior cutouts still allowed where the concept needs one (e.g. padlock shackle gap).
 
 **Semantic map** (one concept per icon — the systematic fix for "icons don't match their actions", 2026-07-06):
 
@@ -104,15 +104,15 @@ There are no characters in the traditional sense — the dashboard IS the world.
 |---|---|
 | Record a Vlog | webcam circle with a solid red rec-dot |
 | Make Drama | megaphone with a jagged crack through the bell |
-| Apologize Online | hand holding a folded note/scroll |
-| Record a Collab | two overlapping webcam circles |
-| Give an Interview | microphone with a small waveform notch |
-| Launch a Course | stacked rectangles (book) with a play-triangle badge |
-| Reach | eye inside a signal-bars arc |
+| Apologize Online | two hands pressed together, praying/pleading gesture (REVISED 2026-07-11, was hand+note) |
+| Record a Collab | handshake — two hands clasped together (REVISED 2026-07-11, was two overlapping webcam circles) |
+| Give an Interview | hand gripping a microphone with cable (REVISED 2026-07-11, was bare mic with waveform notch) |
+| Launch a Course | browser window with an open book overlapping its corner (REVISED 2026-07-11, was stacked books+play; flagged as highest-complexity icon in the set — recheck at chip scale) |
+| Reach | hub-and-spoke network glyph — person-in-circle with 6 radiating satellite nodes (REVISED 2026-07-11, was eye+signal-arc) |
 | Cringe | cracked speech-bubble shard |
-| Haters | clenched fist silhouette (thumb-down implied by angle only) |
-| Morale | battery glyph (no numeric fill inside the icon) |
-| Sponsors | handshake reduced to two overlapping chevrons |
+| Haters | speech bubble with censored profanity symbols (REVISED 2026-07-11, was clenched fist) — pairs with Cringe as a communication-metric icon family |
+| Morale | single static flame (REVISED 2026-07-11, was battery) — one size/color only, never a scale or intensity variant (would re-introduce the banned "shows a level" pattern) |
+| Sponsors | handshake with a dollar-coin above it (REVISED 2026-07-11, was chevrons — gen'd as an unreadable star/pinwheel). Accepted risk: shares a base silhouette with Record a Collab (also a handshake), differentiated by coin accent + color family only |
 | Card-category | stacked-card corner-fold glyph |
 | Locked | padlock, closed shackle only (no keyhole — 1 cutout rule) |
 | Settings | single gear, 6 teeth max |
@@ -149,9 +149,15 @@ There are no characters in the traditional sense — the dashboard IS the world.
 
 **Source-file discipline**: `.ase` sources live in `assets/_source/icons/`, mirroring `ui/icons/` 1:1 — exports only ever land in `assets/ui/icons/`, never the reverse.
 
-**Nano Banana prompt block (verbatim in every generation prompt — consistency depends on this never drifting)**:
-> *"32×32 pixel grid, flat vector icon, single bold silhouette, maximum 3 flat colors, no gradient, no anti-aliasing, no outline stroke, pixel-perfect edges, transparent background, dark-mode analytics-dashboard icon style"*
-> + the specific palette hex token(s) from Section 4 for that asset.
+**Nano Banana prompt block (REVISED 2026-07-11, highlight dropped same day — verbatim in every generation prompt, consistency depends on this never drifting)**:
+
+Two family variants — pick by icon category (Section 7 style spec: outline + flat fill, NO highlight):
+
+> **Actions** (neutral/control icons): *"A 2D video game UI icon of a [SUBJECT], low-resolution 32×32 pixel art style, retro 8-bit game asset. Monochromatic pale lavender-blue color palette with thick dark indigo bold outlines. Flat solid color fill, no shading, no highlights, no gloss. Isolated on a solid flat magenta (#FF00FF) background, minimalist design, highly readable for mobile games."*
+
+> **Resources** (metric icons): *"A 2D video game UI icon of a [SUBJECT], low-resolution 32×32 pixel art style, retro 8-bit game asset. Vibrant [HUE NAME derived from Section 4 token] color palette with thick dark [deep shade of same hue] bold outlines. Flat solid color fill, no shading, no highlights, no gloss. Isolated on a solid flat magenta (#FF00FF) background, minimalist design, highly readable for mobile games."*
+
+Generation background stays **magenta (#FF00FF)**, not white — keys out cleanly in the Aseprite cleanup pass (Section 8 production checklist) and never appears elsewhere in the palette; never shipped magenta.
 
 ---
 

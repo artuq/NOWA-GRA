@@ -44,13 +44,15 @@ const UNLOCKED_ACTION_IDS: Array[StringName] = [&"nagraj_vloga", &"zrob_drame", 
 const ACTION_ICONS: Dictionary[StringName, Texture2D] = {
 	&"nagraj_vloga": preload("res://assets/ui/icons/icon_action_vlog.png"),
 	&"zrob_drame": preload("res://assets/ui/icons/icon_action_drama.png"),
-	&"przeprosiny": preload("res://assets/ui/icons/icon_action_apology.png"),
+	&"przeprosiny": preload("res://assets/ui/icons/icon_action_apologize.png"),
 	# Gated unlock actions (slots 4-6) -- reuse the 3 base action icons as
 	# placeholders (same free-placeholder approach as the rest of this layout;
 	# swap for bespoke pixel art later without touching this wiring).
-	&"nagraj_kolaba": preload("res://assets/ui/icons/icon_action_vlog.png"),
-	&"udziel_wywiadu": preload("res://assets/ui/icons/icon_action_apology.png"),
-	&"wydaj_kurs": preload("res://assets/ui/icons/icon_action_drama.png"),
+	# Wave-1 icons (2026-07-07): gated actions get their OWN icons — no more
+	# borrowing the base three (the "icons don't match" complaint, ASSET-004..006).
+	&"nagraj_kolaba": preload("res://assets/ui/icons/icon_action_collab.png"),
+	&"udziel_wywiadu": preload("res://assets/ui/icons/icon_action_interview.png"),
+	&"wydaj_kurs": preload("res://assets/ui/icons/icon_action_course.png"),
 }
 
 ## The 3 gated slots occupy button indices [GATED_BASE_INDEX, 6) -- the reserved

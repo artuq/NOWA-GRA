@@ -1,11 +1,11 @@
 [gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/ui/resource_hud.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_reach.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_cringe.png" id="3"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_haters.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_morale.png" id="5"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_sponsors.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_resource_reach.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_resource_cringe.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_resource_haters.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_resource_morale.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_resource_sponsors.png" id="6"]
 
 [sub_resource type="StyleBoxFlat" id="PillReach"]
 bg_color = Color(0.168627, 0.168627, 0.211765, 1)
