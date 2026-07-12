@@ -1,18 +1,15 @@
 ## Integration tests for CardScreen's Juice Card channel (Juice/Feedback
-## Story 003, TR-juice-002/005/006, ADR-0011 §3). Covers the 8 QA test cases
+## Story 003, TR-juice-002/005/006, ADR-0011 §3). Covers the QA test cases
 ## embedded in the story: magnitude tier gating (pulse always, shake only at
 ## m >= 0.3), scale returning to ONE (incl. interrupt), direct-resolve pivot
 ## centring, rest-position return after shake, no-valence param identity,
-## the null-stream stinger guard, backgrounding during RESOLVING, and the
-## payoff-beat clamp (TR-juice-005).
+## backgrounding during RESOLVING, and the payoff-beat clamp (TR-juice-005).
 ##
 ## Synthetic cards use Morale/Cringe deltas chosen to land exact magnitudes
 ## (Morale +3 -> 0.1; Morale +9 -> 0.3; Cringe +17.5 -> 0.5; Cringe +24.5 ->
 ## 0.7; Cringe +31.5 -> 0.9). resolve() applies real deltas via
 ## DecisionCardSystem — resources snapshot/restored per the suite convention.
 extends GdUnitTestSuite
-
-const FeedbackMath: GDScript = preload("res://src/ui/feedback_math.gd")
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
 var _onboarding_phase_snapshot: int
@@ -199,22 +196,6 @@ func test_mirrored_outcomes_produce_identical_magnitude() -> void:
 	await get_tree().create_timer(0.4).timeout
 
 	assert_float(win_magnitude).is_equal(loss_magnitude)
-	# Identical magnitude => identical FeedbackMath params by construction.
-	assert_that(FeedbackMath.stinger_params(win_magnitude)).is_equal(FeedbackMath.stinger_params(loss_magnitude))
-
-
-# --- AC-6: null-stream stinger guard ---
-
-func test_null_stream_stinger_noops_silently() -> void:
-	var screen: Node = _present(_card_with_deltas({&"Cringe": 31.5}))
-	await get_tree().process_frame
-	assert_object(screen._stinger_player.stream).is_null()  # pre-art-bible state
-
-	screen.resolve(0)
-	await get_tree().process_frame
-
-	assert_bool(screen._stinger_player.playing).is_false()  # guard held, no play attempted
-	await get_tree().create_timer(0.4).timeout
 
 
 # --- AC-7: backgrounding during RESOLVING kills juice tweens ---

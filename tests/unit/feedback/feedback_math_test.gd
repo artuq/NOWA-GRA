@@ -76,14 +76,10 @@ func test_zero_delta_magnitude_is_0() -> void:
 
 
 func test_zero_magnitude_lowest_tier_effects_still_defined() -> void:
-	# TR-juice-004: never silently skipped — pulse still >= 1.02, one stinger
-	# layer, but no shake (shake's absence at low tier IS the spec).
+	# TR-juice-004: never silently skipped — pulse still >= 1.02, but no shake
+	# (shake's absence at low tier IS the spec).
 	assert_float(FeedbackMath.pulse_scale(0.0)).is_greater_equal(1.02)
 	assert_float(FeedbackMath.shake_amplitude_px(0.0)).is_equal_approx(0.0, 0.0001)
-	var params: Dictionary = FeedbackMath.stinger_params(0.0)
-	assert_int(params["layers"]).is_equal(1)
-	assert_float(params["tail_sec"]).is_equal_approx(0.08, 0.0001)
-	assert_float(params["saturation"]).is_equal_approx(0.0, 0.0001)
 
 
 # --- AC-6: sign-invariance (no-valence-coding, TR-juice-003) ---
@@ -141,14 +137,6 @@ func test_pulse_scale_tier_ranges_and_monotonicity() -> void:
 		var value: float = FeedbackMath.pulse_scale(float(i) / 100.0)
 		assert_float(value).is_greater_equal(previous)
 		previous = value
-
-
-func test_stinger_layer_tiers() -> void:
-	assert_int(FeedbackMath.stinger_params(0.29)["layers"]).is_equal(1)
-	assert_int(FeedbackMath.stinger_params(0.3)["layers"]).is_equal(2)
-	assert_int(FeedbackMath.stinger_params(0.69)["layers"]).is_equal(2)
-	assert_int(FeedbackMath.stinger_params(0.7)["layers"]).is_equal(3)
-	assert_int(FeedbackMath.stinger_params(1.0)["layers"]).is_equal(3)
 
 
 # --- AC-8: deterministic fuzz clamp sweep ---

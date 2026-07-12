@@ -66,19 +66,15 @@ var resolution_beat_milestone_bonus: float = 1.0
 const RESOLUTION_BEAT_TEXT_MAX_SEC: float = 2.5
 
 ## Juice/Feedback Card channel (ADR-0011, Story 003): magnitude-scaled
-## scale-pulse + visual-offset shake + audio stinger at resolution. All
-## parameters come from FeedbackMath (abs-only — no valence coding, registry
-## forbidden pattern). Tween handles stored for kill-before-restart and for
-## the RESOLVING branch of _notification().
+## scale-pulse + visual-offset shake at resolution. All parameters come from
+## FeedbackMath (abs-only — no valence coding, registry forbidden pattern).
+## Tween handles stored for kill-before-restart and for the RESOLVING branch
+## of _notification().
 var _juice_pulse_tween: Tween
 var _juice_shake_tween: Tween
 ## Magnitude of the most recent resolution — public-state-field convention
 ## (like `state`) so tests can assert the computed value directly.
 var _last_juice_magnitude: float = 0.0
-## One-shot stinger player. Streams arrive post-art-bible via /asset-spec;
-## until then the explicit null-stream guard in _play_stinger() makes the
-## silent no-op a code contract. # TODO: art-bible-pending
-var _stinger_player: AudioStreamPlayer
 
 ## Swipe gesture state (Story 003). `-1` = no touch tracked. Only the first
 ## touch that starts a drag is tracked; events with a different index are
@@ -96,8 +92,6 @@ var _bounce_tween: Tween
 
 func _ready() -> void:
 	DecisionCardSystem.card_presented.connect(_on_card_presented)
-	_stinger_player = AudioStreamPlayer.new()
-	add_child(_stinger_player)
 	# Idle until a card is presented -- invisible Controls receive no input, so
 	# the Action UI beneath stays interactive.
 	visible = false
@@ -371,8 +365,8 @@ func _juice_magnitude_for(option_index: int) -> float:
 
 
 ## Plays the Card channel's sensory set for magnitude [param m]: scale-pulse
-## (always -- lowest tier still plays, TR-juice-004), shake (only at m >= 0.3,
-## amplitude/duration from FeedbackMath), and the stinger. Same parameters for
+## (always -- lowest tier still plays, TR-juice-004) and shake (only at
+## m >= 0.3, amplitude/duration from FeedbackMath). Same parameters for
 ## a triumph and a disaster at equal magnitude -- FeedbackMath is sign-blind.
 func _play_juice_effects(m: float) -> void:
 	_kill_juice_tweens()
@@ -397,7 +391,6 @@ func _play_juice_effects(m: float) -> void:
 		_juice_shake_tween.tween_property(_card_node, "position", rest - Vector2(amplitude * 0.6, 0.0), duration * 0.25)
 		_juice_shake_tween.tween_property(_card_node, "position", rest + Vector2(amplitude * 0.3, 0.0), duration * 0.25)
 		_juice_shake_tween.tween_property(_card_node, "position", rest, duration * 0.25)
-	_play_stinger(m)
 
 
 func _kill_juice_tweens() -> void:
@@ -405,20 +398,3 @@ func _kill_juice_tweens() -> void:
 		_juice_pulse_tween.kill()
 	if _juice_shake_tween != null and _juice_shake_tween.is_running():
 		_juice_shake_tween.kill()
-
-
-## Stinger playback stub: parameters are computed (and test-assertable via
-## FeedbackMath) but no streams exist until the art bible + /asset-spec deliver
-## them. The explicit null-stream guard is mandatory (ADR-0011): null-stream
-## play() behavior on 4.6.3 is unverified, so the silent no-op is a code
-## contract, not an assumed engine default.
-func _play_stinger(m: float) -> void:
-	var params: Dictionary = FeedbackMath.stinger_params(m)
-	# Layer mixing (params["layers"] streams, tail, saturation) lands with the
-	# assets. # TODO: art-bible-pending
-	if _stinger_player.stream != null:
-		_stinger_player.play()
-	else:
-		# Structurally silent until assets exist -- params computed above so
-		# the pipeline is exercised end-to-end even before audio lands.
-		pass

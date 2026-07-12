@@ -1,6 +1,6 @@
 ## FeedbackMath owns the Juice/Feedback System's display math: the event
 ## magnitude formula and the per-tier effect parameter functions (pulse scale,
-## shake amplitude/duration, stinger layer params).
+## shake amplitude/duration).
 ##
 ## Implements TR-juice-001/003/004 / ADR-0011: a stateless static utility
 ## (same shape as ResourceFormulas, ADR-0006 — never add instance vars or
@@ -62,11 +62,6 @@ const SHAKE_MID_MIN_SEC: float = 0.30
 const SHAKE_MID_MAX_SEC: float = 0.35
 const SHAKE_HIGH_MAX_SEC: float = 0.40
 
-## Stinger tail bounds (GDD Audio: ~80ms dry at magnitude 0 scaling to
-## ~600-900ms textured tail at magnitude 1 — 0.9 chosen as the ceiling).
-const STINGER_TAIL_MIN_SEC: float = 0.08
-const STINGER_TAIL_MAX_SEC: float = 0.9
-
 
 ## Returns the event feedback magnitude [0.0, 1.0] for [param deltas]
 ## (resource StringName -> signed float delta), per the GDD formula:
@@ -125,25 +120,3 @@ static func shake_duration_sec(m: float) -> float:
 	if mc < TIER_HIGH:
 		return lerpf(SHAKE_MID_MIN_SEC, SHAKE_MID_MAX_SEC, (mc - TIER_MID) / (TIER_HIGH - TIER_MID))
 	return lerpf(SHAKE_MID_MAX_SEC, SHAKE_HIGH_MAX_SEC, (mc - TIER_HIGH) / (1.0 - TIER_HIGH))
-
-
-## Returns the audio stinger parameters for magnitude [param m]:
-## `layers` (1 dry transient low / 2 mid / 3 full stack high — GDD layer
-## density), `tail_sec` (decay length, linear 0.08..0.9), and `saturation`
-## (transient soft-clip amount, equal to clamped m). All parameters scale
-## with magnitude only — never pitch, never harmony (no-valence rule).
-##
-## Example:
-##   FeedbackMath.stinger_params(0.0)  # -> {layers: 1, tail_sec: 0.08, saturation: 0.0}
-static func stinger_params(m: float) -> Dictionary:
-	var mc: float = clampf(m, 0.0, 1.0)
-	var layers: int = 1
-	if mc >= TIER_HIGH:
-		layers = 3
-	elif mc >= TIER_MID:
-		layers = 2
-	return {
-		"layers": layers,
-		"tail_sec": lerpf(STINGER_TAIL_MIN_SEC, STINGER_TAIL_MAX_SEC, mc),
-		"saturation": mc,
-	}
