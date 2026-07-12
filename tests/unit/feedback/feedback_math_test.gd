@@ -125,6 +125,39 @@ func test_shake_duration_tiers() -> void:
 	assert_float(FeedbackMath.shake_duration_sec(1.0)).is_equal_approx(0.40, 0.0001)  # cap
 
 
+# --- Reduce-motion (art-bible.md Section 7 MANDATE, 2026-07-07) ---
+
+func test_shake_amplitude_reduce_motion_scales_to_near_zero() -> void:
+	var full: float = FeedbackMath.shake_amplitude_px(1.0, false)
+	var reduced: float = FeedbackMath.shake_amplitude_px(1.0, true)
+	assert_float(reduced).is_equal_approx(full * FeedbackMath.REDUCE_MOTION_SHAKE_MULTIPLIER, 0.0001)
+	# "Near-zero", not literal zero -- a faint structural signal must survive.
+	assert_float(reduced).is_greater(0.0)
+	assert_float(reduced).is_less(full)
+
+
+func test_shake_duration_reduce_motion_scales_to_near_zero() -> void:
+	var full: float = FeedbackMath.shake_duration_sec(0.7, false)
+	var reduced: float = FeedbackMath.shake_duration_sec(0.7, true)
+	assert_float(reduced).is_equal_approx(full * FeedbackMath.REDUCE_MOTION_SHAKE_MULTIPLIER, 0.0001)
+	assert_float(reduced).is_greater(0.0)
+	assert_float(reduced).is_less(full)
+
+
+func test_shake_reduce_motion_below_mid_tier_still_zero() -> void:
+	# Below the mid tier, shake is already exactly 0 regardless of the flag --
+	# the multiplier has nothing to scale (0 * anything is still 0).
+	assert_float(FeedbackMath.shake_amplitude_px(0.0, true)).is_equal_approx(0.0, 0.0001)
+	assert_float(FeedbackMath.shake_duration_sec(0.0, true)).is_equal_approx(0.0, 0.0001)
+
+
+func test_shake_reduce_motion_defaults_false_matches_omitted_arg() -> void:
+	# Backward-compat: every pre-existing call site omits the new arg -- the
+	# default (false) must produce identical output to an explicit false.
+	assert_float(FeedbackMath.shake_amplitude_px(0.5)).is_equal_approx(FeedbackMath.shake_amplitude_px(0.5, false), 0.0001)
+	assert_float(FeedbackMath.shake_duration_sec(0.5)).is_equal_approx(FeedbackMath.shake_duration_sec(0.5, false), 0.0001)
+
+
 func test_pulse_scale_tier_ranges_and_monotonicity() -> void:
 	# Range checks at tier edges per the story AC.
 	assert_float(FeedbackMath.pulse_scale(0.0)).is_equal_approx(1.02, 0.0001)

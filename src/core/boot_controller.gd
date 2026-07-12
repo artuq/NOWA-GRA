@@ -53,6 +53,7 @@ func boot_with(data: Dictionary, elapsed_seconds: int) -> void:
 	HistoryFlagManager.restore_state(data.get("history_flags", {}))
 	OnboardingGate.restore_state(data.get("onboarding", {}))
 	ClassPathSystem.restore_state(data.get("class_path", {}))
+	SettingsSystem.restore_state(data.get("settings", {}))  # same idempotent re-restore as the other three
 
 	# Baselines captured BEFORE the sim result is applied -- both for computing
 	# the deltas below (apply_delta is the only write ResourceManager exposes)

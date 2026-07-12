@@ -62,6 +62,15 @@ const SHAKE_MID_MIN_SEC: float = 0.30
 const SHAKE_MID_MAX_SEC: float = 0.35
 const SHAKE_HIGH_MAX_SEC: float = 0.40
 
+## Reduce-motion accessibility multiplier (art-bible.md Section 7 MANDATE,
+## 2026-07-07: "shake amplitude respects a reduce-motion flag (gates to
+## near-zero)" -- literally near-zero, not a hard 0.0, so a faint structural
+## signal survives rather than the effect silently vanishing). Applied to both
+## shake functions below. First-pass balance value, NOT spec'd by the GDD/art
+## bible -- a tuning knob, not a locked design number; revisit in a feel-test
+## if it reads as too much or too little.
+const REDUCE_MOTION_SHAKE_MULTIPLIER: float = 0.1
+
 
 ## Returns the event feedback magnitude [0.0, 1.0] for [param deltas]
 ## (resource StringName -> signed float delta), per the GDD formula:
@@ -101,22 +110,36 @@ static func pulse_scale(m: float) -> float:
 
 ## Returns the shake amplitude in pixels for magnitude [param m]: exactly 0
 ## below the mid tier (low-magnitude card resolutions pulse only, GDD rule),
-## 2-4px through the mid tier, up to a hard cap in the high tier.
-static func shake_amplitude_px(m: float) -> float:
+## 2-4px through the mid tier, up to a hard cap in the high tier. When [param
+## reduce_motion] is true, the result is scaled by
+## [constant REDUCE_MOTION_SHAKE_MULTIPLIER] (art-bible.md Section 7 MANDATE)
+## -- scale-pulse/flash/stinger are deliberately unaffected by this flag
+## (out of scope for this function, by design). FeedbackMath stays stateless
+## (ADR-0011): the flag is passed in by the caller (reads
+## SettingsSystem.reduce_motion), never read internally.
+static func shake_amplitude_px(m: float, reduce_motion: bool = false) -> float:
 	var mc: float = clampf(m, 0.0, 1.0)
+	var full: float
 	if mc < TIER_MID:
-		return 0.0
-	if mc < TIER_HIGH:
-		return lerpf(SHAKE_MID_MIN_PX, SHAKE_MID_MAX_PX, (mc - TIER_MID) / (TIER_HIGH - TIER_MID))
-	return lerpf(SHAKE_MID_MAX_PX, SHAKE_HIGH_MAX_PX, (mc - TIER_HIGH) / (1.0 - TIER_HIGH))
+		full = 0.0
+	elif mc < TIER_HIGH:
+		full = lerpf(SHAKE_MID_MIN_PX, SHAKE_MID_MAX_PX, (mc - TIER_MID) / (TIER_HIGH - TIER_MID))
+	else:
+		full = lerpf(SHAKE_MID_MAX_PX, SHAKE_HIGH_MAX_PX, (mc - TIER_HIGH) / (1.0 - TIER_HIGH))
+	return full * REDUCE_MOTION_SHAKE_MULTIPLIER if reduce_motion else full
 
 
 ## Returns the shake duration in seconds for magnitude [param m]: 0 below the
-## mid tier (no shake at all), <=0.15s mid, capped at 0.25s high.
-static func shake_duration_sec(m: float) -> float:
+## mid tier (no shake at all), <=0.15s mid, capped at 0.25s high. [param
+## reduce_motion] scales the result the same way as shake_amplitude_px() --
+## see that function's doc for the rationale.
+static func shake_duration_sec(m: float, reduce_motion: bool = false) -> float:
 	var mc: float = clampf(m, 0.0, 1.0)
+	var full: float
 	if mc < TIER_MID:
-		return 0.0
-	if mc < TIER_HIGH:
-		return lerpf(SHAKE_MID_MIN_SEC, SHAKE_MID_MAX_SEC, (mc - TIER_MID) / (TIER_HIGH - TIER_MID))
-	return lerpf(SHAKE_MID_MAX_SEC, SHAKE_HIGH_MAX_SEC, (mc - TIER_HIGH) / (1.0 - TIER_HIGH))
+		full = 0.0
+	elif mc < TIER_HIGH:
+		full = lerpf(SHAKE_MID_MIN_SEC, SHAKE_MID_MAX_SEC, (mc - TIER_MID) / (TIER_HIGH - TIER_MID))
+	else:
+		full = lerpf(SHAKE_MID_MAX_SEC, SHAKE_HIGH_MAX_SEC, (mc - TIER_HIGH) / (1.0 - TIER_HIGH))
+	return full * REDUCE_MOTION_SHAKE_MULTIPLIER if reduce_motion else full

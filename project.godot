@@ -25,6 +25,7 @@ OfflineProgressSystem="*res://src/core/offline_progress_system.gd"
 OnboardingGate="*res://src/core/onboarding_gate.gd"
 DecisionCardSystem="*res://src/core/decision_card_system.gd"
 ClassPathSystem="*res://src/core/class_path_system.gd"
+SettingsSystem="*res://src/core/settings_system.gd"
 
 [display]
 

@@ -377,7 +377,10 @@ func _play_juice_effects(m: float) -> void:
 	# Shake: visual offset around the rest position; structurally absent below
 	# the mid tier (amplitude 0). Uses the captured rest position when known,
 	# else the card's current position (direct-resolve path before any drag).
-	var amplitude: float = FeedbackMath.shake_amplitude_px(m)
+	# Reduce-motion (art-bible.md Section 7 MANDATE): read directly from the
+	# SettingsSystem Autoload -- FeedbackMath stays stateless (ADR-0011), the
+	# flag is passed in here, never read internally by FeedbackMath itself.
+	var amplitude: float = FeedbackMath.shake_amplitude_px(m, SettingsSystem.reduce_motion)
 	if amplitude <= 0.0:
 		# Keep the field an honest signal: null means "no shake this resolve"
 		# (a stale dead-tween reference would break that invariant on a
@@ -385,7 +388,7 @@ func _play_juice_effects(m: float) -> void:
 		_juice_shake_tween = null
 	else:
 		var rest: Vector2 = _card_rest_position if _rest_captured else _card_node.position
-		var duration: float = FeedbackMath.shake_duration_sec(m)
+		var duration: float = FeedbackMath.shake_duration_sec(m, SettingsSystem.reduce_motion)
 		_juice_shake_tween = create_tween()
 		_juice_shake_tween.tween_property(_card_node, "position", rest + Vector2(amplitude, 0.0), duration * 0.25)
 		_juice_shake_tween.tween_property(_card_node, "position", rest - Vector2(amplitude * 0.6, 0.0), duration * 0.25)
