@@ -53,14 +53,79 @@
 # done in ONE day, including Should Have and Nice to Have. S1 data-loss bug
 # (tests deleting real player save) found and fixed same-session.
 
-sprint: 10
-goal: "Prove web viability (fail-fast on the 10 MB / load-time gate) + pay the twice-carried performance debt — measurably good in browser at 9:16 and on device."
-start: "2026-07-07"
-end: "2026-07-13"
-generated: "2026-07-06"
-updated: "2026-07-06"
+sprint: 11
+goal: "Build the core of long-session play: the era loop (Burnout -> reset -> meta-bonus) designed and playable + doubled decision-card pool."
+start: "2026-07-12"
+end: "2026-07-18"
+generated: "2026-07-12"
+updated: "2026-07-12"
 
 stories:
+  - id: "11-1"
+    name: "Prestige/Checkpoint + Burnout design day (GDD + ADR + epic + stories)"
+    file: "design/quick-specs/final-burnout-2026-07-01.md"
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: ""
+
+  - id: "11-2"
+    name: "BurnoutSystem core — trigger, forced card, era transition + reset + meta-bonus"
+    file: ""
+    priority: must-have
+    status: backlog
+    owner: ""
+    estimate_days: 1.5
+    blocker: "Depends on 11-1"
+    completed: ""
+
+  - id: "11-3"
+    name: "Card wave 2 — 12 new decision cards (resolution_reaction + path_tags, EN)"
+    file: ""
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: ""
+
+  - id: "11-4"
+    name: "Challenge Era Runs implementation"
+    file: "design/quick-specs/challenge-era-runs-2026-07-01.md"
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 1
+    blocker: "Depends on 11-2"
+    completed: ""
+
+  - id: "11-5"
+    name: "Era-start/era-end screens (transition wipe + challenge selection)"
+    file: ""
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: "Depends on 11-2"
+    completed: ""
+
+  - id: "11-6"
+    name: "Post-MVP action expansion — economy pass (design only)"
+    file: "design/quick-specs/post-mvp-action-expansion-2026-07-11.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: ""
+
+# Sprint 10 (Web viability + performance debt) is closed at 6/7 — record preserved in
+# production/sprints/sprint-10.md. 10-3 (device perf pass) carried into Sprint 11's
+# risk register, still blocked on physical Android access; not re-listed as an active
+# story since there's no new work to schedule until the device is available.
+_sprint_10_archive:
   - id: "10-1"
     name: "Web-export spike — Compatibility renderer + size/load measurement (GO/NO-GO)"
     file: "docs/spikes/web-export-spike-2026-07-06.md"
@@ -85,10 +150,10 @@ stories:
     name: "Performance pass on device + memory ceiling + AC-6 recheck (carried x2, escalated)"
     file: ""
     priority: must-have
-    status: ready-for-dev
+    status: blocked
     owner: ""
     estimate_days: 0.5
-    blocker: ""
+    blocker: "No physical Android device available; carried into Sprint 11 risk register"
     completed: ""
 
   - id: "10-4"

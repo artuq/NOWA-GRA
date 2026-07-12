@@ -200,6 +200,74 @@ formulas:
     source: design/gdd/juice-feedback-system.md
     referenced_by: []
 
+  - name: card_contribution
+    expression: "card_contribution[path] = min(choice_count[path] * CARD_AFFILIATION_PER_CHOICE, CARD_CONTRIBUTION_MAX)"
+    variables: [choice_count, CARD_AFFILIATION_PER_CHOICE, CARD_CONTRIBUTION_MAX]
+    output_range: "[0.0, CARD_CONTRIBUTION_MAX] (default [0.0, 60.0])"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: investment_contribution
+    expression: "investment_contribution[path] = resource_spent[path] * INVESTMENT_AFFILIATION_RATE[path]"
+    variables: [resource_spent, INVESTMENT_AFFILIATION_RATE]
+    output_range: "[0.0, unbounded) pre-clamp — re-clamped by affiliation formula"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: affiliation
+    expression: "affiliation[path] = min(card_contribution[path] + investment_contribution[path], 100.0)"
+    variables: [card_contribution, investment_contribution]
+    output_range: "[0.0, 100.0]"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: class_path_tier
+    expression: "tier[path] = max({t in {0..5} | affiliation[path] >= TIER_THRESHOLDS[t]})"
+    variables: [affiliation, TIER_THRESHOLDS]
+    output_range: "[0, 5] integer"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: class_path_active_resolution
+    expression: "active_path = argmax affiliation among Tier1+ paths if lead over 2nd-place >= PATH_AFFILIATION_TIE_BREAK_MARGIN, else ambiguous (null)"
+    variables: [tier, affiliation, PATH_AFFILIATION_TIE_BREAK_MARGIN]
+    output_range: "{path_id, null}"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+class_paths:
+  - name: pato_streamer
+    display_name_pl: "Pato-Streamer Hazardowy"
+    investment_resource: Cringe
+    investment_cost_per_affiliation: 10
+    card_counter: pato_streamer_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: guru_celebryta
+    display_name_pl: "Guru-Celebryta"
+    investment_resource: Sponsors
+    investment_cost_per_affiliation: 5
+    card_counter: guru_celebryta_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: ekspert_niszowy
+    display_name_pl: "Ekspert Niszowy"
+    investment_resource: Morale
+    investment_cost_per_affiliation: 8
+    card_counter: ekspert_niszowy_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: biznesmen_contentu
+    display_name_pl: "Biznesmen Contentu"
+    investment_resource: Reach
+    investment_cost_per_affiliation: 50
+    card_counter: biznesmen_contentu_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
 constants:
   - name: H_base
     value: 0.02
@@ -437,4 +505,31 @@ constants:
     safe_range: [20, 40]
     note: "Magnitude normalization for Morale deltas; derived from Resource System band gaps — keep in sync"
     source: design/gdd/juice-feedback-system.md
+    referenced_by: []
+
+  - name: CARD_AFFILIATION_PER_CHOICE
+    value: 4.0
+    safe_range: [2.0, 8.0]
+    note: "Matches shipped src/core/class_path_system.gd MVP constant — load-bearing, do not change without updating live code"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: CARD_CONTRIBUTION_MAX
+    value: 60.0
+    safe_range: [40.0, 75.0]
+    note: "Matches shipped src/core/class_path_system.gd MVP constant — load-bearing, do not change without updating live code"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: PATH_AFFILIATION_TIE_BREAK_MARGIN
+    value: 5.0
+    safe_range: [2.0, 10.0]
+    note: "Not yet implemented in shipped code — see BUG-003 (no tie-break logic exists yet)"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: TIER_THRESHOLDS
+    value: [0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
+    note: "Matches shipped src/core/class_path_system.gd TIER_THRESHOLDS constant"
+    source: design/gdd/class-path-system.md
     referenced_by: []
