@@ -148,15 +148,27 @@ Per-resource `norm_ref`: **Cringe** = 35 (max of action ceiling 20 and card ceil
 - Same curve/easing applies whether the card resolved as a triumph or disaster — intensity is the only variable.
 - A reduce-motion consideration should be evaluated now, even before the art bible, given Pillar accessibility intent.
 
-**Audio — Decision Card resolution stinger family:**
-- Palette: percussive-impact + noise-texture, **atonal** — no melodic or harmonic content. Pitch and major/minor harmony are reserved exclusively for valence-coded elements elsewhere (none currently exist) and must never appear in this family.
-- Magnitude (0.0-1.0) drives three stacked parameters (never substituted, so ends differ in weight/duration, never in "color"):
-  - **Layer density**: low magnitude = one dry transient ("tap"); high magnitude = transient + sub-thump + noise-burst tail stacked.
-  - **Decay/tail length**: ~80ms dry at magnitude 0, scaling to ~600-900ms textured noise tail at magnitude 1 (filtered-noise decay, not pitch-bend).
-  - **Transient saturation**: subtle soft-clip/distortion proportional to magnitude — reads as physical force, not emotional tone.
-- Source material: broadband filtered noise, foley-style impacts (paper/cardboard/body-hit textures fit the satirical "office cringe" register), sub-bass thump for weight — all non-pitched or pitch-ambiguous.
-- Explicitly avoid: bright filter-sweeps or pitch-rise on high magnitude (common "win" cue), downward pitch-bend or dissonant clusters on high magnitude (common "loss" cue) — both are valence leaks.
-- Validation method for `sound-designer`: audition a "big win" mock event and a "big disaster" mock event at matching magnitude — they must be indistinguishable in emotional read.
+**Audio — CUT (2026-07-12, permanent design decision).** This game ships with no sound effects or music,
+ever — not deferred, not post-MVP, a locked design pillar. Precedent: Reigns (one of this project's
+Day-1 comparable titles, `game-concept.md`) explicitly states "no audio cues are necessary to play the
+game well" — audio there is atmospheric/optional, never load-bearing feedback; Melvor Idle (another Day-1
+comparable title) ships near-silent by the developer's own account. This project goes one step further and
+cuts audio entirely. The stinger family spec that lived in this section (atonal noise-texture, magnitude-driven
+layer density/tail/saturation, explicit anti-valence rules) is preserved below in a collapsed history note
+for the record — it was fully speced (`design/assets/specs/audio-wave-1-assets.md`) and 2 of 6 assets were
+produced and verified (no-pitch confirmed via FFT analysis) before the cut decision. Screen-shake/scale-pulse/
+flash remain the sole feedback channels — see the Visual subsections above, unaffected by this cut.
+
+<details>
+<summary>Former Audio spec (historical, cut 2026-07-12)</summary>
+
+- Palette: percussive-impact + noise-texture, atonal — no melodic or harmonic content.
+- Magnitude (0.0-1.0) drove three stacked parameters: layer density (transient → transient+sub-thump+tail),
+  decay/tail length (~80ms → ~600-900ms), transient saturation (soft-clip proportional to magnitude).
+- Source material: broadband filtered noise, foley-style impacts, non-pitched sub-bass thump.
+- Full spec: `design/assets/specs/audio-wave-1-assets.md` (kept for reference, not implemented).
+
+</details>
 
 📌 **Asset Spec** — once the art bible is approved, run `/asset-spec system:juice-feedback-system`.
 
@@ -183,13 +195,13 @@ Per-resource `norm_ref`: **Cringe** = 35 (max of action ceiling 20 and card ceil
 - **GIVEN** a Decision Card event with magnitude in [0, 0.3), **THEN** only scale-pulse, no shake.
 - **GIVEN** magnitude in [0.3, 0.7), **THEN** scale-pulse + light shake, both present.
 - **GIVEN** magnitude in [0.7, 1.0], **THEN** bigger pulse + stronger shake, capped at the high-tier ceiling.
-- **GIVEN** a Card event at any magnitude, **THEN** the stinger is atonal; density/tail/saturation scale with magnitude; pitch/harmony never change.
-- **GIVEN** an Action event and a Card event of equal magnitude, **THEN** their effect sets are mutually exclusive — Action never shakes/pulses/stings, Card never count-ups.
+- ~~**GIVEN** a Card event at any magnitude, **THEN** the stinger is atonal...~~ **CUT 2026-07-12** — no audio in this game, see Visual/Audio Requirements above.
+- **GIVEN** an Action event and a Card event of equal magnitude, **THEN** their effect sets are mutually exclusive — Action never shakes/pulses, Card never count-ups.
 
 **No-valence-coding rule (highest priority — most explicit test):**
-- **GIVEN** two Card events, one winning-outcome and one losing-outcome, with the **same computed magnitude**, **WHEN** feedback plays, **THEN** scale-pulse size, shake intensity, stinger density/tail/saturation, and flash color token are frame-for-frame identical — a tester observing only the feedback (text obscured) cannot tell win from loss.
+- **GIVEN** two Card events, one winning-outcome and one losing-outcome, with the **same computed magnitude**, **WHEN** feedback plays, **THEN** scale-pulse size, shake intensity, and flash color token are frame-for-frame identical — a tester observing only the feedback (text obscured) cannot tell win from loss.
 - **GIVEN** the label flash token across events of differing valence but matching magnitude, **THEN** exactly one color token is used — no second "negative"/"positive" variant exists anywhere.
-- **GIVEN** the stinger for a win-flavored vs. loss-flavored Card event of equal magnitude, **THEN** pitch/harmony are identical; only magnitude-driven density/tail/saturation may differ, identically in both cases.
+- ~~**GIVEN** the stinger for a win-flavored vs. loss-flavored Card event...~~ **CUT 2026-07-12** — no audio.
 
 **Resolution payoff timing formula:**
 - **GIVEN** `resolution_reaction` length=0, **THEN** duration = 1.5s (floor).
@@ -213,10 +225,15 @@ Per-resource `norm_ref`: **Cringe** = 35 (max of action ceiling 20 and card ceil
 
 **Not testable against this GDD alone:**
 - Exact subjective "feel" of shake/pulse magnitudes at each tier — Visual/Feel evidence (screenshot/video + lead sign-off), not automatable.
-- Audio stinger's actual emotional-read indistinguishability (AC's A/B audition method) — requires human listening test, not unit-testable.
 
 ## Open Questions
 
+- ~~**Audio (all 6 stinger/cue assets)**~~ — **CUT 2026-07-12 (permanent)**: no sound effects or music in this
+  game, ever. Not a deferral — a locked design pillar, matching Reigns's "no audio cues necessary" precedent
+  (`game-concept.md` Day-1 comparable title) taken one step further. 2/6 stinger assets were already produced
+  and verified before the cut (`design/assets/specs/audio-wave-1-assets.md`); kept as historical record, not
+  wired into any scene. `stinger_params()`/`_play_stinger()`/`_stinger_player` in `feedback_math.gd`/
+  `card_screen.gd` are now dead code pending a cleanup story (flagged separately, not touched by this GDD edit).
 - ~~**`resolution_reaction` content for all 12 cards**~~ — **RESOLVED (verified 2026-07-06, ADR-0011)**: the field exists with authored English content on every option of all 12 cards in CardContentDatabase, and CardScreen's resolution beat already displays it. The empty-field fallback remains as a safety net for future cards.
 - **Device haptics (vibration) on high-magnitude card resolutions** — design idea logged 2026-07-06 (user + QA colleague, high priority for the art-bible/game-feel discussion). Touch-only Android target makes haptic feedback a natural third channel; must follow the same no-valence rule (intensity by magnitude only). Not in ADR-0011 scope — needs its own quick-spec when picked up.
 - ~~**Reduce-motion toggle**~~ — **RESOLVED (2026-07-07, art bible Section 7)**: MANDATED, not deferred — shake amplitude respects a reduce-motion flag; pulse/flash/stinger unaffected. Implementation: small story (multiplier gate in FeedbackMath shake functions + settings toggle) — schedule in Sprint 11+. Not yet a committed accessibility tier item (see `design/accessibility-requirements.md`'s "Basic" tier, which currently defers full reduced-motion). *Owner: revise `design/accessibility-requirements.md` if this becomes a confirmed need. Target: Polish, or sooner if a playtester flags motion sensitivity.*

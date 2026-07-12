@@ -145,7 +145,12 @@ There are no characters in the traditional sense — the dashboard IS the world.
 - **`.import` files**: always committed together with their source PNG. Renaming/moving a source changes its `res://` path + UID and breaks scene references — the naming convention above is locked for this reason.
 - **No atlas**: 20–30 individual small PNGs are nowhere near the ≤100 draw-call budget under Godot's 2D batcher. Revisit only if a future profiling pass shows draw-call pressure.
 
-**Audio standards (future stinger set)**: **Ogg Vorbis, mono, 44.1 kHz** (q4–5). A 1–2 s stinger ≈ 15–30 KB; even 20 stingers < 0.6 MB — comfortably inside the ~3 MB web headroom. WAV rejected (≈176 KB/s stereo would burn the budget; wasm decode cost for short one-shots is negligible).
+**Audio — CUT (2026-07-12, permanent design decision)**: this game ships with no sound effects or music,
+ever. Precedent: Reigns (Day-1 comparable title, `game-concept.md`) — "no audio cues are necessary to play
+the game well"; Melvor Idle ships near-silent by design. This project cuts audio entirely rather than making
+it optional. The format standard that lived here (Ogg Vorbis, mono, 44.1 kHz, q4–5, ~15–30 KB/stinger) is
+preserved in `design/assets/specs/audio-wave-1-assets.md` as a historical record — 2 of 6 assets were produced
+and verified before the cut. Not implemented, no `assets/audio/` folder is wired into any scene.
 
 **Source-file discipline**: `.ase` sources live in `assets/_source/icons/`, mirroring `ui/icons/` 1:1 — exports only ever land in `assets/ui/icons/`, never the reverse.
 
@@ -165,8 +170,17 @@ Generation background stays **magenta (#FF00FF)**, not white — keys out cleanl
 
 | Reference | Take | Avoid |
 |---|---|---|
+> **Provenance (corrected 2026-07-12)**: this table must trace back to `design/gdd/game-concept.md`'s Day-1
+> (2026-06-19) "Comparable Titles" list — Beggar's Life, Melvor Idle, Idle Research: Endless Tycoon — plus
+> Reigns (cited separately in the same doc for the card-decision mechanic). **Balatro** and **YouTube Studio /
+> TikTok Analytics** were added unilaterally during the 2026-07-07 `/art-bible` session without going through
+> `AskUserQuestion` approval like the rest of that session's decisions did — user did not plan or approve
+> either and removed both 2026-07-12. Lesson: reference-direction entries are a real design decision, not a
+> drafting-judgment-call — they need the same Question→Options→Decision→Approval loop as everything else.
+
+| Reference | Take | Avoid |
+|---|---|---|
 | **Reigns** | Card-as-sole-hero staging — full-viewport card, everything else dimmed/paused during a decision | Its expressive character portraits with emotional facial read — a valence signal we've ruled out (Section 5) |
-| **YouTube Studio / TikTok Analytics (dark dashboards)** | Chrome language — top-anchored stat row, card/pill grouping, dark-mode dashboard framing | Their multi-graph density — real analytics tools cram far more than our near-zero decoration rule allows |
 | **Melvor Idle** | Nothing visually — cited as the density warning | Its tabbed, panel-heavy UI; confirms our 3-action sparse screen is the right contrast, not a compromise |
 | **Beggar's Life** | The *feeling* of watching things degrade — conveyed through our numbers/palette shifts, never scenery | Its overloaded, exhausting UI and illustrated scene art — directly the failure mode Section 6 is designed against |
-| **Balatro** | Bold, high-contrast single-silhouette icon design readable at small chip/card scale | Its saturated candy-bright joy palette — ours stays muted/desaturated per Section 4's semantic (not celebratory) roles |
+| **Idle Research: Endless Tycoon** | The idle/active hybrid depth — passive number-watching AND active resource-allocation choices, matching this project's own Core Fantasy ("optimizer satisfaction" + weighty decisions, `game-concept.md`) | Its sheer system breadth (18 research items, 70 skills, 12 potions, 62 accelerators simultaneously) — same density warning as Melvor; we stay sparse by design, not by budget constraint |

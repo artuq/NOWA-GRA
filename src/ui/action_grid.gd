@@ -60,7 +60,7 @@ const ACTION_ICONS: Dictionary[StringName, Texture2D] = {
 ## GATED_ACTION_IDS order (slot 4 = index 3, slot 5 = index 4, slot 6 = index 5).
 const GATED_BASE_INDEX: int = 3
 
-const LOCKED_ICON: Texture2D = preload("res://assets/ui/icons/icon_locked.png")
+const LOCKED_ICON: Texture2D = preload("res://assets/ui/icons/icon_system_locked.png")
 
 @onready var _slot_buttons: Array[Button] = [
 	%Slot1Button, %Slot2Button, %Slot3Button, %Slot4Button, %Slot5Button, %Slot6Button,

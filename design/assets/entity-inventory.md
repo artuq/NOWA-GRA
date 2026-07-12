@@ -48,16 +48,16 @@
 | 4 | Card edge vignette | Soft neutral-tint glow tracking drag direction by position, not hue | card-ui.md | Needed (VFX/shader, not a static icon — candidate for technical-artist spec, not Nano Banana) |
 | 5 | Web pillarbox background | `bg_pillarbox_radial` gradient — already shipped as CSS, formalize as in-game asset if native (non-web) builds want the same treatment | art-bible §4 (shipped 2026-07-06) | Done (web); N/A for native builds unless requested |
 
-## Audio
+## Audio — CUT 2026-07-12 (permanent, no audio in this game — see juice-feedback-system.md Open Questions)
 
 | # | Name | Type | Description | Source | Status |
 |---|------|------|-------------|--------|--------|
-| 1 | Card stinger — low magnitude | SFX | Single dry transient ("tap"), ~80ms, atonal | juice-feedback-system.md | Needed |
-| 2 | Card stinger — mid magnitude | SFX | Transient + light noise-burst tail, ~300-500ms | juice-feedback-system.md | Needed |
-| 3 | Card stinger — high magnitude | SFX | Transient + sub-thump + full noise-tail, ~600-900ms | juice-feedback-system.md | Needed |
-| 4 | Offline report — entry stinger | SFX | Short, distinct "report ready" cue, non-looping | offline-report-screen.md | Needed |
-| 5 | Offline report — digit-tier tick | SFX | Subtle synced tick on K/M rollover during count-up | offline-report-screen.md | Needed (optional per GDD — "if implemented") |
-| 6 | Offline report — Morale crash thud | SFX | Low, weightier non-melodic thud, proportional to crash magnitude, texture-distinct not pitch-as-warning | offline-report-screen.md | Needed |
+| 1 | Card stinger — low magnitude | SFX | Single dry transient ("tap"), ~80ms, atonal | juice-feedback-system.md | Cut (produced+verified, unused) |
+| 2 | Card stinger — mid magnitude | SFX | Transient + light noise-burst tail, ~300-500ms | juice-feedback-system.md | Cut (produced+verified, unused) |
+| 3 | Card stinger — high magnitude | SFX | Transient + sub-thump + full noise-tail, ~600-900ms | juice-feedback-system.md | Cut (abandoned — pitch violation) |
+| 4 | Offline report — entry stinger | SFX | Short, distinct "report ready" cue, non-looping | offline-report-screen.md | Cut (never started) |
+| 5 | Offline report — digit-tier tick | SFX | Subtle synced tick on K/M rollover during count-up | offline-report-screen.md | Cut (never started) |
+| 6 | Offline report — Morale crash thud | SFX | Low, weightier non-melodic thud, proportional to crash magnitude, texture-distinct not pitch-as-warning | offline-report-screen.md | Cut (never started) |
 
 ---
 
