@@ -272,7 +272,24 @@ func _activate_gated_slot(g: int) -> void:
 	if _lock_badges[g] != null:
 		_lock_badges[g].queue_free()
 		_lock_badges[g] = null
-	_slot_titles[slot_index].autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var title: Label = _slot_titles[slot_index]
+	# Reparent the title back out of the badge HBox and into the plain VBox
+	# it lived in before _configure_locked_slots() wrapped it. Leaving it in
+	# the (now single-child) HBox reproduces the exact collapse bug the OFF
+	# workaround above exists to avoid: HBoxContainer sizes to its children's
+	# minimum content width, so an autowrapping Label left inside it shrinks
+	# to ~0 width and wraps one character per line the moment WORD_SMART is
+	# restored (found live 2026-07-13 — the wrapper was never actually
+	# removed on unlock, only the badge was).
+	var wrap: HBoxContainer = title.get_parent() as HBoxContainer
+	var title_group: VBoxContainer = wrap.get_parent() as VBoxContainer
+	var wrap_index: int = wrap.get_index()
+	var scene_owner: Node = title.owner
+	title.reparent(title_group)
+	title.owner = scene_owner
+	title_group.move_child(title, wrap_index)
+	wrap.queue_free()
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	# Restore icon to full opacity with the action's real icon.
 	_slot_icons[slot_index].texture = ACTION_ICONS.get(action_id)
