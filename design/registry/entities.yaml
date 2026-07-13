@@ -236,9 +236,18 @@ formulas:
     referenced_by: []
 
   - name: meta_bonus_grant_magnitude
-    expression: "bonus_increment[type] = BASE_INCREMENT[type] * tier_at_burnout * (combined_meta_multiplier)^META_CHALLENGE_SCALING_EXPONENT"
-    variables: [type, tier_at_burnout, combined_meta_multiplier, BASE_INCREMENT, META_CHALLENGE_SCALING_EXPONENT]
-    output_range: "> 0.0, unbounded pre-cap"
+    expression: "raw_increment[type] = BASE_INCREMENT[type] * tier_factor(tier_at_burnout) * (combined_meta_multiplier)^META_CHALLENGE_SCALING_EXPONENT * first_burnout_factor; bonus_increment = min(raw_increment, FIRST_BURNOUT_GRANT_CAP_FRACTION * META_BONUS_MAX[type]) if first grant else raw_increment"
+    variables: [type, tier_factor, tier_at_burnout, combined_meta_multiplier, BASE_INCREMENT, META_CHALLENGE_SCALING_EXPONENT, first_burnout_factor, FIRST_BURNOUT_GRANT_CAP_FRACTION]
+    output_range: "> 0.0, unbounded pre-cap on raw_increment; first-ever grant per type additionally ceilinged at FIRST_BURNOUT_GRANT_CAP_FRACTION * META_BONUS_MAX[type]"
+    note: "Revised 2026-07-13 per /design-review (2 rounds) — original pure tier_at_burnout scaling penalized path-switching (~5:1 vs mastery) and could overshoot a type's lifetime cap by up to 2.42x on a first-ever grant. tier_factor(tier)=(TIER_FLAT_BASE+tier)*5/(TIER_FLAT_BASE+5), tier_factor(5)=5.0 always (unchanged from original)."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_bonus_variety_completionist
+    expression: "variety_grant[type] = BASE_INCREMENT[type] * VARIETY_BONUS_MULT for all 4 types simultaneously, once per save, when the 4th type first goes nonzero"
+    variables: [BASE_INCREMENT, VARIETY_BONUS_MULT]
+    output_range: "> 0.0 per type, applied via meta_bonus_running_total's normal cap logic"
+    note: "New 2026-07-13 /design-review re-review — one-time additive lever rewarding trying all 4 Class Paths, independent of tier_factor's mastery-favoring math"
     source: design/gdd/prestige-checkpoint-system.md
     referenced_by: []
 
@@ -274,7 +283,8 @@ meta_bonus_types:
   - name: META_SPONSOR_MULT
     active_path: guru_celebryta
     effect: "permanent multiplier on Sponsor income"
-    cap: 0.60
+    cap: 0.50
+    note: "Lowered from 0.60 (2026-07-13 /design-review) — economy review flagged a permanent never-revocable bonus into a zero-sink resource as riskier than the cap alone can fix; capped at parity with META_REACH_MULT as a Vertical-Slice-scoped mitigation, not a full fix. See prestige-checkpoint-system.md's locked 'Zero-sink Sponsor scope decision.'"
     source: design/gdd/prestige-checkpoint-system.md
     referenced_by: []
 
@@ -593,7 +603,35 @@ constants:
 
   - name: META_CHALLENGE_SCALING_EXPONENT
     value: 0.5
-    safe_range: [0.3, 1.0]
-    note: "Square-root dampening on ChallengeSystem's combined_meta_multiplier contribution to META_BONUS grants — prevents one extreme-challenge burnout from dominating the multi-era stacking arc"
+    safe_range: [0.3, 0.5]
+    note: "Square-root dampening on ChallengeSystem's combined_meta_multiplier contribution to META_BONUS grants. Range narrowed 2026-07-13 (was [0.3,1.0]) — /design-review systems-designer pass found values above 0.5 let a single Tier-5/max-challenge grant overshoot a type's lifetime cap by 3-9x; 0.5 is the mathematically safe ceiling."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: TIER_FLAT_BASE
+    value: 2
+    safe_range: [0, 4]
+    note: "New 2026-07-13 /design-review. Flat component blended into tier_factor() so low-tier grants aren't punished relative to Tier-5 mastery. 0 = original pure-tier formula (variety-punishing, do not set without another variety incentive in place)."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: FIRST_BURNOUT_BONUS_MULT
+    value: 2.5
+    safe_range: [1.5, 4.0]
+    note: "New 2026-07-13 /design-review. Multiplies a player's first-ever accepted-burnout grant, per META_BONUS type independently (4 separate flags) — makes the first perceivable payout land instead of a near-invisible 2%."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: FIRST_BURNOUT_GRANT_CAP_FRACTION
+    value: 0.5
+    safe_range: [0.3, 0.6]
+    note: "New 2026-07-13 /design-review second re-review. Ceilings a first-ever grant (only) at this fraction of META_BONUS_MAX[type] — closes an overshoot FIRST_BURNOUT_BONUS_MULT opened when combined with high tier/challenge inputs (uncapped, could hit 2.42x a type's cap in one grant)."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: VARIETY_BONUS_MULT
+    value: 2.0
+    safe_range: [1.0, 4.0]
+    note: "New 2026-07-13 /design-review re-review. Multiplies BASE_INCREMENT[type] for the one-time completionist grant to all 4 types (fires once per save when the 4th type first goes nonzero)."
     source: design/gdd/prestige-checkpoint-system.md
     referenced_by: []
