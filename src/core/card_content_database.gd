@@ -1,6 +1,9 @@
-## CardContentDatabase owns the static MVP decision card content: 12 cards
-## (8 risky/safe + 4 neutral), each with exactly 2 options and their resource
-## deltas, counter increments, and optional milestone flags.
+## CardContentDatabase owns the static decision card content: the 12 MVP
+## cards (8 risky/safe + 4 neutral) plus 4 Tier-5 signature cards (Story
+## class-path-full/004, ADR-0010 §10) — one per Class Path, each gated by a
+## "class_path_tier:{path_id}:5" trigger_condition instead of "always". Every
+## card has exactly 2 options and their resource deltas, counter increments,
+## and optional milestone flags.
 ##
 ## Implements ADR-0001: a read-only Autoload — this module owns no mutation
 ## logic and emits no signals. Decision Card System (downstream, not yet
@@ -24,9 +27,12 @@
 extends Node
 
 ## The 12 MVP cards (8 risky/safe + 4 neutral), per
-## design/gdd/card-content-database.md's MVP content table. `text` and
-## `text` and option `label` fields hold authored English satirical copy
-## (2026-06-26). Still missing: a per-card `category` field for the modal's
+## design/gdd/card-content-database.md's MVP content table, plus 4 Tier-5
+## signature cards appended at the end (Story class-path-full/004 — see that
+## block below for details). `text` and option `label` fields on the 12 MVP
+## cards hold authored English satirical copy (2026-06-26); the 4 signature
+## cards are explicitly placeholder copy (narrative-director scope, not this
+## story's). Still missing: a per-card `category` field for the modal's
 ## category icon (CardScreen falls back to a generic placeholder icon) — see
 ## docs/tech-debt-register.md.
 const CARDS: Array[Dictionary] = [
@@ -150,6 +156,55 @@ const CARDS: Array[Dictionary] = [
 			{"label": "Take a day off", "resolution_reaction": "Phone off for a day. Nothing was posted. Nothing was missed.", "resource_deltas": {&"Morale": 10.0}, "counter_increments": {}},
 		],
 	},
+
+	# --- Tier-5 signature cards (Story class-path-full/004, ADR-0010 §10,
+	# TR-cps-006). One per path, gated by the "class_path_tier:{path_id}:5"
+	# trigger_condition grammar entry (decision_card_system.gd) instead of
+	# "always" — only enters the eligible pool once that path's tier reaches
+	# 5. `text`/`label`/`resolution_reaction` below are PLACEHOLDER copy only
+	# (explicitly out of scope for this story — narrative-director task) but
+	# the schema shape matches the 12 MVP cards exactly so no card-rendering
+	# code path is broken.
+	{
+		"id": "viral_moment",
+		"path_tag": "pato_streamer",
+		"trigger_condition": "class_path_tier:pato_streamer:5",
+		"text": "[Placeholder] \"Viral Moment\" — Pato-Streamer Tier 5 signature card. Final narrative copy pending.",
+		"options": [
+			{"label": "[Placeholder] Lean in", "resolution_reaction": "[Placeholder] The moment lands exactly as engineered.", "resource_deltas": {&"Reach": 260.0, &"Cringe": 15.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "[Placeholder] Hold back", "resolution_reaction": "[Placeholder] The moment passes. So does the spike.", "resource_deltas": {&"Reach": 140.0, &"Cringe": -10.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "brand_deal_of_the_century",
+		"path_tag": "guru_celebryta",
+		"trigger_condition": "class_path_tier:guru_celebryta:5",
+		"text": "[Placeholder] \"Brand Deal of the Century\" — Guru-Celebryta Tier 5 signature card. Final narrative copy pending.",
+		"options": [
+			{"label": "[Placeholder] Sign the mega-deal", "resolution_reaction": "[Placeholder] The contract is generational. So are the strings attached.", "resource_deltas": {&"Reach": 70.0, &"Morale": -6.0}, "counter_increments": {}},
+			{"label": "[Placeholder] Negotiate smaller", "resolution_reaction": "[Placeholder] A smaller deal, fully on your terms.", "resource_deltas": {&"Reach": 35.0, &"Morale": 4.0}, "counter_increments": {}},
+		],
+	},
+	{
+		"id": "kult_niszowy",
+		"path_tag": "ekspert_niszowy",
+		"trigger_condition": "class_path_tier:ekspert_niszowy:5",
+		"text": "[Placeholder] \"Kult Niszowy\" — Ekspert Niszowy Tier 5 signature card. Final narrative copy pending.",
+		"options": [
+			{"label": "[Placeholder] Go deeper niche", "resolution_reaction": "[Placeholder] The core audience is now a cult. A small, devoted one.", "resource_deltas": {&"Reach": 45.0, &"Morale": 8.0}, "counter_increments": {}},
+			{"label": "[Placeholder] Broaden the appeal", "resolution_reaction": "[Placeholder] The niche softens. So does the edge.", "resource_deltas": {&"Reach": 90.0, &"Morale": -4.0}, "counter_increments": {}},
+		],
+	},
+	{
+		"id": "ipo_influencera",
+		"path_tag": "biznesmen_contentu",
+		"trigger_condition": "class_path_tier:biznesmen_contentu:5",
+		"text": "[Placeholder] \"IPO Influencera\" — Biznesmen Contentu Tier 5 signature card. Final narrative copy pending.",
+		"options": [
+			{"label": "[Placeholder] Take it public", "resolution_reaction": "[Placeholder] Shares issued. The brand is now a balance sheet.", "resource_deltas": {&"Reach": 50.0, &"Cringe": 10.0}, "counter_increments": {}},
+			{"label": "[Placeholder] Stay private", "resolution_reaction": "[Placeholder] No shares issued. No shareholders to answer to.", "resource_deltas": {&"Reach": 20.0, &"Morale": 5.0}, "counter_increments": {}},
+		],
+	},
 ]
 
 
@@ -165,7 +220,8 @@ func get_card(card_id: String) -> Dictionary:
 	return {}
 
 
-## Returns all 12 MVP cards.
+## Returns all cards: the 12 MVP cards plus the 4 Tier-5 signature cards
+## (Story class-path-full/004).
 ##
 ## Example:
 ##   var all_cards: Array[Dictionary] = CardContentDatabase.get_all_cards()

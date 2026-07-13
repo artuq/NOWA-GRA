@@ -30,6 +30,17 @@
 ## a path cannot be bought with resources alone until the player has made at
 ## least one path-tagged card choice this era.
 ##
+## Story class-path-full/004 (2026-07-13, ADR-0010 §10, TR-cps-006): adds the
+## signature_card_unlocked/removed signals (GDD Signals table), emitted from
+## _check_tier_progression() (tier 5 reached) and reset_era_state() (a
+## Tier-5 path resets). These are UI-only notifications — DecisionCardSystem
+## does not subscribe to them. The actual pool add/remove is a pull-model
+## trigger_condition grammar entry on DecisionCardSystem
+## ("class_path_tier:{path_id}:{min_tier}"), not a push from this module —
+## this file has no dependency on CardContentDatabase or DecisionCardSystem's
+## pool; it only needs to know which card_id corresponds to which path to
+## populate the signal payload (_SIGNATURE_CARD_TABLE below).
+##
 ## Usage example:
 ##   var tier: int = ClassPathSystem.get_tier(&"pato_streamer")
 ##   var mult: float = ClassPathSystem.get_active_multiplier(&"zrob_drame")
@@ -130,6 +141,22 @@ const _INVESTMENT_RATE_TABLE: Dictionary[StringName, float] = {
 	&"biznesmen_contentu": 0.02,
 }
 
+## Path -> Tier-5 signature card id (GDD `design/gdd/class-path-system.md`
+## Tier Bonuses by Path table: "Viral Moment" / "Brand Deal of the Century" /
+## "Kult Niszowy" / "IPO Influencera"; card content lives in
+## CardContentDatabase, not here). Used only to populate the
+## signature_card_unlocked/removed signal payload — Story class-path-full/004,
+## ADR-0010 §10. This module never reads CardContentDatabase itself; pool
+## eligibility is resolved entirely by DecisionCardSystem's
+## "class_path_tier:{path_id}:{min_tier}" trigger_condition grammar entry
+## reading get_tier(), independent of these signals.
+const _SIGNATURE_CARD_TABLE: Dictionary[StringName, StringName] = {
+	&"pato_streamer": &"viral_moment",
+	&"guru_celebryta": &"brand_deal_of_the_century",
+	&"ekspert_niszowy": &"kult_niszowy",
+	&"biznesmen_contentu": &"ipo_influencera",
+}
+
 ## Emitted exactly once per tier crossing for [param path_id] — only from
 ## _check_tier_progression(), never from getters (ADR-0010 rejected
 ## side-effecting getters explicitly).
@@ -138,6 +165,20 @@ signal tier_unlocked(path_id: StringName, tier: int)
 ## Emitted when the active path changes. [param path_id] is &"" when no path
 ## is at Tier 1+ (including after reset_era_state()).
 signal active_path_changed(path_id: StringName)
+
+## Emitted when [param path_id] first reaches Tier 5 this era (GDD Signals
+## table; Story class-path-full/004, ADR-0010 §10, TR-cps-006). UI-only
+## notification — DecisionCardSystem does not subscribe to this; the card's
+## actual pool eligibility is driven independently by its own
+## trigger_condition grammar. [param card_id] is looked up from
+## _SIGNATURE_CARD_TABLE.
+signal signature_card_unlocked(card_id: StringName)
+
+## Emitted when a Tier-5 path's signature card is removed — currently only
+## reachable via reset_era_state() (tiers are monotonic within an era, so
+## this never fires mid-era). Same UI-only-notification contract as
+## signature_card_unlocked.
+signal signature_card_removed(card_id: StringName)
 
 ## Per-path TOTAL affiliation [0.0–100.0] — F3's clamped sum of
 ## _card_contribution and _investment_contribution. Absent key = 0.0 (see
@@ -232,6 +273,10 @@ func _check_tier_progression(path_id: StringName) -> void:
 		for t: int in range(old_tier + 1, new_tier + 1):
 			_current_tier[path_id] = t
 			tier_unlocked.emit(path_id, t)
+			if t == 5:
+				var card_id: StringName = _SIGNATURE_CARD_TABLE.get(path_id, &"")
+				if card_id != &"":
+					signature_card_unlocked.emit(card_id)
 
 
 ## Recomputes the active path per GDD F5: among Tier 1+ paths, the highest
@@ -430,10 +475,31 @@ func serialize_state() -> Dictionary:
 ## table). MVP: callable from debug/tests only; Alpha: BurnoutSystem wires
 ## its era_transitioned signal to this method (deferred per ADR-0010 §6).
 func reset_era_state() -> void:
+	# Iterates the UNION of _affiliation and _current_tier keys, not just
+	# _affiliation. _current_tier only gains a path_id once it first reaches
+	# Tier 1+ (a path that resolved cards but stayed at Tier 0 has an
+	# _affiliation entry with no _current_tier entry) — every such path still
+	# needs its HistoryFlagManager counter reset below, so _affiliation alone
+	# is the broader, correct set for that. But restore_state() loads the two
+	# dicts independently from a save payload's keys, so a saved current_tier
+	# entry could in principle exist without a matching affiliation entry;
+	# iterating the union (not either dict alone) is the only version safe
+	# against both gaps (revised in code review, 2026-07-13 — an earlier fix
+	# that iterated _current_tier alone regressed the Tier-0 counter-reset
+	# case caught by test_era_reset_clears_all_paths_not_just_active).
+	var all_path_ids: Dictionary = {}
 	for path_id: StringName in _affiliation:
+		all_path_ids[path_id] = true
+	for path_id: StringName in _current_tier:
+		all_path_ids[path_id] = true
+	for path_id: StringName in all_path_ids:
 		var tier: int = _current_tier.get(path_id, 0)
 		for t: int in range(1, tier + 1):
 			HistoryFlagManager.set_milestone(StringName("class_path." + String(path_id) + ".best_tier." + str(t)))
+		if tier == 5:
+			var card_id: StringName = _SIGNATURE_CARD_TABLE.get(path_id, &"")
+			if card_id != &"":
+				signature_card_removed.emit(card_id)
 		if _active_path == path_id:
 			HistoryFlagManager.set_milestone(StringName("class_path." + String(path_id) + ".era_completed"))
 		HistoryFlagManager.reset_counter(StringName(String(path_id) + "_choices_count"))

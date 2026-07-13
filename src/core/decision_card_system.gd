@@ -128,11 +128,30 @@ func _build_eligible_pool(cards_override: Variant = null) -> Array[Dictionary]:
 	return pool
 
 
+## Grammar: `"always"` (all MVP cards) or `"class_path_tier:{path_id}:{min_tier}"`
+## (Story class-path-full/004, ADR-0010 §10, TR-cps-006 — the 4 Tier-5
+## signature cards in CardContentDatabase). A full general-purpose expression
+## parser (e.g. "risky_choices_count >= 3") remains out of scope — GDD Open
+## Questions defers that to Vertical Slice+; this is a single additive
+## special-case entry, not a parser. `ClassPathSystem.get_tier()` is a pure
+## read (ADR-0010 pull model) — this stays the only new coupling, no push-based
+## pool-mutation API added. A malformed `"class_path_tier:..."` string (wrong
+## segment count) falls through to `false` rather than an out-of-range crash
+## on `parts[1]`/`parts[2]` (GDD AC-3 edge case).
 func _trigger_condition_met(condition: String) -> bool:
-	# MVP: only "always" is used by any of the 12 cards. A real expression
-	# parser (e.g. "risky_choices_count >= 3") is explicitly out of scope —
-	# GDD Open Questions defers grammar design to Vertical Slice+.
-	return condition == "always"
+	if condition == "always":
+		return true
+	if condition.begins_with("class_path_tier:"):
+		var parts: PackedStringArray = condition.split(":")  # "class_path_tier:{path_id}:{min_tier}"
+		# int() on a non-numeric string silently returns 0 in GDScript (no
+		# error) rather than failing — without this check, a malformed
+		# min_tier segment (e.g. "class_path_tier:pato_streamer:abc") would
+		# silently become "get_tier(...) >= 0", always true, incorrectly
+		# unlocking the card at Tier 0 (found in code review, 2026-07-13).
+		if parts.size() != 3 or not parts[2].is_valid_int():
+			return false
+		return ClassPathSystem.get_tier(StringName(parts[1])) >= int(parts[2])
+	return false
 
 
 func _is_milestone_exhausted(card: Dictionary) -> bool:

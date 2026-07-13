@@ -1,12 +1,12 @@
 # Story 004: Signature Card Wiring (Tier 5)
 
 > **Epic**: Class Path System (Full)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-13
 
 ## Context
 
@@ -53,6 +53,8 @@ func _trigger_condition_met(condition: String) -> bool:
 ```
 
 No pool-mutation call, no new signal consumer — `_build_eligible_pool()` already re-evaluates `trigger_condition` on every pool build (existing code), so the card becomes eligible the moment tier 5 is reached and ineligible again after era reset drops the tier back to 0, with zero new wiring beyond the grammar entry itself. `signature_card_unlocked`/`signature_card_removed` (GDD Signals table, already defined but unused by shipped code) remain UI-only notification signals — `DecisionCardSystem` does not subscribe to them; they exist purely so the HUD/Class Path Panel can show an unlock toast.
+
+**Performance**: no impact — `_trigger_condition_met()` runs once per card per pool build (existing cost shape, ~16 cards today), the new `"class_path_tier:..."` branch is a single string split + one `get_tier()` Dictionary lookup, negligible at this scale.
 
 ---
 
@@ -103,3 +105,10 @@ No pool-mutation call, no new signal consumer — `_build_eligible_pool()` alrea
 
 - Depends on: Story 001 (needs all 4 paths + Tier 5 reachable to exist)
 - Unlocks: None
+
+## Completion Notes
+**Completed**: 2026-07-13
+**Criteria**: 4/4 passing
+**Deviations**: ADVISORY — 2 pre-existing test suites fixed for the 12→16 card count. A BLOCKING int()-parsing bug and a self-introduced reset_era_state() regression were found and fixed during code review — not remaining deviations.
+**Test Evidence**: Integration — `tests/integration/class-path/class_path_signature_card_test.gd` (21 tests, all passing)
+**Code Review**: Complete — APPROVED
