@@ -235,6 +235,63 @@ formulas:
     source: design/gdd/class-path-system.md
     referenced_by: []
 
+  - name: meta_bonus_grant_magnitude
+    expression: "bonus_increment[type] = BASE_INCREMENT[type] * tier_at_burnout * (combined_meta_multiplier)^META_CHALLENGE_SCALING_EXPONENT"
+    variables: [type, tier_at_burnout, combined_meta_multiplier, BASE_INCREMENT, META_CHALLENGE_SCALING_EXPONENT]
+    output_range: "> 0.0, unbounded pre-cap"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_bonus_running_total
+    expression: "META_BONUS_total[type] = min(META_BONUS_total_prev[type] + bonus_increment[type], META_BONUS_MAX[type])"
+    variables: [META_BONUS_total_prev, bonus_increment, META_BONUS_MAX]
+    output_range: "[0.0, META_BONUS_MAX[type]], monotonically non-decreasing across game lifetime"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_reach_final_reward
+    expression: "final_reach(action_id) = base_reach(action_id) * Mult(M) * class_path_multiplier(action_id) * challenge_modifier(action_id) * (1 + META_REACH_MULT_total)"
+    variables: [base_reach, "Mult(M)", class_path_multiplier, challenge_modifier, META_REACH_MULT_total]
+    output_range: "[0, unbounded in principle, practically bounded by each factor's cap]"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_haters_resist
+    expression: "H_rate_final(C) = H_rate(C) * (1 - META_HATERS_RESIST_total)"
+    variables: ["H_rate(C)", META_HATERS_RESIST_total]
+    output_range: "[0.60 * H_rate(C), H_rate(C)] — applies online AND offline (locked scope decision)"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+meta_bonus_types:
+  - name: META_REACH_MULT
+    active_path: pato_streamer
+    effect: "permanent multiplier on active-play Reach income"
+    cap: 0.50
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: META_SPONSOR_MULT
+    active_path: guru_celebryta
+    effect: "permanent multiplier on Sponsor income"
+    cap: 0.60
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: META_HATERS_RESIST
+    active_path: ekspert_niszowy
+    effect: "permanent reduction on Haters growth rate, online and offline"
+    cap: 0.40
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: META_SPONSOR_FLOOR
+    active_path: biznesmen_contentu
+    effect: "permanent minimum Sponsor income floor at era start (overrides default reset of 0)"
+    cap: 100.0
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
 class_paths:
   - name: pato_streamer
     display_name_pl: "Pato-Streamer Hazardowy"
@@ -532,4 +589,11 @@ constants:
     value: [0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
     note: "Matches shipped src/core/class_path_system.gd TIER_THRESHOLDS constant"
     source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: META_CHALLENGE_SCALING_EXPONENT
+    value: 0.5
+    safe_range: [0.3, 1.0]
+    note: "Square-root dampening on ChallengeSystem's combined_meta_multiplier contribution to META_BONUS grants — prevents one extreme-challenge burnout from dominating the multi-era stacking arc"
+    source: design/gdd/prestige-checkpoint-system.md
     referenced_by: []

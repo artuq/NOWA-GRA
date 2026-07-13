@@ -33,7 +33,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | Not Started | — | Action UI, Card UI, Offline Report Screen |
 | 15 | Team/Staff Management | Economy | Alpha | Not Started | — | Resource System, Offline Progress System |
 | 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Not Started | — | Team/Staff Management |
-| 17 | Prestige/Checkpoint System | Progression | Alpha | Not Started | — | Class Path System, Offline Progress System, Save/Persistence System |
+| 17 | Prestige/Checkpoint System | Progression | Alpha | Designed | design/gdd/prestige-checkpoint-system.md | Class Path System, Offline Progress System, Save/Persistence System |
 | 18 | Cosmetic Persona Customization | UI | Full Vision | Not Started | — | Class Path System |
 
 ---
@@ -149,7 +149,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 18 |
-| Design docs started | 13 |
+| Design docs started | 14 |
 | Design docs reviewed | 0 |
 | Design docs approved | 0 |
 | MVP systems designed | 11/11 |
