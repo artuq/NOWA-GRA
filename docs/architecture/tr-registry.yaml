@@ -146,11 +146,35 @@ requirements:
 
   - id: TR-cps-006
     system: class-path-system
-    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    gdd: design/gdd/class-path-system.md
     requirement: Tier-5 signature card add/remove to DecisionCardSystem pool (signature_card_unlocked/removed signals)
-    adr: []
-    status: gap
-    note: Alpha scope. Signals named in quick-spec Affected Systems but not specified in ADR-0010 interface. Needs a follow-up ADR when Tier 5 / signature cards are implemented.
+    adr: [ADR-0010]
+    status: covered
+    note: Was gap — resolved 2026-07-13 by ADR-0010 §10 (pull-model trigger_condition grammar entry "class_path_tier:{path_id}:{min_tier}", no pool-mutation API needed; signals stay UI-only notifications).
+
+  - id: TR-cps-008
+    system: class-path-system
+    gdd: design/gdd/class-path-system.md
+    requirement: F2 Investment Contribution — invest() gated on prior card-choice history per Core Rule 4a
+    adr: [ADR-0010]
+    status: covered
+    note: Registered 2026-07-13 (VS/Alpha delta). ADR-0010 §8 — requires _recalculate_affiliation() split into tracked F1/F2 terms (structural refactor of existing MVP code, flagged MEDIUM risk).
+
+  - id: TR-cps-009
+    system: class-path-system
+    gdd: design/gdd/class-path-system.md
+    requirement: F5 Active Path Resolution and Tie-Break — BUG-003 regression fix (margin-based ambiguity, not silent iteration-order winner)
+    adr: [ADR-0010]
+    status: covered
+    note: Registered 2026-07-13. ADR-0010 §9. BUG-003 (production/qa/bugs/BUG-003-class-path-no-tiebreak-logic.md) closes on this story.
+
+  - id: TR-cps-010
+    system: class-path-system
+    gdd: design/gdd/class-path-system.md
+    requirement: 4-path registration and Tiers 3-5 bonus table (vs. MVP's 2 paths, Tiers 1-2)
+    adr: [ADR-0010]
+    status: covered
+    note: Registered 2026-07-13. ADR-0010 §11 — pure data expansion of existing _MULTIPLIER_TABLE structure, no new API surface.
 
   - id: TR-cps-007
     system: class-path-system
@@ -213,3 +237,56 @@ requirements:
     adr: [ADR-0011]
     status: covered
     note: GDD Dependencies flagged this as a schema extension; ADR-0011 codebase check confirms the field already exists with authored content on every option of all 12 cards. Empty-field fallback retained for future cards.
+
+  - id: TR-pcs-001
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: PrestigeSystem (new Autoload) orchestrates era transition via a single synchronous entry point, no signals/await in the read-then-reset chain
+    adr: [ADR-0012]
+    status: covered
+    note: Registered 2026-07-13. ADR-0012 Proposed — Prestige stories gated until Accepted.
+
+  - id: TR-pcs-002
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: F1/F1b/F2/F3a-d META_BONUS formulas, independently unit-testable
+    adr: [ADR-0012]
+    status: covered
+    note: PrestigeFormulas stateless static methods, same precedent as ResourceFormulas (ADR-0006) / FeedbackMath (ADR-0011).
+
+  - id: TR-pcs-003
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: DecisionCardSystem.inject_priority_card() — general-purpose forced-card injection (Core Rule 6)
+    adr: [ADR-0012]
+    status: covered
+
+  - id: TR-pcs-004
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: Flag classification sweep — era-local vs meta-persistent (Core Rule 7)
+    adr: [ADR-0012]
+    status: covered
+
+  - id: TR-pcs-005
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: Save/restore of era_count, per-type META_BONUS totals, meta-persistent flags via restore_state()
+    adr: [ADR-0012]
+    status: covered
+
+  - id: TR-pcs-006
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: Autosave suppressed for the full era-transitioning window (steps 1-5), resumed before era_transitioned fires
+    adr: [ADR-0002, ADR-0012]
+    status: covered
+    note: suppress_autosave()/resume_autosave() added to ADR-0002 2026-07-13 (/propagate-design-change); ADR-0012 §2 wires the call sites.
+
+  - id: TR-pcs-007
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: BurnoutSystem and ChallengeSystem mechanics (locked in their own quick-specs, restated only in summary here)
+    adr: []
+    status: gap
+    note: BurnoutSystem/ChallengeSystem themselves have no ADR yet — their quick-specs are locked but not architecturally specified. Needed before their own implementation stories (Sprint 11 11-2) can be Ready; ADR-0012 only covers PrestigeSystem's orchestration of the transition they trigger.

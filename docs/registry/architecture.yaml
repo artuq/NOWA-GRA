@@ -51,6 +51,12 @@ state_ownership:
     source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
     referenced_by: []
 
+  - state: "era_count (int), meta_bonus_totals (Dictionary[StringName, float] per bonus type)"
+    owner: PrestigeSystem
+    interface: "on_burnout_accepted(), get_meta_bonus_total(bonus_type), get_era_count(), restore_state(data), serialize_state()"
+    source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
+    referenced_by: []
+
 interfaces:
   - name: force_cooldown_zero
     signature: "force_cooldown_zero() -> void"
@@ -127,6 +133,38 @@ interfaces:
     owner: ClassPathSystem
     note: "Called by ActionSystem at reward resolution. Returns 1.0 if no active path or action not modified by current path tier. O(1) Dictionary lookup. ActionSystem must NOT import ClassPathSystem — uses the global Autoload name only."
     source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: invest
+    signature: "invest(path_id: StringName, resource_id: StringName, amount: float) -> bool"
+    type: method
+    owner: ClassPathSystem
+    note: "Gated on card_contribution[path] > 0 (Core Rule 4a) — returns false and applies no state change if the gate fails or the resource can't be afforded. Was a permanent MVP stub (always false); now a live command per ADR-0010 §8."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: get_ambiguous_gap
+    signature: "get_ambiguous_gap() -> float"
+    type: method
+    owner: ClassPathSystem
+    note: "Returns best_affiliation - second_affiliation when the active path is ambiguous (tie-break margin triggered, GDD F5 / BUG-003 fix), -1.0 otherwise. UI reads this to show the numeric gap remaining to resolve ambiguity."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: on_burnout_accepted
+    signature: "on_burnout_accepted() -> void"
+    type: method
+    owner: PrestigeSystem
+    note: "Single entry point BurnoutSystem's Choice A handler calls. Synchronous call chain only — no await/CONNECT_DEFERRED anywhere in its call graph (binding constraint, ADR-0012 §2). Reads ClassPathSystem state before reset_era_state() clears it."
+    source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
+    referenced_by: []
+
+  - name: inject_priority_card
+    signature: "inject_priority_card(card_id: StringName) -> void"
+    type: method
+    owner: DecisionCardSystem
+    note: "Bypasses normal card pool/weighting/cooldown. General-purpose forced-card injection — BurnoutSystem's Wypalenie card is the first caller, not the only intended one. Blocks normal presentation until resolved; cooldown counter keeps accumulating underneath."
+    source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
     referenced_by: []
 
 api_decisions:

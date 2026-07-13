@@ -1,6 +1,6 @@
 # Epics Index
 
-Last Updated: 2026-07-06
+Last Updated: 2026-07-13
 Engine: Godot 4.6.3
 
 | Epic | Layer | System | GDD | Stories | Status |
@@ -17,4 +17,6 @@ Engine: Godot 4.6.3
 | Card UI | Presentation | card-ui | design/gdd/card-ui.md | 3 stories | Complete |
 | Offline Report Screen | Presentation | offline-report-screen | design/gdd/offline-report-screen.md | 3 stories | Complete |
 | Class Path System | Core | class-path-system | design/quick-specs/class-path-system-2026-07-01.md | 2 stories | Complete (MVP scope) |
-| Juice/Feedback System | Presentation | juice-feedback-system | design/gdd/juice-feedback-system.md | 3 stories | Complete (audio assets pending art bible) |
+| Class Path System (Full) | Core | class-path-full | design/gdd/class-path-system.md | 5 stories | Ready |
+| Juice/Feedback System | Presentation | juice-feedback-system | design/gdd/juice-feedback-system.md | 3 stories | Complete (audio, cut 2026-07-12) |
+| Prestige/Checkpoint System | Core | prestige-checkpoint | design/gdd/prestige-checkpoint-system.md | 9 stories (Blocked) | Ready |
