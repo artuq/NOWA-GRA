@@ -1,12 +1,12 @@
 # Story 002: Investment Contribution (F2, Core Rule 4a)
 
 > **Epic**: Class Path System (Full)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-13
 
 ## Context
 
@@ -61,6 +61,8 @@ func invest(path_id: StringName, resource_id: StringName, amount: float) -> bool
 **Required refactor**: split `_affiliation[path_id]` into `_card_contribution[path_id]` (F1) and `_investment_contribution[path_id]` (F2), summed+clamped by `_recalculate_total_affiliation()` (F3), called from both the existing `card_resolved` handler and this new `invest()`. This touches existing shipped code — verify the 25-test MVP suite stays green, not just that new tests pass.
 
 `_investment_rate_table` (`INVESTMENT_AFFILIATION_RATE[path]` per GDD F2) sourced from `assets/data/balance.json` under `class_path.investment_rate`, same pattern as `_path_multiplier_table` (ADR-0010 §5). Per-path rates: `{pato_streamer: 0.1, guru_celebryta: 0.2, ekspert_niszowy: 0.125, biznesmen_contentu: 0.02}` (GDD Formulas F2).
+
+**Performance**: no impact — `invest()` is a discrete user-action call (button press), not per-frame; same O(1)-per-path cost shape as the existing `card_resolved` handler.
 
 ---
 
@@ -124,3 +126,10 @@ func invest(path_id: StringName, resource_id: StringName, amount: float) -> bool
 
 - Depends on: Story 001 (not a hard blocker — investment logic is path-agnostic — but sequencing after 001 avoids re-touching `_recalculate_affiliation()` twice)
 - Unlocks: Story 005 (UI needs a working gate to render disabled/enabled state against)
+
+## Completion Notes
+**Completed**: 2026-07-13
+**Criteria**: 7/7 passing
+**Deviations**: ADVISORY — `_INVESTMENT_RATE_TABLE` is a const, not JSON-loaded (matches existing `_MULTIPLIER_TABLE` pattern). A BLOCKING persistence bug (investment progress silently lost on save/load) was found and fixed during code review — not a remaining deviation.
+**Test Evidence**: Logic — `tests/unit/class-path/class_path_investment_test.gd` (17 tests, all passing)
+**Code Review**: Complete — APPROVED
