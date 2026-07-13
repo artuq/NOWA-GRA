@@ -1,12 +1,12 @@
 # Story 001: 4-Path Registration + Tier 3-5 Expansion
 
 > **Epic**: Class Path System (Full)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-13
 
 ## Context
 
@@ -55,6 +55,8 @@ This is pure data expansion — `TIER_THRESHOLDS` (already 6 elements, `_check_t
 | T5 | Signature: Viral Moment | Signature: Brand Deal | Signature: Kult Niszowy | Signature: IPO Influencera |
 
 Multipliers are additive within the same resource, never multiplicative — the last AC above regression-tests this against a stubbed second modifier source, since no second real source exists in the codebase yet.
+
+**Performance**: no impact — `_MULTIPLIER_TABLE` lookup stays O(1) regardless of table size (Dictionary), same as ADR-0010's existing Performance Implications.
 
 ---
 
@@ -112,3 +114,10 @@ Multipliers are additive within the same resource, never multiplicative — the 
 
 - Depends on: None (foundational — extends existing shipped `class_path_system.gd`)
 - Unlocks: Story 002 (Investment), Story 004 (Signature Cards — needs Tier 5 reachable on all 4 paths)
+
+## Completion Notes
+**Completed**: 2026-07-13
+**Criteria**: 6/6 passing
+**Deviations**: ADVISORY — `_check_tier_progression()` multi-emit fix (required by AC-2, confined to this story's owned file)
+**Test Evidence**: Logic — `tests/unit/class-path/class_path_multiplier_table_test.gd` (11 tests, all passing)
+**Code Review**: Complete — APPROVED

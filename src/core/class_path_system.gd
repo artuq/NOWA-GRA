@@ -15,6 +15,11 @@
 ## bonuses only, card affiliation only. invest() is a stub returning false —
 ## the active investment mechanic is Vertical Slice scope.
 ##
+## Story class-path-full/001 (2026-07-13, ADR-0010 §11): expanded path
+## registration and _MULTIPLIER_TABLE to all 4 GDD paths × Tiers 1-5 (data
+## only — TIER_THRESHOLDS already generalized). invest() remains a stub;
+## active investment ships in class-path-full/002.
+##
 ## Usage example:
 ##   var tier: int = ClassPathSystem.get_tier(&"pato_streamer")
 ##   var mult: float = ClassPathSystem.get_active_multiplier(&"zrob_drame")
@@ -34,18 +39,55 @@ const CARD_AFFILIATION_PER_CHOICE: float = 4.0
 ## investment (Vertical Slice) can push total affiliation above this cap.
 const CARD_CONTRIBUTION_MAX: float = 60.0
 
-## MVP multiplier table: path_id -> tier (int) -> action_id -> Reach multiplier.
+## Multiplier table: path_id -> tier (int) -> action_id -> Reach multiplier.
 ## Any unregistered combination resolves to 1.0 in get_active_multiplier().
-## Source: quick-spec Tier 1–2 bonus tables (pato T1 drama 1.3 / guru T1
-## interview 1.2), T2 values extend the same bonuses.
+## get_active_multiplier() only resolves Reach bonuses tied to a specific
+## named action — this is a strict subset of the GDD's Tier Bonuses by Path
+## table (design/gdd/class-path-system.md §Detailed Design). Most tier
+## bonuses (Sponsor income, Morale floor, Haters conversion rate, action
+## slots, unlock cost, signature cards, etc.) are NOT expressible as an
+## action-keyed Reach multiplier and are intentionally represented as an
+## empty {} tier entry here — their gameplay hooks belong to whichever
+## system consumes them (ADR-0010 §11 / Story class-path-full/001 Out of
+## Scope). All 4 paths list explicit keys 1-5 so a missing tier is always a
+## deliberate `{}`, never an accidental omission.
+## Source: pato T1 "Zrób dramę" +30% / T2 continuation to +60% (shipped MVP,
+## unchanged); guru T1 "Zrób wywiad" +20% / T2 continuation to +40% (shipped
+## MVP, unchanged — GDD's revised guru bonus text (Sponsor income) does not
+## have a resolution hook yet, tracked as a pre-existing gap, not touched by
+## this story); ekspert T2 "Nagraj vloga" +20% (only expressible ekspert
+## entry — T1's "passive Reach floor" is a floor mechanic, not an
+## action-keyed multiplier); biznesmen has no Reach-action-keyed bonus at
+## any tier (its bonuses are Sponsor income, cooldown, and Morale cost —
+## all {} ).
 const _MULTIPLIER_TABLE: Dictionary[StringName, Dictionary] = {
 	&"pato_streamer": {
 		1: {&"zrob_drame": 1.3},
 		2: {&"zrob_drame": 1.6},
+		3: {},
+		4: {},
+		5: {},
 	},
 	&"guru_celebryta": {
 		1: {&"udziel_wywiadu": 1.2},
 		2: {&"udziel_wywiadu": 1.4},
+		3: {},
+		4: {},
+		5: {},
+	},
+	&"ekspert_niszowy": {
+		1: {},
+		2: {&"nagraj_vloga": 1.2},
+		3: {},
+		4: {},
+		5: {},
+	},
+	&"biznesmen_contentu": {
+		1: {},
+		2: {},
+		3: {},
+		4: {},
+		5: {},
 	},
 }
 
@@ -94,8 +136,9 @@ func _recalculate_affiliation(path_id: StringName) -> void:
 
 
 ## Advances [param path_id]'s tier if its affiliation crossed one or more
-## thresholds, emitting tier_unlocked once per newly reached tier level's
-## final value. Never lowers a tier.
+## thresholds, emitting tier_unlocked once per newly reached tier level, in
+## ascending order, never skipping an intermediate tier (GDD AC, Story
+## class-path-full/001). Never lowers a tier.
 func _check_tier_progression(path_id: StringName) -> void:
 	var affil: float = _affiliation.get(path_id, 0.0)
 	var old_tier: int = _current_tier.get(path_id, 0)
@@ -106,8 +149,9 @@ func _check_tier_progression(path_id: StringName) -> void:
 		else:
 			break
 	if new_tier > old_tier:
-		_current_tier[path_id] = new_tier
-		tier_unlocked.emit(path_id, new_tier)
+		for t: int in range(old_tier + 1, new_tier + 1):
+			_current_tier[path_id] = t
+			tier_unlocked.emit(path_id, t)
 
 
 ## Recomputes the active path: the Tier 1+ path with the highest affiliation.
