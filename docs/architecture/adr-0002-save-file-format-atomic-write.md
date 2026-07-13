@@ -68,12 +68,31 @@ If the process is killed between steps 1-3, `save.json` (the previous save) is u
                   DirAccess.rename_absolute(save.tmp -> save.json)   [atomic swap]
 ```
 
+### Autosave suppression window *(added 2026-07-13, `/propagate-design-change` on `prestige-checkpoint-system.md`'s `/design-review`)*
+
+`save-persistence-system.md` triggers autosave on card-resolution events via `mark_dirty()`'s 2s debounce (Architecture Diagram above). Prestige/Checkpoint System's era-transition sequence needs a bounded window where that trigger is inert — Choice A's resolution IS a card resolution, so an unmodified autosave could fire mid-sequence (after meta-bonus grant, before the flag sweep completes) and persist a half-transitioned state. This is a new capability layered on top of the existing debounce/`save_now()` flow, not a change to it:
+
+```gdscript
+func suppress_autosave() -> void:
+    _autosave_suppressed = true
+    # any pending debounce Timer is NOT cancelled — only prevented from
+    # firing save_now() while suppressed; it re-arms normally on resume
+
+func resume_autosave() -> void:
+    _autosave_suppressed = false
+```
+
+`mark_dirty()`'s debounce Timer callback checks `_autosave_suppressed` before calling `save_now()` and no-ops (re-checking on the timer's next natural fire, not queuing a catch-up call) if suppressed. Lifecycle-pause-triggered saves (app backgrounding) are **not** subject to this flag — an OS-initiated background-kill risk always takes priority over an in-progress logical transition; the suppression only governs the routine 2s-debounce path. Callers MUST pair every `suppress_autosave()` with a `resume_autosave()` in the same synchronous call chain (no `await` between them, same constraint as `prestige-checkpoint-system.md`'s call-contract lock) — an unpaired suppression would silently disable autosave indefinitely.
+
 ### Key Interfaces
 ```gdscript
 # SaveSystem (Autoload) — interface locked by ADR-0001, implementation defined here
 const SAVE_PATH = "user://save.json"
 const TEMP_PATH = "user://save.tmp"
 const SCHEMA_VERSION = 1
+
+func suppress_autosave() -> void  # added 2026-07-13, see Autosave suppression window above
+func resume_autosave() -> void    # added 2026-07-13, see Autosave suppression window above
 
 func save_now() -> void:
     var data := _gather_state()  # Dictionary, includes "schema_version": SCHEMA_VERSION

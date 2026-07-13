@@ -113,6 +113,19 @@ func get_active_multiplier(action_id: StringName) -> float:
 
 `_path_multiplier_table` is a `Dictionary` populated from `assets/data/balance.json` under the `class_path` key at `_ready()`. No dependency ClassPathSystem → ActionSystem is introduced.
 
+### 5a. Sponsor multiplier application — pull model, card-resolution scoped *(added 2026-07-13, `/propagate-design-change` on `prestige-checkpoint-system.md`'s `/design-review`)*
+
+`guru_celebryta`/`biznesmen_contentu`'s Sponsor tier bonuses (per the quick-spec's Tier Bonuses table) have no resolution hook, since Sponsors are granted at Decision Card resolution (`sponsorzy_per_qualifying_card` roll), not via §5's `action_id`-keyed reward path. Same pull-model precedent as §5, additive:
+
+```gdscript
+func get_active_sponsor_multiplier() -> float:
+    if _active_path.is_empty():
+        return 1.0
+    return _sponsor_multiplier_table.get(_active_path, 1.0)
+```
+
+`_sponsor_multiplier_table` is a `Dictionary` populated from `assets/data/balance.json` under the same `class_path` key as `_path_multiplier_table` (§5), keyed by path only (no `action_id` — Sponsor grants aren't per-action). Called by `DecisionCardSystem` at the point it resolves a qualifying card's Sponsor roll, immediately before writing the delta via `ResourceManager.apply_delta()` — mirrors §5's "immediately after Morale multiplier, before `apply_delta()`" ordering, adapted to the card-resolution call site instead of action-completion. No new dependency direction: `DecisionCardSystem` already depends on `ClassPathSystem` indirectly via the `card_resolved` signal chain (§2/§4); this adds one pull-query call, same shape as ActionSystem's existing one.
+
 ### 6. Era reset — deferred wiring
 
 `ClassPathSystem.reset_era_state() -> void` is the public API. For MVP (no BurnoutSystem): called manually via debug console or test helper. For Alpha: BurnoutSystem registers ClassPathSystem as a listener to its `era_transitioned` signal in BurnoutSystem's `_ready()` — not here. This ADR defines the API contract only.
@@ -156,6 +169,7 @@ func get_affiliation(path_id: StringName) -> float
 func get_tier(path_id: StringName) -> int
 func get_active_path() -> StringName
 func get_active_multiplier(action_id: StringName) -> float  # 1.0 when no active path
+func get_active_sponsor_multiplier() -> float  # 1.0 when no active path (added 2026-07-13, §5a)
 
 # Commands
 func invest(path_id: StringName, resource_id: StringName, amount: float) -> bool
