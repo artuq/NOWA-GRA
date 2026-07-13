@@ -53,7 +53,7 @@ This epic is complete when:
 |---|-------|------|--------|-----|
 | 001 | 4-Path Registration + Tier 3-5 Expansion | Logic | Complete | ADR-0010 §11 |
 | 002 | Investment Contribution (F2, Core Rule 4a) | Logic | Complete | ADR-0010 §8 |
-| 003 | Tie-Break Resolution Fix (F5, BUG-003) | Logic | Ready | ADR-0010 §9 |
+| 003 | Tie-Break Resolution Fix (F5, BUG-003) | Logic | Complete | ADR-0010 §9 |
 | 004 | Signature Card Wiring (Tier 5) | Integration | Ready | ADR-0010 §10 |
 | 005 | Class Path Panel — Investment & Ambiguity UI | UI | Ready | ADR-0010 §8/§9 (secondary) |
 

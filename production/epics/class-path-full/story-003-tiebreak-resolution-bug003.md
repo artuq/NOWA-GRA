@@ -1,12 +1,12 @@
 # Story 003: Tie-Break Resolution Fix (F5, BUG-003)
 
 > **Epic**: Class Path System (Full)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: S (1-2h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-13
 
 ## Context
 
@@ -69,6 +69,8 @@ func _update_active_path() -> void:
 ```
 
 `PATH_AFFILIATION_TIE_BREAK_MARGIN` (5.0 default) stays a GDScript `const`, matching `CARD_AFFILIATION_PER_CHOICE`/`CARD_CONTRIBUTION_MAX`'s placement — not `balance.json`. Also add `get_ambiguous_gap() -> float` (returns `best_affil - second_affil` when ambiguous, `-1.0` otherwise — ADR-0010 Key Interfaces) for Story 005's UI to consume.
+
+**Performance**: no impact — `_update_active_path()` stays O(n paths) (n=4), same call sites (card resolution, `invest()`) as before; tracking a second candidate is one extra float comparison per path, negligible at this scale.
 
 **Behavioural change note**: `active_path_changed("")` can now fire in a case it never did before (any two paths landing within the margin after previously having a resolved winner) — intentional per F5, already covered by GDD UI Requirements' Ambiguous state.
 
@@ -142,3 +144,10 @@ func _update_active_path() -> void:
 
 - Depends on: Story 001 (not a hard blocker — fix applies regardless of path count — sequencing after 001 lets AC-5's "3+ paths" case use real registered paths instead of a mock)
 - Unlocks: Story 005 (UI needs `get_ambiguous_gap()` to exist)
+
+## Completion Notes
+**Completed**: 2026-07-13
+**Criteria**: 8/8 passing
+**Deviations**: ADVISORY — `_ambiguous_gap` reset in `reset_era_state()`, shared `_compute_top_two_tier1plus()` helper. A BLOCKING `restore_state()` gap-recompute bug was found and fixed during code review — not a remaining deviation.
+**Test Evidence**: Logic — `tests/unit/class-path/class_path_tiebreak_test.gd` (21 tests, all passing)
+**Code Review**: Complete — APPROVED

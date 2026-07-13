@@ -49,6 +49,15 @@ const CARD_AFFILIATION_PER_CHOICE: float = 4.0
 ## investment (Vertical Slice) can push total affiliation above this cap.
 const CARD_CONTRIBUTION_MAX: float = 60.0
 
+## Minimum lead the top-affiliation Tier-1+ path must hold over the
+## second-highest to resolve as the sole active path (GDD F5's `M`). Below
+## this margin (including an exact tie, diff == 0.0), the active path is
+## "ambiguous" (&"") instead of silently picking whichever path iterates
+## first in the Dictionary — BUG-003 fix (Story class-path-full/003,
+## ADR-0010 §9, TR-cps-009).
+## GDD Tuning Knob: default 5.0, safe range 2.0-10.0.
+const PATH_AFFILIATION_TIE_BREAK_MARGIN: float = 5.0
+
 ## Multiplier table: path_id -> tier (int) -> action_id -> Reach multiplier.
 ## Any unregistered combination resolves to 1.0 in get_active_multiplier().
 ## get_active_multiplier() only resolves Reach bonuses tied to a specific
@@ -156,6 +165,14 @@ var _current_tier: Dictionary[StringName, int] = {}
 ## The active path (highest affiliation among Tier 1+ paths), or &"" if none.
 var _active_path: StringName = &""
 
+## Cached result of the last _update_active_path() computation: the gap
+## between the top two Tier-1+ affiliations when currently ambiguous, or
+## -1.0 when resolved (or fewer than 2 paths are Tier 1+). Backs
+## get_ambiguous_gap() (ADR-0010 §9 Key Interfaces) — not persisted
+## (serialize_state()/restore_state() don't round-trip it; it's a pure
+## derived-display value, recomputed on the next active-path change).
+var _ambiguous_gap: float = -1.0
+
 
 func _ready() -> void:
 	DecisionCardSystem.card_resolved.connect(_on_card_resolved)
@@ -217,20 +234,52 @@ func _check_tier_progression(path_id: StringName) -> void:
 			tier_unlocked.emit(path_id, t)
 
 
-## Recomputes the active path: the Tier 1+ path with the highest affiliation.
-## Emits active_path_changed only when the value actually changes.
+## Recomputes the active path per GDD F5: among Tier 1+ paths, the highest
+## affiliation only wins if it leads the second-highest by at least
+## PATH_AFFILIATION_TIE_BREAK_MARGIN; otherwise the state is "ambiguous"
+## (&"") — BUG-003 fix (Story class-path-full/003), replacing the old
+## strict `>` comparison that let Dictionary iteration order silently pick
+## a winner on a near- or exact tie. Tracks only the top two candidates —
+## per F5, a third (or further) lower-affiliation Tier 1+ path never
+## affects the result. Also refreshes _ambiguous_gap (get_ambiguous_gap()).
+## Emits active_path_changed only when the resolved value actually changes.
 func _update_active_path() -> void:
+	var top_two: Dictionary = _compute_top_two_tier1plus()
+	var best_path: StringName = top_two["best_path"]
+	var best_affil: float = top_two["best_affil"]
+	var second_affil: float = top_two["second_affil"]
+	var resolved: StringName = best_path
+	var ambiguous: bool = second_affil >= 0.0 and (best_affil - second_affil) < PATH_AFFILIATION_TIE_BREAK_MARGIN
+	if ambiguous:
+		resolved = &""
+	_ambiguous_gap = (best_affil - second_affil) if ambiguous else -1.0
+	if resolved != _active_path:
+		_active_path = resolved
+		active_path_changed.emit(_active_path)
+
+
+## Shared top-two-candidate scan used by _update_active_path() and
+## restore_state() (BUG-003 fix follow-up, code review 2026-07-13 — the gap
+## cache must be recomputable without re-deriving _active_path itself, since
+## restore_state() trusts the persisted active_path value rather than
+## recomputing it, but still needs a correct _ambiguous_gap for a save loaded
+## mid-ambiguity). Returns {"best_path": StringName, "best_affil": float,
+## "second_affil": float} — see _update_active_path() for the margin logic
+## that turns this into a resolved/ambiguous decision.
+func _compute_top_two_tier1plus() -> Dictionary:
 	var best_path: StringName = &""
-	var best_affil: float = 0.0
+	var best_affil: float = -1.0
+	var second_affil: float = -1.0
 	for path_id: StringName in _affiliation:
 		if _current_tier.get(path_id, 0) >= 1:
 			var a: float = _affiliation[path_id]
 			if a > best_affil:
+				second_affil = best_affil
 				best_affil = a
 				best_path = path_id
-	if best_path != _active_path:
-		_active_path = best_path
-		active_path_changed.emit(_active_path)
+			elif a > second_affil:
+				second_affil = a
+	return {"best_path": best_path, "best_affil": best_affil, "second_affil": second_affil}
 
 
 ## Returns [param path_id]'s current affiliation [0.0–100.0], or 0.0 if the
@@ -248,6 +297,16 @@ func get_tier(path_id: StringName) -> int:
 ## Returns the active path id, or &"" if no path has reached Tier 1.
 func get_active_path() -> StringName:
 	return _active_path
+
+
+## Returns the affiliation gap between the top two Tier-1+ paths when
+## get_active_path() is currently ambiguous (GDD F5, ADR-0010 §9), or -1.0
+## when resolved (a sole path leads by >= PATH_AFFILIATION_TIE_BREAK_MARGIN)
+## or when fewer than 2 paths are Tier 1+. Pure read reflecting the last
+## _update_active_path() computation — no side effects. Story
+## class-path-full/005's Ambiguous UI state consumes this.
+func get_ambiguous_gap() -> float:
+	return _ambiguous_gap
 
 
 ## Returns the Reach multiplier for [param action_id] under the active path
@@ -322,6 +381,18 @@ func restore_state(data: Dictionary) -> void:
 	for key: String in tier_in:
 		_current_tier[StringName(key)] = int(tier_in[key])
 	_active_path = StringName(data.get("active_path", ""))
+	# Recompute _ambiguous_gap from the just-restored affiliation/tier data —
+	# without this, a save loaded mid-ambiguity would report get_ambiguous_gap()
+	# == -1.0 (field-initializer default) until the next card resolution or
+	# invest() call, contradicting its documented "reflects the last computed
+	# state" contract (found in code review, 2026-07-13). _active_path itself
+	# is trusted directly from [param data], not re-derived here — this only
+	# fixes the derived display cache alongside it.
+	var top_two: Dictionary = _compute_top_two_tier1plus()
+	var best_affil: float = top_two["best_affil"]
+	var second_affil: float = top_two["second_affil"]
+	var ambiguous: bool = second_affil >= 0.0 and (best_affil - second_affil) < PATH_AFFILIATION_TIE_BREAK_MARGIN
+	_ambiguous_gap = (best_affil - second_affil) if ambiguous else -1.0
 
 
 ## Returns this module's persisted state as a JSON-serializable Dictionary
@@ -370,6 +441,7 @@ func reset_era_state() -> void:
 	_card_contribution.clear()
 	_investment_contribution.clear()
 	_current_tier.clear()
+	_ambiguous_gap = -1.0  # nothing is Tier 1+ anymore, so nothing can be ambiguous
 	# Same emit-only-on-change contract as _update_active_path() — a reset with
 	# no active path (nothing ever reached Tier 1) emits nothing.
 	if _active_path != &"":
