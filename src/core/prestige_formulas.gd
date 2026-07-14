@@ -12,10 +12,14 @@
 ## touch `HistoryFlagManager`, `SaveSystem`, or any Autoload.
 ##
 ## Story 003 scope: F1 (`grant_magnitude`, `tier_factor`) and F1b
-## (`variety_bonus_increment`). Story 004 (this revision) adds F2's per-type
-## stacking/cap (`apply_stacking_and_cap`). F3a-d's consumption-side formulas
-## remain explicitly out of scope (Story 005) and are NOT implemented in this
-## file yet.
+## (`variety_bonus_increment`). Story 004 adds F2's per-type stacking/cap
+## (`apply_stacking_and_cap`). Story 005 (this revision) adds F3a-d's
+## consumption-side formulas — `final_reach`, `final_sponsors`,
+## `haters_rate_final`, `sponsors_era_start_override` — the read-time
+## multiplier applications consumed at action reward / card resolution /
+## Haters-rate / era-start-reset points (ADR-0012 §3, `ResourceFormulas`-style
+## stateless composition per control-manifest.md Core layer rules — these are
+## read-time multiplier applications, not stored state mutations).
 ##
 ## Stateless-only invariant: never add instance vars or @export fields to
 ## this class — PrestigeSystem's on_burnout_accepted() and any future
@@ -211,3 +215,135 @@ static func variety_bonus_increment(bonus_type: StringName) -> float:
 static func apply_stacking_and_cap(bonus_type: StringName, current_total: float,
 		grant: float, cap: float) -> float:
 	return minf(current_total + grant, cap)
+
+
+## Returns the final Reach grant for one completed action, per GDD Formula
+## F3a:
+##
+##   final_reach = max(1, round(base * Mult(M) * class_path_multiplier
+##       * challenge_modifier * (1 + META_REACH_MULT_total)))
+##
+## The `max(1, ...)` floor (added post-`/design-review`) guarantees a
+## completed action never grants zero Reach, even when every multiplicative
+## layer is at its lowest legal value simultaneously (AC-3's edge case: a
+## raw product that rounds to 0 is floored to 1, not left at 0).
+##
+## [param base] the action's base Reach value (`ActionSystem`'s per-action
+## constant).
+## [param morale_mult] `ResourceFormulas.action_effectiveness_multiplier()`'s
+## return value (`Mult(M)`) — the Morale-band multiplier, already computed
+## by the caller.
+## [param class_path_multiplier] `ClassPathSystem.get_active_multiplier(action_id)`
+## (ADR-0010 §5) — 1.0 when no active path.
+## [param challenge_modifier] `ChallengeSystem`'s per-action Reach modifier —
+## 1.0 when no challenge active.
+## [param meta_reach_mult_total] `PrestigeSystem.get_meta_bonus_total(&"META_REACH_MULT")`.
+##
+## Performance: O(1) pure float arithmetic — called once per completed
+## action, same negligible-cost precedent as this class's other functions.
+##
+## Usage example:
+##   PrestigeFormulas.final_reach(10.0, 1.00, 1.30, 1.0, 0.3873)  # -> 18
+static func final_reach(base: float, morale_mult: float, class_path_multiplier: float,
+		challenge_modifier: float, meta_reach_mult_total: float) -> int:
+	var raw: float = base * morale_mult * class_path_multiplier * challenge_modifier \
+		* (1.0 + meta_reach_mult_total)
+	return maxi(1, roundi(raw))
+
+
+## Returns the final Sponsors grant for one qualifying Decision Card's
+## Sponsor roll, per GDD Formula F3b:
+##
+##   final_sponsors = round(base_sponsors_roll * class_path_sponsor_multiplier
+##       * (1 + META_SPONSOR_MULT_total))
+##
+## Unlike final_reach(), there is no floor rule here — a Sponsor roll
+## legitimately can and does round to 0 (GDD F3b has no "never zero"
+## guarantee for Sponsors, unlike Reach's F3a).
+##
+## [param base_sponsors_roll] the qualifying card's already-rolled base
+## Sponsor amount (`DecisionCardSystem`'s `sponsorzy_per_qualifying_card`
+## roll result).
+## [param class_path_sponsor_multiplier] `ClassPathSystem.get_active_sponsor_multiplier()`
+## (ADR-0010 §5a) — 1.0 when no active path. Story 005 implements ONLY this
+## formula function; wiring the real call to `get_active_sponsor_multiplier()`
+## at card resolution is a separate Class Path System epic concern (this
+## story's Out of Scope) — callers of this function pass the multiplier as
+## an explicit argument (mocked in tests, per AC-4).
+## [param meta_sponsor_mult_total] `PrestigeSystem.get_meta_bonus_total(&"META_SPONSOR_MULT")`.
+##
+## Performance: O(1) pure float arithmetic — called once per qualifying
+## card resolution, same negligible-cost precedent as this class's other
+## functions.
+##
+## Usage example:
+##   PrestigeFormulas.final_sponsors(3.0, 1.20, 0.50)  # -> 5
+static func final_sponsors(base_sponsors_roll: float, class_path_sponsor_multiplier: float,
+		meta_sponsor_mult_total: float) -> int:
+	return roundi(base_sponsors_roll * class_path_sponsor_multiplier * (1.0 + meta_sponsor_mult_total))
+
+
+## Returns the final Haters growth rate (per minute), per GDD Formula F3c:
+##
+##   H_rate_final = H_rate(C) * (1 - META_HATERS_RESIST_total)
+##
+## Deliberately the ONE F3 formula that applies identically online and
+## offline (F3c locked scope, GDD's own explicit call-out) — contrast with
+## Class Path's/Challenge's multipliers, which are excluded from offline
+## simulation by default (TR-cps-007). Both `ActionSystem` (live play) and
+## `OfflineProgressSystem.simulate_offline()` must call this same function
+## on top of `ResourceFormulas.haters_growth_rate(cringe)`'s result, so the
+## two contexts can never silently diverge (same online/offline-consistency-
+## by-construction precedent as ADR-0006's `ResourceFormulas`).
+##
+## Story 005 scope note: this function's correctness is this story's
+## deliverable; wiring the real call sites in `ActionSystem` (which
+## currently has no live Haters-rate call site at all) and
+## `OfflineProgressSystem.simulate_offline()` (which would need a new
+## `OfflineProgressSystem` -> `PrestigeSystem` read dependency not yet
+## sanctioned by any ADR) is explicitly flagged as a follow-up decision, not
+## performed by this story.
+##
+## [param base_rate] `ResourceFormulas.haters_growth_rate(cringe)` — `H_rate(C)`,
+## already computed by the caller.
+## [param meta_haters_resist_total] `PrestigeSystem.get_meta_bonus_total(&"META_HATERS_RESIST")`.
+## `meta_haters_resist_total=0.0` is a no-op, returning [param base_rate]
+## unchanged (META_HATERS_RESIST's cap of 0.40, per META_BONUS_MAX, keeps
+## this always well short of the (1 - x) <= 0 degenerate case).
+##
+## Performance: O(1) pure float arithmetic — same negligible-cost precedent
+## as this class's other functions; cheap even at the offline simulation
+## loop's 1440-iteration worst case (ADR-0006).
+##
+## Usage example:
+##   PrestigeFormulas.haters_rate_final(0.66, 0.30)  # -> 0.462
+static func haters_rate_final(base_rate: float, meta_haters_resist_total: float) -> float:
+	return base_rate * (1.0 - meta_haters_resist_total)
+
+
+## Returns the era-start Sponsors override value, per GDD Formula F3d:
+##
+##   Sponsors_era_start = META_SPONSOR_FLOOR_total if META_SPONSOR_FLOOR_total > 0.0 else 0.0
+##
+## Story 005 implements ONLY this override function in isolation. The
+## ordering guarantee between the era-transition flag sweep's default
+## Sponsors=0 write and this override's write (the sweep must write its
+## default FIRST, this override must write AFTER) is Story 007's own
+## responsibility (this story's Out of Scope) — this function has no
+## knowledge of when it is called relative to the sweep.
+##
+## [param meta_sponsor_floor_total] `PrestigeSystem.get_meta_bonus_total(&"META_SPONSOR_FLOOR")`.
+## Always >= 0.0 by construction (F2's `apply_stacking_and_cap()` never
+## produces a negative running total) — the `> 0.0` branch exists to make
+## the "no override when the total is still exactly the untouched default"
+## case explicit and self-documenting, not to guard against a negative
+## input this function doesn't otherwise handle specially.
+##
+## Performance: O(1) — single comparison, same negligible-cost precedent as
+## this class's other functions.
+##
+## Usage example:
+##   PrestigeFormulas.sponsors_era_start_override(9.0)  # -> 9.0
+##   PrestigeFormulas.sponsors_era_start_override(0.0)  # -> 0.0
+static func sponsors_era_start_override(meta_sponsor_floor_total: float) -> float:
+	return meta_sponsor_floor_total if meta_sponsor_floor_total > 0.0 else 0.0

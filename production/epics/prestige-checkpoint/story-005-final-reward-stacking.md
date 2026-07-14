@@ -1,12 +1,12 @@
 # Story 005: F3a-d Final Reward Stacking Application Points
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-14
 
 
 ## Context
@@ -106,3 +106,10 @@ These are pure functions taking explicit float arguments — implement as additi
 
 - Depends on: Story 004 (needs real `META_BONUS_total` values to compose against)
 - Unlocks: Story 007 (sweep+F3d ordering test needs this story's override function to exist)
+
+## Completion Notes
+**Completed**: 2026-07-14
+**Criteria**: 8/8 passing
+**Deviations**: ADVISORY — F3c (`haters_rate_final()`) implemented as formula only, no real call-site wiring (logged as tech debt); 2 non-blocking boundary-test gaps (logged as tech debt)
+**Test Evidence**: Logic — `tests/unit/prestige/prestige_formulas_reward_stacking_test.gd` (12 tests)
+**Code Review**: Complete — APPROVED
