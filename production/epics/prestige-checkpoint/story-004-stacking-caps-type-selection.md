@@ -1,12 +1,12 @@
 # Story 004: META_BONUS Stacking/Caps + Bonus Type Selection (F2, Core Rule 1/3)
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-14
 
 
 ## Context
@@ -66,6 +66,8 @@ const _BONUS_TYPE_BY_PATH: Dictionary[StringName, StringName] = {
 ```
 
 The no-active-path case (empty `get_active_path()`) must still let `on_burnout_accepted()` (Story 001) proceed through reset/era_count/save — the absence of a reward never blocks the reset itself. This is the same "trigger is Cringe-driven, not reward-driven" principle as the all-caps-absorbed case.
+
+**Performance**: no impact — `apply_stacking_and_cap()`/type-selection lookup run once per era transition (a rare event), same as Story 003's formulas.
 
 ---
 
@@ -132,3 +134,10 @@ The no-active-path case (empty `get_active_path()`) must still let `on_burnout_a
 
 - Depends on: Story 003 (needs grant magnitude values to stack)
 - Unlocks: Story 005 (F3a-d reads these totals), Story 007 (flag sweep must preserve these totals unchanged)
+
+## Completion Notes
+**Completed**: 2026-07-14
+**Criteria**: 9/9 passing
+**Deviations**: None
+**Test Evidence**: Logic — `tests/unit/prestige/prestige_formulas_stacking_test.gd` (9 tests) + `tests/integration/prestige/prestige_grant_wiring_test.gd` (+2 tests)
+**Code Review**: Complete — APPROVED

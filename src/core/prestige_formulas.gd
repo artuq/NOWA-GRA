@@ -12,10 +12,10 @@
 ## touch `HistoryFlagManager`, `SaveSystem`, or any Autoload.
 ##
 ## Story 003 scope: F1 (`grant_magnitude`, `tier_factor`) and F1b
-## (`variety_bonus_increment`) only. F2's per-type stacking/cap
-## (`apply_stacking_and_cap`) and F3a-d's consumption-side formulas are
-## explicitly out of scope (Story 004 / Story 005) and are NOT implemented
-## in this file yet.
+## (`variety_bonus_increment`). Story 004 (this revision) adds F2's per-type
+## stacking/cap (`apply_stacking_and_cap`). F3a-d's consumption-side formulas
+## remain explicitly out of scope (Story 005) and are NOT implemented in this
+## file yet.
 ##
 ## Stateless-only invariant: never add instance vars or @export fields to
 ## this class — PrestigeSystem's on_burnout_accepted() and any future
@@ -166,3 +166,48 @@ static func grant_magnitude(bonus_type: StringName, tier: int, challenge_mult: f
 ##   PrestigeFormulas.variety_bonus_increment(&"META_REACH_MULT")  # -> 0.04
 static func variety_bonus_increment(bonus_type: StringName) -> float:
 	return BASE_INCREMENT[bonus_type] * VARIETY_BONUS_MULT
+
+
+## Applies GDD Formula F2's per-type running-total stacking and hard cap to a
+## single already-computed grant:
+##
+##   apply_stacking_and_cap(type, current_total, grant, cap) = min(current_total + grant, cap)
+##
+## Additive stacking, per type, clamped at [param cap] — any portion of
+## [param grant] that would push the total past [param cap] is silently
+## absorbed with no effect and no compensating grant elsewhere (Core Rule 1).
+## A type already sitting exactly at [param cap] absorbs the entire grant
+## (returns [param cap] unchanged) — this is the mechanism, by construction,
+## that guarantees a "grant" can never softlock or reject an era transition:
+## the caller (`PrestigeSystem`) always applies this function's result
+## unconditionally, regardless of whether it changed anything.
+##
+## [param bonus_type] is accepted (rather than this function reading
+## `META_BONUS_MAX[bonus_type]` internally) so the caller decides which cap
+## applies — this keeps the function usable both for a normal per-type grant
+## (caller passes `META_BONUS_MAX[bonus_type]`) and for any future test/tool
+## that wants to probe an arbitrary cap value without touching the real
+## table. This function itself never reads `META_BONUS_MAX` — [param
+## bonus_type] exists purely for call-site clarity/documentation (matching
+## every other `PrestigeFormulas` function's `bonus_type`-first signature)
+## and is otherwise unused by the body.
+##
+## [param current_total] `PrestigeSystem.meta_bonus_totals.get(bonus_type,
+## 0.0)` — the running total BEFORE this grant.
+## [param grant] the already-computed grant magnitude for this single
+## accepted burnout (`grant_magnitude()`'s return value, or
+## `variety_bonus_increment()`'s — both call sites route through this same
+## clamp, per ADR-0012 §3).
+## [param cap] `PrestigeFormulas.META_BONUS_MAX[bonus_type]` — the type's
+## hard lifetime ceiling (F2's "proposed defaults, deliberately non-uniform"
+## table).
+##
+## Performance: O(1) pure float arithmetic — called once per accepted
+## burnout (a rare event), same negligible-cost precedent as this class's
+## other functions.
+##
+## Usage example:
+##   PrestigeFormulas.apply_stacking_and_cap(&"META_REACH_MULT", 0.4944, 0.1010, 0.50)  # -> 0.50 (absorbs 0.0954)
+static func apply_stacking_and_cap(bonus_type: StringName, current_total: float,
+		grant: float, cap: float) -> float:
+	return minf(current_total + grant, cap)

@@ -9,6 +9,15 @@
 ## untested; and no test drove a real `ClassPathSystem` path through
 ## `on_burnout_accepted()` end-to-end and checked `meta_bonus_totals`.
 ##
+## Extended for Story 004 (META_BONUS Stacking/Caps + Bonus Type Selection,
+## TR-pcs-002, ADR-0012 §3): two further tests cover AC-6 (all four totals
+## already at cap, grant fully absorbed, transition still completes) and
+## AC-8/AC-9 (no active path -> no grant, totals AND first_burnout flags
+## unchanged, reset still proceeds) — both require the real Autoload wiring
+## this file already exercises, not just `PrestigeFormulas` in isolation. See
+## `tests/unit/prestige/prestige_formulas_stacking_test.gd` for this story's
+## pure-formula-level coverage of the remaining ACs.
+##
 ## Milestone leakage note (same accepted precedent as
 ## class_path_core_test.gd/prestige_orchestration_test.gd's own header
 ## comments): `HistoryFlagManager` milestones are a one-way ratchet --
@@ -179,3 +188,94 @@ func test_check_variety_bonus_real_method_fires_when_all_four_types_go_nonzero()
 		assert_float(PrestigeSystem.get_meta_bonus_total(fourth_type)).override_failure_message(
 			"the 4th type's total must reflect its own grant plus the variety bonus increment stacked on top in the same cycle"
 		).is_greater(totals_before_last_grant[fourth_type] + variety_increment * 0.5)
+
+
+# --- Story 004 AC-6: all four totals already at cap -> grant fully absorbed, reset still proceeds ---
+
+## Regression coverage for Story 004 (META_BONUS Stacking/Caps, TR-pcs-002)
+## AC-6: mocks all-4-totals-at-cap state via restore_state() (the technique
+## this story's own QA Test Cases section prescribes -- "mocked
+## all-4-totals-at-cap state"), then drives a real active path through the
+## real on_burnout_accepted() and asserts BOTH halves in one test, per the
+## AC's own wording: era_count increments / era_transitioned fires exactly
+## once (the reset half) AND every total remains exactly at its cap (the
+## absorption half) -- proving PrestigeFormulas.apply_stacking_and_cap(),
+## wired through _apply_grant()/_check_variety_bonus(), never softlocks the
+## transition even when every type has zero room left to grant into.
+func test_on_burnout_accepted_with_all_totals_at_cap_absorbs_grant_and_still_transitions() -> void:
+	var capped_totals: Dictionary = {
+		"META_REACH_MULT": PrestigeFormulas.META_BONUS_MAX[&"META_REACH_MULT"],
+		"META_SPONSOR_MULT": PrestigeFormulas.META_BONUS_MAX[&"META_SPONSOR_MULT"],
+		"META_HATERS_RESIST": PrestigeFormulas.META_BONUS_MAX[&"META_HATERS_RESIST"],
+		"META_SPONSOR_FLOOR": PrestigeFormulas.META_BONUS_MAX[&"META_SPONSOR_FLOOR"],
+	}
+	PrestigeSystem.restore_state({"era_count": PrestigeSystem.era_count, "meta_bonus_totals": capped_totals})
+	_drive_path_to_tier_1(&"pato_streamer")
+
+	# Array, not a plain int/bool -- GDScript lambdas capture outer locals BY
+	# VALUE, same pattern as prestige_orchestration_test.gd's signal-spy tests.
+	var emissions: Array = []
+	var spy: Callable = func() -> void: emissions.append(true)
+	PrestigeSystem.era_transitioned.connect(spy)
+
+	var era_before: int = PrestigeSystem.era_count
+	PrestigeSystem.on_burnout_accepted()
+
+	PrestigeSystem.era_transitioned.disconnect(spy)
+
+	assert_int(emissions.size()).override_failure_message(
+		"era_transitioned must still fire exactly once even when the grant is fully absorbed by the cap"
+	).is_equal(1)
+	assert_int(PrestigeSystem.era_count).override_failure_message(
+		"era_count must still increment even when the grant is fully absorbed -- the transition is Cringe-driven, not reward-driven"
+	).is_equal(era_before + 1)
+
+	for path_id: StringName in _ALL_PATHS:
+		var bonus_type: StringName = _BONUS_TYPE_BY_PATH[path_id]
+		assert_float(PrestigeSystem.get_meta_bonus_total(bonus_type)).override_failure_message(
+			"type %s must remain exactly at its cap -- the grant must be fully absorbed with no overshoot" % bonus_type
+		).is_equal_approx(PrestigeFormulas.META_BONUS_MAX[bonus_type], 0.0001)
+
+
+# --- Story 004 AC-8/AC-9: no active path -> no grant, totals AND first-burnout flags unchanged, reset still proceeds ---
+
+## Regression coverage for Story 004 AC-8 (all four totals unchanged, era
+## still resets) and AC-9 (a zero-reward burnout never consumes a
+## first-burnout flag that was never spent) -- both require driving the real
+## on_burnout_accepted() with ClassPathSystem.get_active_path() == "" and
+## inspecting real Autoload state (era_count, HistoryFlagManager milestones),
+## none of which prestige_formulas_stacking_test.gd's PrestigeFormulas-only
+## unit tests can exercise (see that file's header comment). before_test()
+## already leaves no active path (ClassPathSystem.reset_era_state()), same
+## precondition prestige_orchestration_test.gd's own Story 001
+## no-active-path test relies on.
+##
+## Leakage-tolerant: captures every total AND every first_burnout milestone's
+## state BEFORE the no-path resolution, and asserts byte-for-byte equality
+## after -- correct regardless of what any earlier test in this run already
+## granted/set (same technique this file's other tests already use).
+func test_on_burnout_accepted_no_active_path_grants_nothing_and_still_resets() -> void:
+	assert_that(ClassPathSystem.get_active_path()).is_equal(&"")
+
+	var totals_before: Dictionary = {}
+	var flags_before: Dictionary = {}
+	for path_id: StringName in _ALL_PATHS:
+		var bonus_type: StringName = _BONUS_TYPE_BY_PATH[path_id]
+		totals_before[bonus_type] = PrestigeSystem.get_meta_bonus_total(bonus_type)
+		flags_before[bonus_type] = HistoryFlagManager.has_milestone(StringName("prestige.first_burnout_used." + String(bonus_type)))
+	var era_before: int = PrestigeSystem.era_count
+
+	PrestigeSystem.on_burnout_accepted()
+
+	assert_int(PrestigeSystem.era_count).override_failure_message(
+		"a zero-reward burnout (no active path) must still increment era_count -- the reset is Cringe-driven, not reward-driven"
+	).is_equal(era_before + 1)
+
+	for path_id: StringName in _ALL_PATHS:
+		var bonus_type: StringName = _BONUS_TYPE_BY_PATH[path_id]
+		assert_float(PrestigeSystem.get_meta_bonus_total(bonus_type)).override_failure_message(
+			"type %s must be unchanged when no active path exists to grant a bonus" % bonus_type
+		).is_equal_approx(totals_before[bonus_type], 0.0001)
+		assert_bool(HistoryFlagManager.has_milestone(StringName("prestige.first_burnout_used." + String(bonus_type)))).override_failure_message(
+			"a zero-reward burnout must never consume first_burnout_bonus_used[%s] -- it was never spent" % bonus_type
+		).is_equal(flags_before[bonus_type])

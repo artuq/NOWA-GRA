@@ -11,15 +11,15 @@
 ## established for ClassPathSystem).
 ##
 ## Story 001 implemented the orchestration skeleton and the read-then-reset
-## ordering guarantee. Story 003 (this revision) fills in step 4: META_BONUS
-## grant computation via PrestigeFormulas.grant_magnitude()/
-## variety_bonus_increment(), applied directly to meta_bonus_totals with a
-## plain `+=` (no cap enforcement yet — F2's running-total clamp,
-## apply_stacking_and_cap(), is Story 004 scope; this story only computes
-## and applies the raw grant magnitude). The four
-## first_burnout_bonus_used[type] flags and variety_bonus_used are tracked
-## as HistoryFlagManager milestones (ADR-0012 §1), same pattern
-## ClassPathSystem uses for its own per-path milestones
+## ordering guarantee. Story 003 filled in step 4: META_BONUS grant
+## computation via PrestigeFormulas.grant_magnitude()/
+## variety_bonus_increment(). Story 004 (this revision) wires both grant call
+## sites (_apply_grant()/_check_variety_bonus()) through PrestigeFormulas.
+## apply_stacking_and_cap() — every grant now clamps at
+## PrestigeFormulas.META_BONUS_MAX[bonus_type] (F2, Core Rule 1) instead of
+## accumulating unbounded. The four first_burnout_bonus_used[type] flags and
+## variety_bonus_used are tracked as HistoryFlagManager milestones (ADR-0012
+## §1), same pattern ClassPathSystem uses for its own per-path milestones
 ## (class_path_system.gd's reset_era_state(), "class_path.{path}.best_tier.
 ## {N}" naming) — here: "prestige.first_burnout_used.{type}" and
 ## "prestige.variety_bonus_used".
@@ -34,7 +34,6 @@
 ##     than stubbing a call against a non-existent Autoload. Whichever
 ##     future story wires ChallengeSystem in must replace this literal with
 ##     a real ChallengeSystem.get_combined_meta_multiplier() call.
-##   - F2's per-type running-total cap (apply_stacking_and_cap()) — Story 004
 ##
 ## Usage example:
 ##   PrestigeSystem.on_burnout_accepted()  # called by BurnoutSystem's Choice A handler
@@ -53,10 +52,10 @@ var era_count: int = 0
 ## Keys are the four META_BONUS type StringNames (PrestigeFormulas.
 ## BASE_INCREMENT's keys); a missing key means "never granted yet" (0.0),
 ## not an error — always read via get_meta_bonus_total(), never indexed
-## directly, so callers get the 0.0 default for free. Story 003 scope: plain
-## `+=` application only, no cap enforcement (Story 004 adds
-## PrestigeFormulas.apply_stacking_and_cap()). Persisted via
-## serialize_state()/restore_state().
+## directly, so callers get the 0.0 default for free. Each write routes
+## through PrestigeFormulas.apply_stacking_and_cap() (Story 004, F2), so a
+## value here is always clamped at PrestigeFormulas.META_BONUS_MAX[type] —
+## never exceeds it. Persisted via serialize_state()/restore_state().
 var meta_bonus_totals: Dictionary[StringName, float] = {}
 
 ## Maps each Class Path id to the single META_BONUS type it grants on
@@ -100,10 +99,11 @@ var _last_captured_tier: int = -1
 ##      Choice A's resolution is itself a card resolution, which would
 ##      otherwise be able to autosave mid-sequence
 ##   3. Reset ClassPathSystem's era-local state
-##   4. META_BONUS grant computation (Story 003): if a path was active,
-##      compute this era's grant via PrestigeFormulas.grant_magnitude() and
-##      apply it to meta_bonus_totals (plain `+=`, no cap yet — Story 004),
-##      then run the cross-type variety-completionist check (F1b)
+##   4. META_BONUS grant computation (Story 003) + stacking/cap (Story 004):
+##      if a path was active, compute this era's grant via
+##      PrestigeFormulas.grant_magnitude() and apply it to meta_bonus_totals
+##      through PrestigeFormulas.apply_stacking_and_cap() (F2's clamp), then
+##      run the cross-type variety-completionist check (F1b), also clamped
 ##   5. [STUBBED — Story 007] flag classification sweep (Core Rule 7)
 ##   6. Increment era_count
 ##   7. Save, resume autosave, then fire era_transitioned — nothing above
@@ -161,12 +161,17 @@ func _first_burnout_pending(bonus_type: StringName) -> bool:
 	return not HistoryFlagManager.has_milestone(StringName("prestige.first_burnout_used." + String(bonus_type)))
 
 
-## Adds [param grant] to [param bonus_type]'s running total. Story 003
-## scope: plain `+=`, no cap enforcement — F2's per-type ceiling
-## (PrestigeFormulas.apply_stacking_and_cap()) is Story 004 scope and will
-## wrap this call once it exists.
+## Adds [param grant] to [param bonus_type]'s running total, clamped at
+## PrestigeFormulas.META_BONUS_MAX[bonus_type] (F2, Core Rule 1 — Story 004).
+## Routes through PrestigeFormulas.apply_stacking_and_cap() unconditionally:
+## a type already sitting at its cap still calls this, absorbing the grant
+## with zero effect rather than skipping the call — this is what guarantees
+## a fully-absorbed grant never blocks on_burnout_accepted()'s reset/save
+## sequence (no softlock, per this story's Implementation Notes).
 func _apply_grant(bonus_type: StringName, grant: float) -> void:
-	meta_bonus_totals[bonus_type] = meta_bonus_totals.get(bonus_type, 0.0) + grant
+	var current_total: float = meta_bonus_totals.get(bonus_type, 0.0)
+	var cap: float = PrestigeFormulas.META_BONUS_MAX[bonus_type]
+	meta_bonus_totals[bonus_type] = PrestigeFormulas.apply_stacking_and_cap(bonus_type, current_total, grant, cap)
 
 
 ## Cross-type variety-completionist check (GDD Formula F1b, Core Rule 4c).
@@ -177,8 +182,12 @@ func _apply_grant(bonus_type: StringName, grant: float) -> void:
 ## in on_burnout_accepted(), never before), each of the four types
 ## additionally receives PrestigeFormulas.variety_bonus_increment(type), and
 ## the "prestige.variety_bonus_used" milestone is set so this never fires
-## again. Same plain-`+=`, no-cap-yet posture as _apply_grant() (Story 004
-## adds F2's clamp on top of both call sites).
+## again. Same F2 clamp as _apply_grant() (Story 004): each type's flat
+## variety increment is applied through PrestigeFormulas.
+## apply_stacking_and_cap() too, so a type already at its cap when the
+## completionist bonus fires absorbs its share with zero effect, same as any
+## other grant (AC-11 — variety_bonus_increment() itself is cap-agnostic by
+## design; this loop is what layers F2's clamp on top).
 func _check_variety_bonus() -> void:
 	if HistoryFlagManager.has_milestone(&"prestige.variety_bonus_used"):
 		return
@@ -186,8 +195,10 @@ func _check_variety_bonus() -> void:
 		if meta_bonus_totals.get(bonus_type, 0.0) <= 0.0:
 			return
 	for bonus_type: StringName in _ALL_BONUS_TYPES:
-		meta_bonus_totals[bonus_type] = meta_bonus_totals.get(bonus_type, 0.0) \
-			+ PrestigeFormulas.variety_bonus_increment(bonus_type)
+		var current_total: float = meta_bonus_totals.get(bonus_type, 0.0)
+		var cap: float = PrestigeFormulas.META_BONUS_MAX[bonus_type]
+		var increment: float = PrestigeFormulas.variety_bonus_increment(bonus_type)
+		meta_bonus_totals[bonus_type] = PrestigeFormulas.apply_stacking_and_cap(bonus_type, current_total, increment, cap)
 	HistoryFlagManager.set_milestone(&"prestige.variety_bonus_used")
 
 
