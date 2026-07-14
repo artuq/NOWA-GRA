@@ -1,12 +1,12 @@
 # Story 001: PrestigeSystem Orchestration Core
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: L (4h+)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-14
 
 
 ## Context
@@ -62,6 +62,8 @@ This story implements the skeleton and the ordering contract only — the grant 
 
 `PrestigeSystem` is the *caller*, not a *listener* — see ADR-0012 §2's "Why not a signal-driven design" for the rationale.
 
+**Performance**: no impact — `on_burnout_accepted()` runs once per era transition (a rare event, not per-frame or per-action), same as ADR-0012's own Performance Implications section.
+
 ---
 
 ## Out of Scope
@@ -114,3 +116,10 @@ This story implements the skeleton and the ordering contract only — the grant 
 
 - Depends on: None (foundational — first story in this epic)
 - Unlocks: Stories 002-009 (all call into or extend `on_burnout_accepted()`)
+
+## Completion Notes
+**Completed**: 2026-07-14
+**Criteria**: 5/5 passing
+**Deviations**: ADVISORY — SaveSystem.suppress_autosave()/resume_autosave() implemented per already-Accepted ADR-0002 spec despite docs claiming pre-existing; ChallengeSystem call omitted (system doesn't exist yet). A BLOCKING save/boot wiring gap was found and fixed during code review (logged as tech debt) — not a remaining deviation.
+**Test Evidence**: Integration — `tests/integration/prestige/prestige_orchestration_test.gd` (11 tests, all passing)
+**Code Review**: Complete — APPROVED

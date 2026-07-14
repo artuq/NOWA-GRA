@@ -49,7 +49,7 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | PrestigeSystem Orchestration Core | Integration | Ready | ADR-0012 §1-2 |
+| 001 | PrestigeSystem Orchestration Core | Integration | Complete | ADR-0012 §1-2 |
 | 002 | inject_priority_card() Contract | Integration | Ready | ADR-0012 §4 |
 | 003 | META_BONUS Grant Magnitude + Variety Bonus (F1/F1b) | Logic | Ready | ADR-0012 §3 |
 | 004 | META_BONUS Stacking/Caps + Bonus Type Selection (F2) | Logic | Ready | ADR-0012 §3 |

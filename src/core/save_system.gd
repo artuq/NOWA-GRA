@@ -85,6 +85,16 @@ var state: State = State.UNINITIALIZED
 
 var _debounce_timer: Timer
 
+## Autosave suppression window (ADR-0002 §"Autosave suppression window",
+## added 2026-07-13 for Prestige/Checkpoint System's era-transition atomicity
+## contract, TR-pcs-006). When `true`, the debounce Timer's timeout no-ops
+## instead of calling save_now() — re-checked on the timer's next natural
+## fire, not queued as a catch-up call. Does NOT affect
+## NOTIFICATION_APPLICATION_PAUSED-triggered saves (see _notification()) —
+## an OS-initiated background-kill risk always takes priority over an
+## in-progress logical transition.
+var _autosave_suppressed: bool = false
+
 
 func _ready() -> void:
 	state = State.LOADING
@@ -94,12 +104,13 @@ func _ready() -> void:
 	OnboardingGate.restore_state(data.get("onboarding", {}))
 	ClassPathSystem.restore_state(data.get("class_path", {}))
 	SettingsSystem.restore_state(data.get("settings", {}))
+	PrestigeSystem.restore_state(data.get("prestige", {}))
 	state = State.READY
 
 	_debounce_timer = Timer.new()
 	_debounce_timer.one_shot = true
 	_debounce_timer.wait_time = _DEBOUNCE_INTERVAL_SEC
-	_debounce_timer.timeout.connect(save_now)
+	_debounce_timer.timeout.connect(_on_debounce_timeout)
 	add_child(_debounce_timer)
 
 
@@ -115,6 +126,42 @@ func _ready() -> void:
 func mark_dirty() -> void:
 	_debounce_timer.stop()
 	_debounce_timer.start()
+
+
+## Debounce Timer's `timeout` handler. No-ops if autosave is currently
+## suppressed (see [member _autosave_suppressed]); otherwise behaves exactly
+## as the old direct `timeout.connect(save_now)` wiring did.
+func _on_debounce_timeout() -> void:
+	if _autosave_suppressed:
+		return
+	save_now()
+
+
+## Suppresses the debounce Timer's autosave trigger (routine 2s-debounce path
+## only — see [member _autosave_suppressed]). A pending Timer is NOT
+## cancelled, only prevented from calling save_now() while suppressed; it
+## re-arms normally once [method resume_autosave] is called. Added for
+## Prestige/Checkpoint System's era-transition atomicity contract (ADR-0002
+## §"Autosave suppression window", TR-pcs-006) — Choice A's resolution is
+## itself a card resolution, so an unmodified autosave trigger could
+## otherwise fire mid-transition and persist a half-transitioned state.
+## Callers MUST pair every call with [method resume_autosave] in the same
+## synchronous call chain (no `await` between them) — an unpaired suppression
+## silently disables autosave indefinitely.
+##
+## Example:
+##   SaveSystem.suppress_autosave()
+##   ClassPathSystem.reset_era_state()
+##   SaveSystem.save_now()
+##   SaveSystem.resume_autosave()
+func suppress_autosave() -> void:
+	_autosave_suppressed = true
+
+
+## Lifts the suppression started by [method suppress_autosave]. See that
+## method's doc comment for the pairing contract.
+func resume_autosave() -> void:
+	_autosave_suppressed = false
 
 
 ## Godot lifecycle notification handler. On `NOTIFICATION_APPLICATION_PAUSED`
@@ -148,6 +195,7 @@ func save_now() -> void:
 		"onboarding": OnboardingGate.serialize_state(),
 		"class_path": ClassPathSystem.serialize_state(),
 		"settings": SettingsSystem.serialize_state(),
+		"prestige": PrestigeSystem.serialize_state(),
 	}
 	var file: FileAccess = FileAccess.open(TEMP_PATH, FileAccess.WRITE)
 	if file == null:
