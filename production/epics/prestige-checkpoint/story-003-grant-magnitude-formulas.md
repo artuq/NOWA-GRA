@@ -1,12 +1,12 @@
 # Story 003: META_BONUS Grant Magnitude + Variety Bonus (F1, F1b)
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: L (4h+ — dense formula surface with many edge cases)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-14
 
 
 ## Context
@@ -67,6 +67,8 @@ static func grant_magnitude(bonus_type: StringName, tier: int, challenge_mult: f
 
 Variety bonus (F1b) is a separate check the caller (Story 001's `on_burnout_accepted()`, or a dedicated `PrestigeSystem._check_variety_bonus()`) runs after every grant — not part of `grant_magnitude()` itself, since it's a cross-type check, not a per-grant formula. All constants (`BASE_INCREMENT`, `TIER_FLAT_BASE`, `FIRST_BURNOUT_BONUS_MULT`, `FIRST_BURNOUT_GRANT_CAP_FRACTION`, `META_CHALLENGE_SCALING_EXPONENT`, `VARIETY_BONUS_MULT`, `META_BONUS_MAX`) are already registered in `design/registry/entities.yaml` — read fresh, don't hardcode defaults into this story's implementation beyond what the registry states.
 
+**Performance**: no impact — `PrestigeFormulas` static methods are called once per era transition (a rare event, not per-frame or per-action), same as Story 001's `on_burnout_accepted()`.
+
 ---
 
 ## Out of Scope
@@ -113,3 +115,10 @@ Variety bonus (F1b) is a separate check the caller (Story 001's `on_burnout_acce
 
 - Depends on: Story 001 (orchestration skeleton must exist as the call site, though `PrestigeFormulas` itself is independently unit-testable without it)
 - Unlocks: Story 004 (stacking/caps consumes these grant values)
+
+## Completion Notes
+**Completed**: 2026-07-14
+**Criteria**: 11/11 passing
+**Deviations**: ADVISORY — AC-5/AC-6 tested via formula composition (locked signature doesn't accept runtime knob overrides); challenge_mult fixed at 1.0 (ChallengeSystem doesn't exist yet). 3 BLOCKING testability gaps found and closed during code review — not remaining deviations.
+**Test Evidence**: Logic — `tests/unit/prestige/prestige_formulas_grant_test.gd` (15 tests) + `tests/integration/prestige/prestige_grant_wiring_test.gd` (3 tests, added during review)
+**Code Review**: Complete — APPROVED

@@ -51,7 +51,7 @@ This epic is complete when:
 |---|-------|------|--------|-----|
 | 001 | PrestigeSystem Orchestration Core | Integration | Complete | ADR-0012 §1-2 |
 | 002 | inject_priority_card() Contract | Integration | Complete | ADR-0012 §4 |
-| 003 | META_BONUS Grant Magnitude + Variety Bonus (F1/F1b) | Logic | Ready | ADR-0012 §3 |
+| 003 | META_BONUS Grant Magnitude + Variety Bonus (F1/F1b) | Logic | Complete | ADR-0012 §3 |
 | 004 | META_BONUS Stacking/Caps + Bonus Type Selection (F2) | Logic | Ready | ADR-0012 §3 |
 | 005 | F3a-d Final Reward Stacking Application Points | Logic | Ready | ADR-0012 §3, ADR-0010 §5a |
 | 006 | Choice B (Defer) — Morale Floor, No Grant | Logic | Ready | ADR-0012 §2 |
