@@ -57,6 +57,16 @@ signal card_resolved(card_id: StringName, path_tag: StringName, option_chosen: S
 
 var _actions_until_check: int = COOLDOWN_ACTIONS
 
+## Story 002 (TR-pcs-003, ADR-0012 §4): orthogonal to `state` above -- tracks
+## whether a card was force-presented via [method inject_priority_card]
+## rather than selected through the normal `cooldown -> checking -> presenting`
+## cycle. While `true`, [method _on_action_completed] still decrements
+## `_actions_until_check` (the cooldown counter keeps accumulating
+## underneath) but never calls [method _check_pool], so no pool-selected card
+## can present until the priority card resolves. Cleared in
+## [method resolve_choice].
+var _priority_card_pending: bool = false
+
 ## Flat weight floor every eligible card receives, independent of Cringe or
 ## intensity. GDD Tuning Knob: start 10, safe range 5-20.
 const BASE_WEIGHT: float = 10.0
@@ -79,6 +89,14 @@ func set_seed(s: int) -> void:
 func _on_action_completed(_action_id: StringName, _rewards: Dictionary) -> void:
 	if OnboardingGate.is_card_suppressed():
 		return  # Phase 1: don't even decrement, per onboarding-tutorial.md
+	if _priority_card_pending:
+		# Story 002 (TR-pcs-003): a priority card is being shown -- normal
+		# pool-driven presentation stays blocked (never reaches _check_pool()
+		# below), but the cooldown counter must NOT freeze; it keeps counting
+		# completed actions underneath so a normal card is immediately
+		# eligible the instant the priority card resolves (see resolve_choice()).
+		_actions_until_check -= 1
+		return
 	if state != State.COOLDOWN:
 		return  # a card is already being checked/presented/resolved — do not double-trigger
 	_actions_until_check -= 1
@@ -223,6 +241,48 @@ func present_next_card(pool: Array[Dictionary]) -> void:
 	card_presented.emit(_presented_card)
 
 
+## Forces [param card_id] to present on the next available frame, bypassing
+## [method _build_eligible_pool]'s `trigger_condition`/milestone filtering,
+## [method _weighted_pick]'s weighting, and the cooldown counter entirely
+## (TR-pcs-003, ADR-0012 §4, GDD `prestige-checkpoint-system.md` Core Rule 6).
+## General-purpose: BurnoutSystem's `"final_burnout"` card is the first
+## caller (TR-pcs-007, out of this story's scope), but nothing here is
+## Burnout-specific -- any future forced-card mechanic can call this too.
+##
+## Adds a `_priority_card_pending` state orthogonal to the existing
+## `cooldown -> checking -> presenting -> resolving` cycle: while pending,
+## normal pool-driven presentation is blocked (see [method _on_action_completed])
+## but the cooldown counter keeps accumulating underneath, so a normal card
+## is immediately eligible the instant the priority card resolves (see
+## [method resolve_choice]).
+##
+## Returns `false` (no-op, the pending card is untouched) if a priority card
+## is already pending -- no queueing. This is a REAL runtime guard, not just
+## an `assert()`: asserts are stripped in exported release builds and are
+## insufficient on their own to satisfy this rejection contract there.
+##
+## Also returns `false` (no-op, `_priority_card_pending` never set) if [param
+## card_id] does not resolve to a real card -- [method CardContentDatabase.get_card]
+## returns `{}` on an unknown id with no error of its own, and presenting `{}`
+## would crash downstream in [method _card_intensity] ("options" key missing
+## on an empty Dictionary, hit inside [method _weighted_pick]/[method present_next_card])
+## the moment weighting runs, not at this call site -- found in code review,
+## 2026-07-14. Validated here so a bad id fails loud-but-safe at the call
+## site instead of corrupting state (`_priority_card_pending = true` with no
+## card actually presented) and crashing on the next completed action.
+func inject_priority_card(card_id: StringName) -> bool:
+	if _priority_card_pending:
+		return false
+	var card: Dictionary = CardContentDatabase.get_card(card_id)
+	if card.is_empty():
+		push_error("inject_priority_card(%s): unknown card_id, no-op" % card_id)
+		return false
+	_priority_card_pending = true
+	var pool: Array[Dictionary] = [card]
+	present_next_card(pool)
+	return true
+
+
 ## Called when the player chooses an option ([param option_index]: `0` or
 ## `1`, matching the card schema's exactly-2-options contract). Card UI
 ## (undesigned) will eventually call this; for now it's the public seam
@@ -272,5 +332,13 @@ func resolve_choice(option_index: int) -> void:
 
 	_presented_card = {}
 	card_resolved.emit(resolved_card_id, resolved_path_tag, resolved_option_label)
-	_actions_until_check = COOLDOWN_ACTIONS
+	if _priority_card_pending:
+		# Story 002 (TR-pcs-003): do NOT reset the counter here -- it already
+		# kept accumulating underneath while this priority card was pending
+		# (see _on_action_completed()), so a normal card can become
+		# immediately eligible on the very next completed action if the
+		# threshold is already met.
+		_priority_card_pending = false
+	else:
+		_actions_until_check = COOLDOWN_ACTIONS
 	state = State.COOLDOWN

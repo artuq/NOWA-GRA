@@ -1,12 +1,12 @@
 # Story 002: inject_priority_card() Contract
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: S (1-2h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-14
 
 
 ## Context
@@ -53,6 +53,8 @@ func inject_priority_card(card_id: StringName) -> void:
 Note (godot-gdscript-specialist review, ADR-0012): `assert()` is stripped in exported release builds — it's a dev-time guard only. The re-call rejection AC (3rd bullet above) needs a real runtime guard (early `return false`), not just the `assert`, since it must hold in release builds too.
 
 The cooldown counter keeps accumulating underneath while `_priority_card_pending` is true, so a normal card is immediately eligible the instant the priority card resolves — verify this explicitly, it's easy to accidentally freeze the counter alongside blocking presentation.
+
+**Performance**: no impact — `inject_priority_card()` is a discrete call (Choice A trigger, a rare event), not per-frame or per-action.
 
 ---
 
@@ -105,3 +107,10 @@ The cooldown counter keeps accumulating underneath while `_priority_card_pending
 
 - Depends on: None (independent of PrestigeSystem's orchestration internals — pure DecisionCardSystem extension)
 - Unlocks: BurnoutSystem's forced-card mechanic (out of this epic's scope, TR-pcs-007)
+
+## Completion Notes
+**Completed**: 2026-07-14
+**Criteria**: 4/4 passing
+**Deviations**: ADVISORY — return type resolved as bool (story's sample said void); AC-3's release-build claim honestly documented as code-review-verified, not test-verified. A BLOCKING soft-lock bug (unknown card_id crashing resolve_choice()) was found and fixed during code review — not a remaining deviation.
+**Test Evidence**: Integration — `tests/integration/decision_card_system/inject_priority_card_test.gd` (6 tests, all passing)
+**Code Review**: Complete — APPROVED
