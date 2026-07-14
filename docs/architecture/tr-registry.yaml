@@ -244,7 +244,7 @@ requirements:
     requirement: PrestigeSystem (new Autoload) orchestrates era transition via a single synchronous entry point, no signals/await in the read-then-reset chain
     adr: [ADR-0012]
     status: covered
-    note: Registered 2026-07-13. ADR-0012 Proposed — Prestige stories gated until Accepted.
+    note: Registered 2026-07-13. ADR-0012 Accepted 2026-07-14 (/architecture-review) — PrestigeSystem stories now unblocked.
 
   - id: TR-pcs-002
     system: prestige-checkpoint-system
@@ -288,5 +288,5 @@ requirements:
     gdd: design/gdd/prestige-checkpoint-system.md
     requirement: BurnoutSystem and ChallengeSystem mechanics (locked in their own quick-specs, restated only in summary here)
     adr: []
-    status: gap
-    note: BurnoutSystem/ChallengeSystem themselves have no ADR yet — their quick-specs are locked but not architecturally specified. Needed before their own implementation stories (Sprint 11 11-2) can be Ready; ADR-0012 only covers PrestigeSystem's orchestration of the transition they trigger.
+    status: covered
+    note: User ruling 2026-07-14 (/architecture-review) — the locked quick-specs (final-burnout-2026-07-01.md, challenge-era-runs-2026-07-01.md) are accepted as sufficient architectural spec for these two systems; no separate ADR required. ADR-0012 covers PrestigeSystem's orchestration of the transition they trigger. Their Sprint 11 11-2 stories are Ready on this basis.

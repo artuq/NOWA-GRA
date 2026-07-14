@@ -1,7 +1,7 @@
 # ADR-0012: Prestige/Checkpoint System — Autoload, Orchestration Order, and META_BONUS API
 
 ## Status
-Proposed
+Accepted (2026-07-14, following independent `/architecture-review` — verdict CONCERNS overall (one open gap: TR-pcs-007 Burnout/Challenge have no ADR), but no conflicts or blockers against this ADR specifically; all four dependencies ADR-0001/0002/0003/0010 Accepted, engine-clean, dependency APIs verified against shipped code)
 
 ## Date
 2026-07-13

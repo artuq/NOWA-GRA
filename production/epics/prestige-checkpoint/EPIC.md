@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/prestige-checkpoint-system.md
 > **Architecture Module**: PrestigeSystem (new Autoload)
 > **Status**: Ready
-> **Stories**: 9 stories (all Blocked — ADR-0012 is Proposed)
+> **Stories**: 9 stories (all Ready — ADR-0012 Accepted 2026-07-14)
 
 ## Overview
 
@@ -49,16 +49,16 @@ This epic is complete when:
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | PrestigeSystem Orchestration Core | Integration | Blocked | ADR-0012 §1-2 |
-| 002 | inject_priority_card() Contract | Integration | Blocked | ADR-0012 §4 |
-| 003 | META_BONUS Grant Magnitude + Variety Bonus (F1/F1b) | Logic | Blocked | ADR-0012 §3 |
-| 004 | META_BONUS Stacking/Caps + Bonus Type Selection (F2) | Logic | Blocked | ADR-0012 §3 |
-| 005 | F3a-d Final Reward Stacking Application Points | Logic | Blocked | ADR-0012 §3, ADR-0010 §5a |
-| 006 | Choice B (Defer) — Morale Floor, No Grant | Logic | Blocked | ADR-0012 §2 |
-| 007 | Flag Classification Sweep (Core Rule 7) | Integration | Blocked | ADR-0012 §5 |
-| 008 | Transition Atomicity | Integration | Blocked | ADR-0012 §2, ADR-0002 |
-| 009 | Misconfiguration Guard + Save Migration | Logic | Blocked | ADR-0012 §6 |
+| 001 | PrestigeSystem Orchestration Core | Integration | Ready | ADR-0012 §1-2 |
+| 002 | inject_priority_card() Contract | Integration | Ready | ADR-0012 §4 |
+| 003 | META_BONUS Grant Magnitude + Variety Bonus (F1/F1b) | Logic | Ready | ADR-0012 §3 |
+| 004 | META_BONUS Stacking/Caps + Bonus Type Selection (F2) | Logic | Ready | ADR-0012 §3 |
+| 005 | F3a-d Final Reward Stacking Application Points | Logic | Ready | ADR-0012 §3, ADR-0010 §5a |
+| 006 | Choice B (Defer) — Morale Floor, No Grant | Logic | Ready | ADR-0012 §2 |
+| 007 | Flag Classification Sweep (Core Rule 7) | Integration | Ready | ADR-0012 §5 |
+| 008 | Transition Atomicity | Integration | Ready | ADR-0012 §2, ADR-0002 |
+| 009 | Misconfiguration Guard + Save Migration | Logic | Ready | ADR-0012 §6 |
 
 ## Next Step
 
-All 9 stories are Blocked pending ADR-0012 → Accepted. Run `/architecture-review` in a **fresh session** to validate ADR-0012's coverage and move it Proposed → Accepted, then re-run `/story-readiness` on Story 001 to unblock it (and cascade to the rest via their Dependencies chain).
+ADR-0012 Accepted (2026-07-14, independent `/architecture-review`, verdict CONCERNS overall but no conflicts against this ADR). All 9 stories are Ready. Start with Story 001 (PrestigeSystem Orchestration Core) — everything else in this epic depends on it directly or transitively.

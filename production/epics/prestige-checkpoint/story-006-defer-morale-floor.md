@@ -1,14 +1,13 @@
 # Story 006: Choice B (Defer) — Morale Floor, No Grant
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Blocked
+> **Status**: Ready
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: S (1-2h)
 > **Manifest Version**: 2026-06-20
 > **Last Updated**:
 
-**BLOCKED**: ADR-0012 is Proposed — run `/architecture-review` in a fresh session to move it to Accepted before starting this story.
 
 ## Context
 

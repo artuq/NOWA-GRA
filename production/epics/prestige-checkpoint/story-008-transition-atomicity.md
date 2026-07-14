@@ -1,14 +1,13 @@
 # Story 008: Transition Atomicity
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Blocked
+> **Status**: Ready
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: L (4h+ — app-kill simulation is inherently fiddly to set up as a test)
 > **Manifest Version**: 2026-06-20
 > **Last Updated**:
 
-**BLOCKED**: ADR-0012 is Proposed — run `/architecture-review` in a fresh session to move it to Accepted before starting this story.
 
 ## Context
 
