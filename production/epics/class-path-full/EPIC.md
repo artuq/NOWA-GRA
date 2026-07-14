@@ -3,8 +3,8 @@
 > **Layer**: Core
 > **GDD**: design/gdd/class-path-system.md
 > **Architecture Module**: ClassPathSystem (Autoload #9, existing — extended, not replaced)
-> **Status**: Ready
-> **Stories**: 5 stories
+> **Status**: Complete
+> **Stories**: 5 stories (5/5 done)
 
 ## Overview
 
@@ -55,7 +55,7 @@ This epic is complete when:
 | 002 | Investment Contribution (F2, Core Rule 4a) | Logic | Complete | ADR-0010 §8 |
 | 003 | Tie-Break Resolution Fix (F5, BUG-003) | Logic | Complete | ADR-0010 §9 |
 | 004 | Signature Card Wiring (Tier 5) | Integration | Complete | ADR-0010 §10 |
-| 005 | Class Path Panel — Investment & Ambiguity UI | UI | Ready | ADR-0010 §8/§9 (secondary) |
+| 005 | Class Path Panel — Investment & Ambiguity UI | UI | Complete | ADR-0010 §8/§9 (secondary) |
 
 ## Next Step
 

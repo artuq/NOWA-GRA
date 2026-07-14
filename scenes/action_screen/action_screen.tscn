@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/action_screen/resource_hud.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/action_grid.tscn" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/action_screen/class_path_hud_indicator.tscn" id="7"]
 [ext_resource type="Script" path="res://src/ui/action_screen.gd" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/settings_screen/settings_screen.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/class_path_panel.tscn" id="10"]
 
 [sub_resource type="StyleBoxFlat" id="AppBackground"]
 bg_color = Color(0.082353, 0.082353, 0.101961, 1)
@@ -66,6 +67,13 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="PathButton" type="Button" parent="MainLayout/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Path"
+
 [node name="SettingsButton" type="Button" parent="MainLayout/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
@@ -94,6 +102,10 @@ size_flags_vertical = 1
 layout_mode = 1
 
 [node name="SettingsScreen" parent="." instance=ExtResource("9")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="ClassPathPanel" parent="." instance=ExtResource("10")]
 unique_name_in_owner = true
 layout_mode = 1
 

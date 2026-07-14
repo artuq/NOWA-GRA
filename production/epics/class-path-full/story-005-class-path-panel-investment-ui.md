@@ -1,12 +1,12 @@
 # Story 005: Class Path Panel — Investment & Ambiguity UI
 
 > **Epic**: Class Path System (Full)
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: UI
 > **Estimate**: L (4h+, consider splitting if the panel's full 4-path layout takes longer)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-14
 
 ## Context
 
@@ -43,9 +43,11 @@
 
 Reads-only against `ClassPathSystem`'s existing query surface — this story adds no new ClassPathSystem API beyond what Stories 002/003 already expose (`invest()`, `get_ambiguous_gap()`, `get_affiliation()`, `get_tier()`, `get_active_path()`). The Invest button's `pressed` signal calls `ClassPathSystem.invest(path_id, resource_id, amount)` directly (same "Button wired directly to Autoload" pattern as `action_grid.gd`'s unlocked slots — no intermediate signal layer needed).
 
-Disabled-state rendering: check `ClassPathSystem.get_affiliation(path_id)`'s card-contribution component is `> 0` before enabling the Invest button (this requires the query surface to expose the F1 term separately, or a dedicated `can_invest(path_id) -> bool` helper — confirm with whoever implements Story 002 whether such a query already exists or needs adding as a small additive method during that story).
+Disabled-state rendering: Story 002 shipped, and no public query exposes the F1 (`_card_contribution`) term separately — it's a private field. Add a small additive `can_invest(path_id: StringName) -> bool` query method to `ClassPathSystem` as part of this story (returns `_card_contribution.get(path_id, 0.0) > 0.0`, mirroring `invest()`'s own gate check exactly) — this is UI-supporting read-only infrastructure, not new business logic, in scope for this story.
 
 Per Core Rule 8 (no explicit moral score), affiliation renders as a neutral progress bar labeled with tier names — never framed as "good"/"evil."
+
+**Performance**: no impact — Control-node UI, entirely event-driven (button presses, signal-driven refresh on `tier_unlocked`/`active_path_changed`/`signature_card_unlocked`), no `_process()` needed (same discipline as `action_grid.gd`).
 
 ---
 
@@ -104,3 +106,10 @@ Per Core Rule 8 (no explicit moral score), affiliation renders as a neutral prog
 
 - Depends on: Story 002 (Investment gate must exist to render), Story 003 (`get_ambiguous_gap()` must exist to render)
 - Unlocks: None
+
+## Completion Notes
+**Completed**: 2026-07-14
+**Criteria**: 5/5 passing
+**Deviations**: ADVISORY — `PathButton` added (necessary new entry point). Display names + scope simplifications already user-approved. A real topmost-modal regression was found and fixed during implementation — not a remaining deviation.
+**Test Evidence**: UI — `production/qa/evidence/class-path-panel-evidence.md` + `tests/integration/class-path/class_path_panel_interaction_test.gd` (11 tests, all passing)
+**Code Review**: Complete — APPROVED, no blocking findings (first clean pass in this epic)

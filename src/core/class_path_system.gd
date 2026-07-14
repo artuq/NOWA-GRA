@@ -354,6 +354,18 @@ func get_ambiguous_gap() -> float:
 	return _ambiguous_gap
 
 
+## Returns whether [param path_id] currently satisfies invest()'s Core Rule
+## 4a gate -- i.e. whether the player could successfully call invest() on
+## this path right now, resource affordability aside. Mirrors invest()'s own
+## gate check exactly (`_card_contribution.get(path_id, 0.0) > 0.0`). Added
+## for Story class-path-full/005: no public query previously exposed this
+## private _card_contribution term, and the Class Path Panel's Invest control
+## needs it to render a visually-disabled state with an explanatory label
+## rather than merely being non-functional. Pure read -- no side effects.
+func can_invest(path_id: StringName) -> bool:
+	return _card_contribution.get(path_id, 0.0) > 0.0
+
+
 ## Returns the Reach multiplier for [param action_id] under the active path
 ## at its current tier, or 1.0 when there is no active path or no registered
 ## bonus. Called by ActionSystem._on_action_timeout() at reward resolution
