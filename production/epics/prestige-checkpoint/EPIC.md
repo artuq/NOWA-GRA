@@ -54,7 +54,7 @@ This epic is complete when:
 | 003 | META_BONUS Grant Magnitude + Variety Bonus (F1/F1b) | Logic | Complete | ADR-0012 §3 |
 | 004 | META_BONUS Stacking/Caps + Bonus Type Selection (F2) | Logic | Complete | ADR-0012 §3 |
 | 005 | F3a-d Final Reward Stacking Application Points | Logic | Complete | ADR-0012 §3, ADR-0010 §5a |
-| 006 | Choice B (Defer) — Morale Floor, No Grant | Logic | Ready | ADR-0012 §2 |
+| 006 | Choice B (Defer) — Morale Floor, No Grant | Logic | Complete | ADR-0012 §2 |
 | 007 | Flag Classification Sweep (Core Rule 7) | Integration | Ready | ADR-0012 §5 |
 | 008 | Transition Atomicity | Integration | Ready | ADR-0012 §2, ADR-0002 |
 | 009 | Misconfiguration Guard + Save Migration | Logic | Ready | ADR-0012 §6 |

@@ -13,8 +13,8 @@
 ## Story 001 implemented the orchestration skeleton and the read-then-reset
 ## ordering guarantee. Story 003 filled in step 4: META_BONUS grant
 ## computation via PrestigeFormulas.grant_magnitude()/
-## variety_bonus_increment(). Story 004 (this revision) wires both grant call
-## sites (_apply_grant()/_check_variety_bonus()) through PrestigeFormulas.
+## variety_bonus_increment(). Story 004 wires both grant call sites
+## (_apply_grant()/_check_variety_bonus()) through PrestigeFormulas.
 ## apply_stacking_and_cap() — every grant now clamps at
 ## PrestigeFormulas.META_BONUS_MAX[bonus_type] (F2, Core Rule 1) instead of
 ## accumulating unbounded. The four first_burnout_bonus_used[type] flags and
@@ -22,7 +22,11 @@
 ## §1), same pattern ClassPathSystem uses for its own per-path milestones
 ## (class_path_system.gd's reset_era_state(), "class_path.{path}.best_tier.
 ## {N}" naming) — here: "prestige.first_burnout_used.{type}" and
-## "prestige.variety_bonus_used".
+## "prestige.variety_bonus_used". Story 006 (this revision) adds
+## on_burnout_deferred() — Choice B (Defer)'s own, much simpler entry point:
+## a Morale cost via ResourceManager's existing clamp plus a
+## "burnout_deferred_era_N" HistoryFlagManager milestone, deliberately
+## calling none of Choice A's grant machinery.
 ##
 ## The following steps remain intentionally stubbed/no-op placeholders,
 ## filled in by later stories:
@@ -151,6 +155,50 @@ func on_burnout_accepted() -> void:
 	SaveSystem.resume_autosave()
 
 	era_transitioned.emit()
+
+
+## Single entry point for "Choice B (Defer) confirmed" (Story 006, GDD's
+## Choice B — Defer, Morale Floor, No Grant). Deliberately NOT a branch
+## inside on_burnout_accepted() — ADR-0012 §2 frames Choice A and Choice B as
+## distinct paths, and Defer's body is intentionally much smaller: it never
+## reads ClassPathSystem, never resets era-local state, and never touches
+## meta_bonus_totals/era_count. The Morale-cost mechanic itself
+## (BURNOUT_DEFER_MORALE_COST) is owned by BurnoutSystem's own quick-spec
+## (final-burnout-2026-07-01.md) — this method accepts the cost as an
+## explicit argument rather than importing or hardcoding that constant, so
+## PrestigeSystem stays ignorant of BurnoutSystem's tuning (same
+## one-directional-dependency discipline as ADR-0012 §1 — BurnoutSystem is
+## the future caller, passing its own BURNOUT_DEFER_MORALE_COST).
+##
+## Performs, in order:
+##   1. ResourceManager.apply_delta({&"Morale": -morale_cost}) — Morale is
+##      already one of ResourceManager's _CLAMPED_KEYS (floor 0, ceiling
+##      100), so this reuses the existing clamp mechanism rather than
+##      reimplementing a floor here (GDD AC: "Morale clamps to 0, never
+##      negative").
+##   2. HistoryFlagManager.set_milestone() writes "burnout_deferred_era_N",
+##      N = era_count (Defer does not transition eras — era_count is not
+##      incremented here — so "the current era" is simply this field's
+##      present value, unlike Choice A's "completed era" framing). Same
+##      milestone mechanism as ClassPathSystem's "class_path.{path}.
+##      best_tier.{N}" pattern (ADR-0010 §1) and this file's own
+##      "prestige.first_burnout_used.{type}" flags — flat "burnout_deferred_
+##      era_N" naming (no "prestige." prefix) matches the GDD's own AC
+##      wording and final-burnout-2026-07-01.md §5's naming verbatim.
+##
+## Deliberately does NOT call ClassPathSystem.get_active_path()/get_tier(),
+## does NOT call ClassPathSystem.reset_era_state(), does NOT call
+## PrestigeFormulas.grant_magnitude()/apply_stacking_and_cap(), and does NOT
+## touch meta_bonus_totals or era_count — Choice B grants nothing (GDD Edge
+## Cases). tests/unit/prestige/prestige_defer_test.gd's static source-scan
+## enforces this at the source level, not just via one test run's observed
+## behavior.
+##
+## Example:
+##   PrestigeSystem.on_burnout_deferred(BurnoutSystem.BURNOUT_DEFER_MORALE_COST)
+func on_burnout_deferred(morale_cost: float) -> void:
+	ResourceManager.apply_delta({&"Morale": -morale_cost})
+	HistoryFlagManager.set_milestone(StringName("burnout_deferred_era_" + str(era_count)))
 
 
 ## Returns true if [param bonus_type] has never received a first-burnout
