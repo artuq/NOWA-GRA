@@ -1,12 +1,12 @@
 # Story 007: Flag Classification Sweep (Core Rule 7)
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: L (4h+ — the ordering assertion for F3d is the highest-fragility test in this epic)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-15
 
 
 ## Context
@@ -98,3 +98,10 @@
 
 - Depends on: Story 001 (orchestration sequence), Story 004 (META_BONUS totals must exist to verify preservation), Story 005 (F3d's override function)
 - Unlocks: Story 008 (atomicity tests need the full sweep to exist)
+
+## Completion Notes
+**Completed**: 2026-07-15
+**Criteria**: 3/3 passing
+**Deviations**: ADVISORY — Challenge-flag clearing not implemented (logged as tech debt), `_deferred_this_era` is a placeholder field (matches codebase precedent). RESOLVED during review: `burnout_accepted_era_N` was initially unwritten (BLOCKING GDD AC violation), fixed and reverified; ADR-0012 §2 ordering drift resolved via amendment note.
+**Test Evidence**: Integration — `tests/integration/prestige/prestige_flag_sweep_test.gd` (5 tests)
+**Code Review**: Complete — APPROVED
