@@ -13,13 +13,20 @@
 ##
 ## Story 003 scope: F1 (`grant_magnitude`, `tier_factor`) and F1b
 ## (`variety_bonus_increment`). Story 004 adds F2's per-type stacking/cap
-## (`apply_stacking_and_cap`). Story 005 (this revision) adds F3a-d's
-## consumption-side formulas — `final_reach`, `final_sponsors`,
-## `haters_rate_final`, `sponsors_era_start_override` — the read-time
-## multiplier applications consumed at action reward / card resolution /
-## Haters-rate / era-start-reset points (ADR-0012 §3, `ResourceFormulas`-style
-## stateless composition per control-manifest.md Core layer rules — these are
-## read-time multiplier applications, not stored state mutations).
+## (`apply_stacking_and_cap`). Story 005 adds F3a-d's consumption-side
+## formulas — `final_reach`, `final_sponsors`, `haters_rate_final`,
+## `sponsors_era_start_override` — the read-time multiplier applications
+## consumed at action reward / card resolution / Haters-rate / era-start-reset
+## points (ADR-0012 §3, `ResourceFormulas`-style stateless composition per
+## control-manifest.md Core layer rules — these are read-time multiplier
+## applications, not stored state mutations). Story 009 (this revision, TR-
+## pcs-005, GDD "Misconfiguration Guard") adds `_clamp_grant()`, wrapping
+## `grant_magnitude()`'s final return value: clamps a negative result to
+## `0.0` and logs a `push_warning()` if `BASE_INCREMENT[bonus_type]` is
+## misconfigured (`<= 0.0`) or the pre-clamp result would otherwise be
+## negative — defensive only, degrades a bad balance edit gracefully instead
+## of corrupting a permanent, never-reduced META_BONUS total (Core Rule 5).
+## F1's math itself is unmodified by this revision (Out of Scope).
 ##
 ## Stateless-only invariant: never add instance vars or @export fields to
 ## this class — PrestigeSystem's on_burnout_accepted() and any future
@@ -107,6 +114,55 @@ static func tier_factor(tier: int, tier_flat_base: int) -> float:
 	return (float(tier_flat_base) + float(tier)) * 5.0 / (float(tier_flat_base) + 5.0)
 
 
+## Misconfiguration guard (Story 009, TR-pcs-005, GDD "Misconfiguration
+## Guard"): clamps [param raw] to a non-negative value and logs a
+## `push_warning()` if either (a) [param base_increment] itself is
+## non-positive (`<= 0.0` — the config value grant_magnitude() actually
+## multiplied by, i.e. `BASE_INCREMENT[bonus_type]`), or (b) [param raw] is
+## negative even though [param base_increment] is positive (a defensive
+## belt-and-braces branch — every other factor in F1's product (tier_factor(),
+## pow(challenge_mult, ...), FIRST_BURNOUT_BONUS_MULT) is non-negative by
+## construction, so this branch should be unreachable with any currently
+## legal input, but is checked explicitly rather than assumed). At most one
+## warning is logged per call (the two conditions are checked as if/elif, not
+## independently) — a misconfigured base_increment and its resulting negative
+## raw are the same root cause, not two separate problems worth double-
+## reporting.
+##
+## This exists purely so a misconfigured `balance.json`/BASE_INCREMENT edit
+## degrades gracefully — clamping a would-be-negative permanent META_BONUS
+## contribution to `0.0` instead of silently corrupting the running total
+## (Core Rule 5's never-reduced guarantee) — not expected to trigger with any
+## of the four currently-tuned BASE_INCREMENT defaults (all positive, GDD F1
+## table).
+##
+## [param base_increment] is accepted as an explicit argument (rather than
+## re-reading `BASE_INCREMENT[bonus_type]` internally) purely so this guard
+## stays independently unit-testable against a simulated misconfigured value:
+## `BASE_INCREMENT` is a `const Dictionary`, and Godot 4.6.3's GDScript
+## compiler rejects any assignment into a const collection's contents at
+## parse time ("Cannot assign a new value to a constant", verified empirically
+## — both from within this class and from an external caller), so there is no
+## way to actually corrupt the real table at runtime to exercise this path.
+## Same explicit-parameter-for-testability precedent as `tier_factor()`'s
+## `tier_flat_base` parameter (Story 003's own doc comment: "exposed... so
+## this function stays independently testable at any tuning value").
+##
+## grant_magnitude() below calls this with `BASE_INCREMENT[bonus_type]` as
+## [param base_increment] — the real, currently-always-positive config value —
+## and its own already-computed pre-clamp result as [param raw].
+##
+## Usage example:
+##   PrestigeFormulas._clamp_grant(&"META_REACH_MULT", -0.05, -0.02)  # -> 0.0, warns
+##   PrestigeFormulas._clamp_grant(&"META_REACH_MULT", 0.1071, 0.02)  # -> 0.1071, no warning
+static func _clamp_grant(bonus_type: StringName, raw: float, base_increment: float) -> float:
+	if base_increment <= 0.0:
+		push_warning("PrestigeFormulas.grant_magnitude(): BASE_INCREMENT[%s] is misconfigured (%.4f, must be > 0.0) — grant clamped to 0.0" % [String(bonus_type), base_increment])
+	elif raw < 0.0:
+		push_warning("PrestigeFormulas.grant_magnitude(): computed grant for %s is negative (%.4f) — clamped to 0.0" % [String(bonus_type), raw])
+	return maxf(0.0, raw)
+
+
 ## Returns the META_BONUS grant magnitude for one accepted burnout, per GDD
 ## Formula F1:
 ##
@@ -132,6 +188,12 @@ static func tier_factor(tier: int, tier_flat_base: int) -> float:
 ## (subject only to F2's running-total cap, Story 004, applied by the
 ## caller on top of this function's return value).
 ##
+## Story 009: the final return value is routed through `_clamp_grant()`
+## (misconfiguration guard, TR-pcs-005) before being handed back to the
+## caller — a no-op for every currently-tuned positive BASE_INCREMENT value,
+## defensive-only for a hypothetical future misconfigured one. F1's math
+## above this final wrap is unmodified (Out of Scope for that story).
+##
 ## Performance: O(1) pure float arithmetic (one pow() call) — called once
 ## per accepted burnout (a rare event), same negligible-cost precedent as
 ## ResourceFormulas' per-call functions.
@@ -140,12 +202,13 @@ static func tier_factor(tier: int, tier_flat_base: int) -> float:
 ##   PrestigeFormulas.grant_magnitude(&"META_REACH_MULT", 1, 1.0, true)  # -> 0.1071
 static func grant_magnitude(bonus_type: StringName, tier: int, challenge_mult: float,
 		is_first_burnout: bool) -> float:
-	var raw: float = BASE_INCREMENT[bonus_type] * tier_factor(tier, TIER_FLAT_BASE) \
+	var base_increment: float = BASE_INCREMENT[bonus_type]
+	var raw: float = base_increment * tier_factor(tier, TIER_FLAT_BASE) \
 		* pow(challenge_mult, META_CHALLENGE_SCALING_EXPONENT)
 	if is_first_burnout:
 		raw *= FIRST_BURNOUT_BONUS_MULT
 		raw = minf(raw, FIRST_BURNOUT_GRANT_CAP_FRACTION * META_BONUS_MAX[bonus_type])
-	return raw
+	return _clamp_grant(bonus_type, raw, base_increment)
 
 
 ## Returns the one-time variety-completionist flat grant for a single

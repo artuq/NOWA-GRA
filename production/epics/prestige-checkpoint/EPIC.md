@@ -3,8 +3,8 @@
 > **Layer**: Core (Progression)
 > **GDD**: design/gdd/prestige-checkpoint-system.md
 > **Architecture Module**: PrestigeSystem (new Autoload)
-> **Status**: Ready
-> **Stories**: 9 stories (all Ready — ADR-0012 Accepted 2026-07-14)
+> **Status**: Complete
+> **Stories**: 9 stories (9/9 Complete — closed 2026-07-15)
 
 ## Overview
 
@@ -57,8 +57,8 @@ This epic is complete when:
 | 006 | Choice B (Defer) — Morale Floor, No Grant | Logic | Complete | ADR-0012 §2 |
 | 007 | Flag Classification Sweep (Core Rule 7) | Integration | Complete | ADR-0012 §5 |
 | 008 | Transition Atomicity | Integration | Complete | ADR-0012 §2, ADR-0002 |
-| 009 | Misconfiguration Guard + Save Migration | Logic | Ready | ADR-0012 §6 |
+| 009 | Misconfiguration Guard + Save Migration | Logic | Complete | ADR-0012 §6 |
 
 ## Next Step
 
-ADR-0012 Accepted (2026-07-14, independent `/architecture-review`, verdict CONCERNS overall but no conflicts against this ADR). All 9 stories are Ready. Start with Story 001 (PrestigeSystem Orchestration Core) — everything else in this epic depends on it directly or transitively.
+**Epic Complete (2026-07-15).** All 9 stories implemented, code-reviewed, and closed. 3 real bugs found and fixed during code review across the epic: Story 001 (SaveSystem/BootController wiring gap), Story 002 (inject_priority_card() soft-lock on unknown card_id), Story 007 (BLOCKING — burnout_accepted_era_N never written, violated a GDD acceptance criterion). Story 008 was narrowed at readiness time (2026-07-15) since its original ACs assumed `_card_pending`/Challenge Selection mechanisms that don't exist yet — see TR-pcs-007's row above for the follow-up story this leaves on the backlog. All remaining deviations logged in `docs/tech-debt-register.md`. Next: pick up the follow-up TR-pcs-007 work once BurnoutSystem/ChallengeSystem get their own ADR, or move to the next epic in `production/epics/index.md`.

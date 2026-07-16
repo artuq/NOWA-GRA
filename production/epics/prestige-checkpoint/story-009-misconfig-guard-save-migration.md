@@ -1,12 +1,12 @@
 # Story 009: Misconfiguration Guard + Save Migration
 
 > **Epic**: Prestige/Checkpoint System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: S (1-2h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-15
 
 
 ## Context
@@ -99,3 +99,10 @@ func restore_state(data: Dictionary) -> void:
 
 - Depends on: Story 003 (wraps its output), Story 001 (restore_state is part of the orchestration skeleton)
 - Unlocks: None
+
+## Completion Notes
+**Completed**: 2026-07-15
+**Criteria**: 3/3 passing
+**Deviations**: None remaining (1 test-quality gap found in review, fixed and reverified before close)
+**Test Evidence**: Logic — `tests/unit/prestige/prestige_persistence_test.gd` (13 tests)
+**Code Review**: Complete — APPROVED
