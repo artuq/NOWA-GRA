@@ -29,7 +29,7 @@ Meta-progression layer sitting on top of two already-locked sub-specs: BurnoutSy
 | TR-pcs-004 | Flag classification sweep (era-local vs meta-persistent) | ADR-0012 ✅ |
 | TR-pcs-005 | Save/restore of `era_count`, per-type totals, meta flags | ADR-0012 ✅ |
 | TR-pcs-006 | Autosave suppressed for era-transitioning window only | ADR-0002 + ADR-0012 ✅ |
-| TR-pcs-007 | BurnoutSystem / ChallengeSystem core mechanics themselves | ❌ No ADR — their own quick-specs are locked but never got an architecture pass. Stories touching Burnout's threshold/warning/defer logic or Challenge's picker/multiplier logic are Blocked until a follow-up ADR exists; stories touching only `PrestigeSystem`'s consumption of their outputs (`get_combined_meta_multiplier()`, Choice A trigger) are not blocked. |
+| TR-pcs-007 | BurnoutSystem / ChallengeSystem core mechanics themselves | ❌ No ADR — their own quick-specs are locked but never got an architecture pass. Stories touching Burnout's threshold/warning/defer logic or Challenge's picker/multiplier logic are Blocked until a follow-up ADR exists; stories touching only `PrestigeSystem`'s consumption of their outputs (`get_combined_meta_multiplier()`, Choice A trigger) are not blocked. Story 008 (Transition Atomicity) was narrowed 2026-07-15 for this reason — its original ACs assumed a `_card_pending` boot-reentry flag and a Challenge Selection confirmation step that don't exist in code. **Follow-up needed**: a story covering kill-timing around card re-presentation and Challenge Selection, once BurnoutSystem/ChallengeSystem get an ADR. |
 
 ## Definition of Done
 
@@ -56,7 +56,7 @@ This epic is complete when:
 | 005 | F3a-d Final Reward Stacking Application Points | Logic | Complete | ADR-0012 §3, ADR-0010 §5a |
 | 006 | Choice B (Defer) — Morale Floor, No Grant | Logic | Complete | ADR-0012 §2 |
 | 007 | Flag Classification Sweep (Core Rule 7) | Integration | Complete | ADR-0012 §5 |
-| 008 | Transition Atomicity | Integration | Ready | ADR-0012 §2, ADR-0002 |
+| 008 | Transition Atomicity | Integration | Complete | ADR-0012 §2, ADR-0002 |
 | 009 | Misconfiguration Guard + Save Migration | Logic | Ready | ADR-0012 §6 |
 
 ## Next Step
