@@ -1,12 +1,12 @@
 # Story 001: Trigger Detection — Sustained Cringe Timer + Warning Countdown
 
 > **Epic**: Burnout & Challenge System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: S (1-2h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-17
 
 
 ## Context
@@ -32,10 +32,10 @@
 
 *From `design/quick-specs/final-burnout-2026-07-01.md` §1-2 (Trigger, Warning State), scoped to this story:*
 
-- [ ] GIVEN Cringe is at 100.0 for `delta` seconds of live play, THEN `_cringe_sustained_seconds` increments by exactly `delta` each frame
-- [ ] GIVEN Cringe drops below 100.0, THEN `_cringe_sustained_seconds` resets to `0.0` on the same frame the drop is observed
-- [ ] GIVEN `_cringe_sustained_seconds >= BURNOUT_WARNING_THRESHOLD` (180.0s default), THEN `burnout_warning_changed(true, seconds_remaining)` emits every frame while the warning is active, with `seconds_remaining = BURNOUT_THRESHOLD - _cringe_sustained_seconds`
-- [ ] GIVEN the warning is active and Cringe drops below 100.0, THEN `burnout_warning_changed(false, 0.0)` emits exactly once (not every frame after)
+- [x] GIVEN Cringe is at 100.0 for `delta` seconds of live play, THEN `_cringe_sustained_seconds` increments by exactly `delta` each frame
+- [x] GIVEN Cringe drops below 100.0, THEN `_cringe_sustained_seconds` resets to `0.0` on the same frame the drop is observed
+- [x] GIVEN `_cringe_sustained_seconds >= BURNOUT_WARNING_THRESHOLD` (180.0s default), THEN `burnout_warning_changed(true, seconds_remaining)` emits every frame while the warning is active, with `seconds_remaining = BURNOUT_THRESHOLD - _cringe_sustained_seconds`
+- [x] GIVEN the warning is active and Cringe drops below 100.0, THEN `burnout_warning_changed(false, 0.0)` emits exactly once (not every frame after)
 
 ---
 
@@ -110,7 +110,7 @@ func _process(delta: float) -> void:
 **Required evidence**:
 - `tests/unit/burnout/burnout_trigger_timer_test.gd` — must exist and pass
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created and passing
 
 ---
 
@@ -118,3 +118,10 @@ func _process(delta: float) -> void:
 
 - Depends on: None (first story in this epic)
 - Unlocks: Story 002 (card injection reads this story's threshold-crossing state)
+
+## Completion Notes
+**Completed**: 2026-07-17
+**Criteria**: 4/4 passing
+**Deviations**: ADVISORY — process_mode/pause interaction open (logged as tech debt, resolve before Story 002/003); test add_child() technique will need revisiting for Story 003 (logged as tech debt)
+**Test Evidence**: Logic — `tests/unit/burnout/burnout_trigger_timer_test.gd` (11 tests)
+**Code Review**: Complete — APPROVED

@@ -29,7 +29,7 @@ split and why the prestige-checkpoint epic was not reopened.
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | Trigger Detection — Sustained Cringe Timer + Warning Countdown | Logic | Ready | ADR-0013 |
+| 001 | Trigger Detection — Sustained Cringe Timer + Warning Countdown | Logic | Complete | ADR-0013 |
 | 002 | Forced Card Injection with Guard Rails | Integration | Ready | ADR-0013 |
 | 003 | Choice Routing into PrestigeSystem | Integration | Ready | ADR-0013 + ADR-0012 |
 | 004 | BurnoutSystem Persistence | Logic | Ready | ADR-0013 + ADR-0003 |
