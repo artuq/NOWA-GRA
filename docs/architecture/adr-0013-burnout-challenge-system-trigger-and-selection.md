@@ -1,7 +1,7 @@
 # ADR-0013: BurnoutSystem / ChallengeSystem — Trigger Detection, Card Injection, and Challenge Selection
 
 ## Status
-Proposed
+Accepted (2026-07-17, following independent `/architecture-review` in a separate session — verdict CONCERNS overall, but no conflicts or blockers against this ADR specifically; all three dependencies ADR-0001/ADR-0010/ADR-0012 Accepted, engine-clean, every shipped-code claim independently reverified against `src/core/prestige_system.gd`/`decision_card_system.gd`/`resource_manager.gd`)
 
 ## Date
 2026-07-17

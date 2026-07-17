@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-07-06
-version: 6
+last_updated: 2026-07-17
+version: 7
 
 requirements:
   - id: TR-res-001
@@ -140,9 +140,9 @@ requirements:
     system: class-path-system
     gdd: design/quick-specs/class-path-system-2026-07-01.md
     requirement: reset_era_state resets era-local affiliation/tier/counters, preserves meta milestone flags
-    adr: [ADR-0010]
-    status: partial
-    note: ADR-0010 defines the reset_era_state API contract; BurnoutSystem era_transitioned wiring deferred to Alpha BurnoutSystem ADR.
+    adr: [ADR-0010, ADR-0012]
+    status: covered
+    note: Upgraded partial->covered 2026-07-17 (/architecture-review). ADR-0010 defines the reset_era_state API contract; ADR-0012 (shipped) owns the era-transition reset sweep and calls ClassPathSystem.reset_era_state() from PrestigeSystem. ADR-0013 confirms BurnoutSystem only routes into it, does not own the wiring. Prior "deferred to BurnoutSystem ADR" note was stale.
 
   - id: TR-cps-006
     system: class-path-system
@@ -289,4 +289,4 @@ requirements:
     requirement: BurnoutSystem and ChallengeSystem mechanics (locked in their own quick-specs, restated only in summary here)
     adr: [ADR-0013]
     status: covered
-    note: ADR-0013 written 2026-07-17 — resolves the ownership drift the 2026-07-14 ruling deferred (quick-specs predate ADR-0012, assumed BurnoutSystem owned era_count/resets/grants). BurnoutSystem/ChallengeSystem stories can now proceed via /create-stories once ADR-0013 is Accepted.
+    note: ADR-0013 Accepted 2026-07-17 (independent /architecture-review, verdict CONCERNS overall but no conflicts against this ADR) — resolves the ownership drift the 2026-07-14 ruling deferred (quick-specs predate ADR-0012, assumed BurnoutSystem owned era_count/resets/grants). BurnoutSystem/ChallengeSystem have zero code yet — ready for /create-epics + /create-stories.
