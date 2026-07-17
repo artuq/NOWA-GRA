@@ -3,20 +3,21 @@
 > **Layer**: Foundation
 > **GDD**: design/gdd/resource-system.md
 > **Architecture Module**: ResourceManager
-> **Status**: Ready
-> **Stories**: 7 stories created
+> **Status**: Complete
+> **Stories**: 8 stories (8/8 Complete)
 
 ## Stories
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | Core Resource Mutation & Clamping | Logic | Ready | ADR-0001 |
-| 002 | Hatersi Passive Growth Rate (Formula A) | Logic | Ready | ADR-0006 |
-| 003 | Morale Drain Rate (Formula B) | Logic | Ready | ADR-0006 |
-| 004 | Action Effectiveness Multiplier Lookup (Formula C) | Logic | Ready | ADR-0006 |
-| 005 | Passive Zasięgi/Reach Income (Formula D) | Logic | Ready | ADR-0006 |
-| 006 | Cringe Delta Clamping (Formula E) | Logic | Ready | ADR-0001 |
-| 007 | Sponsorzy/Sponsors Acquisition (Placeholder) | Config/Data | Ready | N/A |
+| 001 | Core Resource Mutation & Clamping | Logic | Complete | ADR-0001 |
+| 002 | Hatersi Passive Growth Rate (Formula A) | Logic | Complete | ADR-0006 |
+| 003 | Morale Drain Rate (Formula B) | Logic | Complete | ADR-0006 |
+| 004 | Action Effectiveness Multiplier Lookup (Formula C) | Logic | Complete | ADR-0006 |
+| 005 | Passive Zasięgi/Reach Income (Formula D) | Logic | Complete | ADR-0006 |
+| 006 | Cringe Delta Clamping (Formula E) | Logic | Complete | ADR-0001 |
+| 007 | Sponsorzy/Sponsors Acquisition (Placeholder) | Config/Data | Complete | N/A |
+| 008 | Sponsor Network Shield | Logic | Complete | ADR-0006 |
 
 ## Overview
 

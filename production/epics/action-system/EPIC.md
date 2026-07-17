@@ -3,15 +3,16 @@
 > **Layer**: Core
 > **GDD**: design/gdd/action-system.md
 > **Architecture Module**: ActionSystem
-> **Status**: Ready
-> **Stories**: 2 stories created (2026-06-23)
+> **Status**: Complete
+> **Stories**: 3 stories (3/3 Complete)
 
 ## Stories
 
 | # | Story | Type | Status | ADR |
 |---|-------|------|--------|-----|
-| 001 | ActionSystem Core — Timer, Single-Concurrency & Progress | Logic | Ready | ADR-0004 |
-| 002 | Action Reward Resolution & Morale Scaling | Integration | Ready | ADR-0004 + ADR-0001 |
+| 001 | ActionSystem Core — Timer, Single-Concurrency & Progress | Logic | Complete | ADR-0004 |
+| 002 | Action Reward Resolution & Morale Scaling | Integration | Complete | ADR-0004 + ADR-0001 |
+| 003 | Action Queue with Auto-Repeat | Logic | Complete | ADR-0004 |
 
 ## Overview
 
