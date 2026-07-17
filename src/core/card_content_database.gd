@@ -205,6 +205,51 @@ const CARDS: Array[Dictionary] = [
 			{"label": "[Placeholder] Stay private", "resolution_reaction": "[Placeholder] No shares issued. No shareholders to answer to.", "resource_deltas": {&"Reach": 20.0, &"Morale": 5.0}, "counter_increments": {}},
 		],
 	},
+
+		# --- Wypalenie ("Final Burnout") -- BurnoutSystem/ADR-0013, TR-pcs-007,
+		# Story burnout-challenge-system/002. trigger_condition is "never" (NOT
+		# "always"), DELIBERATELY -- this card must be reachable ONLY via
+		# CardContentDatabase.get_card(BurnoutSystem.BURNOUT_CARD_ID) through
+		# DecisionCardSystem.inject_priority_card() (BurnoutSystem's forced
+		# injection), never through the normal weighted-random pool.
+		# _build_eligible_pool() iterates get_all_cards() (the FULL CARDS array,
+		# no id-based exclusion) when building normal draws -- "always" here
+		# would let this card leak into ordinary card presentation independent
+		# of the sustained-Cringe trigger. _trigger_condition_met() returns
+		# false for any string that isn't "always" or a well-formed
+		# "class_path_tier:..." condition, so "never" permanently excludes it
+		# from normal selection while inject_priority_card()'s direct id lookup
+		# (unaffected by trigger_condition) still finds it.
+		#
+		# path_tag "" (neutral) -- burnout accept/defer is not a Class Path
+		# affiliation choice.
+		#
+		# resource_deltas/counter_increments are intentionally {} on both
+		# options -- Story 003 (out of this story's scope) routes the real
+		# Choice A/B consequences through PrestigeSystem.on_burnout_accepted()/
+		# on_burnout_deferred(), called from BurnoutSystem._on_card_resolved().
+		# Applying non-zero deltas here (DecisionCardSystem.resolve_choice()
+		# calls ResourceManager.apply_delta() unconditionally before
+		# card_resolved fires) would double-apply on top of those. Minimal
+		# placeholder content only -- final copy/presentation is a future
+		# content/UI pass (story-002-card-injection-guard-rails.md Out of
+		# Scope).
+		#
+		# Option "label" fields ARE the literal option_chosen value
+		# DecisionCardSystem.card_resolved carries (resolve_choice() derives it
+		# from option["label"], not a separate id) -- Story 003 must match
+		# against these two exact strings. Mirrored in a doc comment on
+		# BurnoutSystem.BURNOUT_CARD_ID.
+		{
+			"id": "final_burnout",
+			"path_tag": "",
+			"trigger_condition": "never",
+			"text": "Six months, zero days off. The hands won't stop shaking on camera anymore, and the audience thinks it's a bit.",
+			"options": [
+				{"label": "Accept the Burnout", "resolution_reaction": "The account goes dark. The era ends here.", "resource_deltas": {}, "counter_increments": {}},
+				{"label": "Defer the Burnout", "resolution_reaction": "One more grind, running on fumes. The audience never finds out how close it came.", "resource_deltas": {}, "counter_increments": {}},
+			],
+		},
 ]
 
 

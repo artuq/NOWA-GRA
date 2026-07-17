@@ -1,12 +1,12 @@
 # Story 002: Forced Card Injection with Guard Rails
 
 > **Epic**: Burnout & Challenge System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-17
 
 
 ## Context
@@ -32,10 +32,10 @@
 
 *From `design/quick-specs/final-burnout-2026-07-01.md` §1, §3, scoped to this story and ADR-0013's guard-rail corrections:*
 
-- [ ] GIVEN `_cringe_sustained_seconds >= BURNOUT_THRESHOLD` and `_card_pending == false` and `DecisionCardSystem.state == COOLDOWN`, WHEN the injection attempt runs, THEN `DecisionCardSystem.inject_priority_card(BURNOUT_CARD_ID)` is called, and on a `true` return, `_card_pending = true` and `_cringe_sustained_seconds = 0.0`
-- [ ] GIVEN the same trigger condition but `DecisionCardSystem.state != COOLDOWN` (a normal card is mid-cycle), WHEN the injection attempt runs, THEN injection is skipped — `_card_pending` stays `false`, `_cringe_sustained_seconds` is NOT reset, and the attempt retries on a subsequent frame once `state` returns to `COOLDOWN`
-- [ ] GIVEN `inject_priority_card()` returns `false` (misconfigured `BURNOUT_CARD_ID`, or a priority card already pending from elsewhere), WHEN the injection attempt runs, THEN a `push_error()` is logged, `_card_pending` stays `false`, and the attempt retries next frame — this must NEVER silently soft-lock (permanently stuck `_card_pending == false` with the threshold condition satisfied but no further attempts)
-- [ ] GIVEN the Burnout Card is presented (`_card_pending == true`), THEN no normal card can be checked/presented until it resolves — verified via `DecisionCardSystem`'s existing `state` machine (this story does not add a new suspension mechanism, it relies on `inject_priority_card()`'s already-shipped `PRESENTING` takeover)
+- [x] GIVEN `_cringe_sustained_seconds >= BURNOUT_THRESHOLD` and `_card_pending == false` and `DecisionCardSystem.state == COOLDOWN`, WHEN the injection attempt runs, THEN `DecisionCardSystem.inject_priority_card(BURNOUT_CARD_ID)` is called, and on a `true` return, `_card_pending = true` and `_cringe_sustained_seconds = 0.0`
+- [x] GIVEN the same trigger condition but `DecisionCardSystem.state != COOLDOWN` (a normal card is mid-cycle), WHEN the injection attempt runs, THEN injection is skipped — `_card_pending` stays `false`, `_cringe_sustained_seconds` is NOT reset, and the attempt retries on a subsequent frame once `state` returns to `COOLDOWN`
+- [x] GIVEN `inject_priority_card()` returns `false` (misconfigured `BURNOUT_CARD_ID`, or a priority card already pending from elsewhere), WHEN the injection attempt runs, THEN a `push_error()` is logged, `_card_pending` stays `false`, and the attempt retries next frame — this must NEVER silently soft-lock (permanently stuck `_card_pending == false` with the threshold condition satisfied but no further attempts)
+- [x] GIVEN the Burnout Card is presented (`_card_pending == true`), THEN no normal card can be checked/presented until it resolves — verified via `DecisionCardSystem`'s existing `state` machine (this story does not add a new suspension mechanism, it relies on `inject_priority_card()`'s already-shipped `PRESENTING` takeover)
 
 ---
 
@@ -67,7 +67,9 @@ Called from Story 001's `_process()` at the point marked "card injection trigger
 
 - Story 001: the trigger timer itself (this story only reacts to the threshold-crossing condition)
 - Story 003: what happens after the card is resolved (Choice A/B routing)
-- Card content authoring itself (`CardContentDatabase`'s Wypalenie entry) — assumed to already exist or be authored in parallel; this story's regression test will catch a missing/misnamed entry loudly rather than silently
+- Full Wypalenie card content (flavor text, visual treatment) — this story adds only a minimal `CardContentDatabase` entry (id `final_burnout`, two options with `option_chosen` values `&"accept"`/`&"defer"`) sufficient for injection + real-content regression testing; final copy/presentation is a future content/UI pass, not blocking here
+
+**SCOPE NOTE (2026-07-17, added at implementation time)**: the original story assumed the Wypalenie card content already existed in `CardContentDatabase` — confirmed false (zero matches on `final_burnout`/`Wypalenie` at story-readiness time). Adding a minimal real entry is now IN scope for this story (see Implementation Notes), since AC-1/AC-3 cannot be verified against a real `inject_priority_card()` call without one.
 
 ---
 
@@ -104,7 +106,7 @@ Called from Story 001's `_process()` at the point marked "card injection trigger
 **Required evidence**:
 - `tests/integration/burnout/burnout_card_injection_test.gd` — must exist and pass
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created and passing
 
 ---
 
@@ -112,3 +114,10 @@ Called from Story 001's `_process()` at the point marked "card injection trigger
 
 - Depends on: Story 001 (trigger timer provides the threshold-crossing condition this story reacts to)
 - Unlocks: Story 003 (Choice A/B routing needs a successfully-presented card to resolve)
+
+## Completion Notes
+**Completed**: 2026-07-17
+**Criteria**: 4/4 passing
+**Deviations**: ADVISORY — scope expanded mid-implementation to author minimal real Wypalenie card content (SCOPE NOTE), since it didn't exist in CardContentDatabase yet; `option_chosen` discovered to be label-derived, not a semantic id (documented, load-bearing for Story 003); 2 pre-existing magic-number test locks updated for the 17th card.
+**Test Evidence**: Integration — `tests/integration/burnout/burnout_card_injection_test.gd` (10 tests)
+**Code Review**: Complete — APPROVED

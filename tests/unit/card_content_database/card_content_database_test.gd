@@ -61,11 +61,14 @@ func after_test() -> void:
 
 
 ## AC-1: every card has exactly 2 options.
-## Count is 16 as of Story class-path-full/004 (2026-07-13): the 12 original
-## MVP cards plus 4 Tier-5 signature cards (ADR-0010 §10, TR-cps-006).
+## Count is 17 as of Story burnout-challenge-system/002 (2026-07-17): the 12
+## original MVP cards, plus 4 Tier-5 signature cards (ADR-0010 §10,
+## TR-cps-006), plus the Wypalenie ("Final Burnout") card (ADR-0013,
+## TR-pcs-007) -- id "final_burnout", trigger_condition "never" so it is
+## reachable only via BurnoutSystem's forced injection, never the normal pool.
 func test_all_cards_have_exactly_two_options() -> void:
 	var cards: Array[Dictionary] = _db.get_all_cards()
-	assert_int(cards.size()).is_equal(16)
+	assert_int(cards.size()).is_equal(17)
 	for card: Dictionary in cards:
 		assert_int(card["options"].size()).is_equal(2)
 
@@ -218,12 +221,13 @@ func test_algorithm_hack_milestone_has_no_current_consumer() -> void:
 		assert_str(card["trigger_condition"]).not_contains("card.algorithm_hack.saved")
 
 
-## AC-17: the 9 non-milestone-bearing cards' options (plus the non-milestone
+## AC-17: the non-milestone-bearing cards' options (plus the non-milestone
 ## option on each of the 3 milestone cards) structurally lack the
 ## milestone_to_set key -- confirming absence is correct, not missing data.
-## Count is 29 as of Story class-path-full/004 (2026-07-13): 16 cards * 2
-## options = 32, minus the 3 milestone-bearing options -- none of the 4
-## Tier-5 signature cards carries a milestone_to_set.
+## Count is 31 as of Story burnout-challenge-system/002 (2026-07-17): 17
+## cards * 2 options = 34, minus the 3 milestone-bearing options -- none of
+## the 4 Tier-5 signature cards nor the Wypalenie ("Final Burnout") card
+## carries a milestone_to_set.
 func test_absence_of_milestone_to_set_is_structural_not_missing() -> void:
 	var non_milestone_option_count: int = 0
 	for card: Dictionary in _db.get_all_cards():
@@ -236,7 +240,7 @@ func test_absence_of_milestone_to_set_is_structural_not_missing() -> void:
 			if not is_the_milestone_option:
 				assert_bool(option.has("milestone_to_set")).is_false()
 				non_milestone_option_count += 1
-	assert_int(non_milestone_option_count).is_equal(29)
+	assert_int(non_milestone_option_count).is_equal(31)
 
 
 ## get_card() returns an empty Dictionary for an unknown id -- not tested by
