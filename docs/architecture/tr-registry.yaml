@@ -287,6 +287,6 @@ requirements:
     system: prestige-checkpoint-system
     gdd: design/gdd/prestige-checkpoint-system.md
     requirement: BurnoutSystem and ChallengeSystem mechanics (locked in their own quick-specs, restated only in summary here)
-    adr: []
+    adr: [ADR-0013]
     status: covered
-    note: User ruling 2026-07-14 (/architecture-review) — the locked quick-specs (final-burnout-2026-07-01.md, challenge-era-runs-2026-07-01.md) are accepted as sufficient architectural spec for these two systems; no separate ADR required. ADR-0012 covers PrestigeSystem's orchestration of the transition they trigger. Their Sprint 11 11-2 stories are Ready on this basis.
+    note: ADR-0013 written 2026-07-17 — resolves the ownership drift the 2026-07-14 ruling deferred (quick-specs predate ADR-0012, assumed BurnoutSystem owned era_count/resets/grants). BurnoutSystem/ChallengeSystem stories can now proceed via /create-stories once ADR-0013 is Accepted.

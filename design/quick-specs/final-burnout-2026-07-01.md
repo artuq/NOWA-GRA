@@ -10,6 +10,17 @@ around.
 **Estimated Implementation**: Design anchor only — full implementation ~3–4 weeks in Alpha
 alongside Prestige/Checkpoint System
 
+> **REVISION (2026-07-17, ADR-0013)**: `era_count`, `_deferred_this_era`, the five-resource
+> reset, and the META_BONUS grant now live on **`PrestigeSystem`** (ADR-0012, shipped and
+> closed), not BurnoutSystem as originally specced below. BurnoutSystem's real scope is now
+> just the trigger detector + forced-card mechanics (Core Rules 1-3) — Choice A/B (Core Rules
+> 4-5) route synchronously into `PrestigeSystem.on_burnout_accepted()`/`on_burnout_deferred()`.
+> The `era_transitioned(new_era, meta_bonus_granted)` signal below is now
+> **`PrestigeSystem.era_transitioned`** (no arguments — read `get_era_count()`/
+> `get_meta_bonus_total()` instead). `HistoryFlagManager.set_flag(...)` calls below are now
+> **`set_milestone(...)`** (the real shipped method name). See ADR-0013's ownership-split table
+> for the authoritative correction before implementing any BurnoutSystem story.
+
 ## Overview
 
 When the player sustains Cringe at 100 for `BURNOUT_THRESHOLD` continuous seconds in active

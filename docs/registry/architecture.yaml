@@ -53,8 +53,20 @@ state_ownership:
 
   - state: "era_count (int), meta_bonus_totals (Dictionary[StringName, float] per bonus type)"
     owner: PrestigeSystem
-    interface: "on_burnout_accepted(), get_meta_bonus_total(bonus_type), get_era_count(), restore_state(data), serialize_state()"
+    interface: "on_burnout_accepted(), on_burnout_deferred(morale_cost), get_meta_bonus_total(bonus_type), get_era_count(), restore_state(data), serialize_state()"
     source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
+    referenced_by: [docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md]
+
+  - state: "_cringe_sustained_seconds (float, not persisted), _card_pending (bool, persisted)"
+    owner: BurnoutSystem
+    interface: "restore_state(data), serialize_state()"
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
+    referenced_by: []
+
+  - state: "_active_challenge_ids (Array[StringName], era-local)"
+    owner: ChallengeSystem
+    interface: "get_combined_meta_multiplier(), get_modifier(action_id, axis), restore_state(data), serialize_state()"
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
     referenced_by: []
 
 interfaces:
@@ -160,11 +172,27 @@ interfaces:
     referenced_by: []
 
   - name: inject_priority_card
-    signature: "inject_priority_card(card_id: StringName) -> void"
+    signature: "inject_priority_card(card_id: StringName) -> bool"
     type: method
     owner: DecisionCardSystem
-    note: "Bypasses normal card pool/weighting/cooldown. General-purpose forced-card injection — BurnoutSystem's Wypalenie card is the first caller, not the only intended one. Blocks normal presentation until resolved; cooldown counter keeps accumulating underneath."
+    note: "Bypasses normal card pool/weighting/cooldown. General-purpose forced-card injection — BurnoutSystem's Wypalenie card is the first caller, not the only intended one. Blocks normal presentation until resolved; cooldown counter keeps accumulating underneath. Returns false (no-op) if a priority card is already pending OR card_id doesn't resolve in CardContentDatabase (2026-07-14 code-review fix) — callers must check the return value, not assume success. Signature corrected 2026-07-17 (ADR-0013 validation) from ADR-0012's original -> void pseudocode."
     source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
+    referenced_by: [docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md]
+
+  - name: get_combined_meta_multiplier
+    signature: "get_combined_meta_multiplier() -> float"
+    type: method
+    owner: ChallengeSystem
+    note: "Pull-model read, same shape as ClassPathSystem.get_active_sponsor_multiplier() (ADR-0010 §5a). Called synchronously by PrestigeSystem.on_burnout_accepted() to replace the Story 003-era challenge_mult=1.0 stub. Returns 1.0 (safe default) if no challenges are active."
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
+    referenced_by: []
+
+  - name: get_modifier
+    signature: "get_modifier(action_id: StringName, axis: StringName) -> float"
+    type: method
+    owner: ChallengeSystem
+    note: "Pull-model read consumed by ActionSystem at reward resolution, after the Morale multiplier (Formula C). Returns 1.0 (no-op) if the axis/action isn't targeted by any active challenge. Clamped to CHALLENGE_MODIFIER_FLOOR (0.05) as a hard safety rail."
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
     referenced_by: []
 
 api_decisions:
@@ -261,6 +289,11 @@ api_decisions:
   - decision: "Juice/Feedback has NO Autoload and NO new signal: FeedbackMath (res://src/ui/feedback_math.gd, class_name FeedbackMath, stateless static — magnitude(deltas), pulse_scale(m), shake_amplitude_px(m), shake_duration_sec(m), stinger_params(m)) + additive effect code inside ResourceHud (action channel: count-up + self_modulate pill flash) and CardScreen (card channel: scale-pulse + shake + stinger) (ADR-0011)"
     rationale: "System owns zero state (no restore_state by GDD design) so an Autoload contradicts ADR-0001's rationale; a conductor node would violate ADR-0007 zone ownership; deltas are already in hand at both call sites (action_completed payload, presented card's option), so local computation needs no signal changes"
     source: docs/architecture/adr-0011-juice-feedback-stateless-math-ui-effects.md
+    referenced_by: []
+
+  - decision: "BurnoutSystem is a thin trigger-detector only (Cringe-sustained timer, warning countdown, forced card injection via inject_priority_card()); ChallengeSystem is a thin selection/modifier-storage system. Neither owns era_count, resource resets, or the META_BONUS grant — that state stays on PrestigeSystem (ADR-0012), which they call into synchronously from a card_resolved signal handler (BurnoutSystem) or get pulled from directly (ChallengeSystem's get_combined_meta_multiplier()) (ADR-0013)"
+    rationale: "The 2026-07-01 quick-specs predate PrestigeSystem and assumed BurnoutSystem owned the reset+grant sequence; ADR-0012 shipped with that ownership on PrestigeSystem instead (9 stories, 80 tests, epic closed 2026-07-15) — this decision ratifies the shipped reality rather than reopening a closed epic to match stale quick-specs. Signal-listener pattern (not a direct DecisionCardSystem->BurnoutSystem coupling) matches the existing card_resolved additive-signal precedent (ADR-0008/ADR-0010)"
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
     referenced_by: []
 
 forbidden_patterns:
