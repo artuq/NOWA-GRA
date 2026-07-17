@@ -4,7 +4,7 @@
 > **GDD**: design/gdd/prestige-checkpoint-system.md (system #17 parent) + design/quick-specs/final-burnout-2026-07-01.md + design/quick-specs/challenge-era-runs-2026-07-01.md
 > **Architecture Module**: BurnoutSystem (new Autoload), ChallengeSystem (new Autoload)
 > **Status**: Ready
-> **Stories**: Not yet created — run `/create-stories burnout-challenge-system`
+> **Stories**: 8 stories created (2026-07-17)
 
 ## Overview
 
@@ -24,6 +24,19 @@ accepted burnout, consumed by `PrestigeSystem` via a pull-model getter
 This epic does not touch `PrestigeSystem`'s already-shipped, tested code beyond one line (the
 `challenge_mult` stub → a real `ChallengeSystem` call) — see ADR-0013 for the full ownership
 split and why the prestige-checkpoint epic was not reopened.
+
+## Stories
+
+| # | Story | Type | Status | ADR |
+|---|-------|------|--------|-----|
+| 001 | Trigger Detection — Sustained Cringe Timer + Warning Countdown | Logic | Ready | ADR-0013 |
+| 002 | Forced Card Injection with Guard Rails | Integration | Ready | ADR-0013 |
+| 003 | Choice Routing into PrestigeSystem | Integration | Ready | ADR-0013 + ADR-0012 |
+| 004 | BurnoutSystem Persistence | Logic | Ready | ADR-0013 + ADR-0003 |
+| 005 | Challenge Catalogue + Selection Storage | Logic | Ready | ADR-0013 |
+| 006 | Modifier Application at Reward Resolution | Integration | Ready | ADR-0013 |
+| 007 | Meta-Bonus Multiplier Pull into PrestigeSystem | Integration | Ready | ADR-0013 + ADR-0012 |
+| 008 | Era-Local Challenge Reset Wiring | Integration | Ready | ADR-0013 + ADR-0012 |
 
 ## Governing ADRs
 

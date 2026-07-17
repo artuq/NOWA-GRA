@@ -20,4 +20,4 @@ Engine: Godot 4.6.3
 | Class Path System (Full) | Core | class-path-full | design/gdd/class-path-system.md | 5 stories | Complete |
 | Juice/Feedback System | Presentation | juice-feedback-system | design/gdd/juice-feedback-system.md | 3 stories | Complete (audio, cut 2026-07-12) |
 | Prestige/Checkpoint System | Core | prestige-checkpoint | design/gdd/prestige-checkpoint-system.md | 9 stories | Complete |
-| Burnout & Challenge System | Core | burnout-challenge-system | design/gdd/prestige-checkpoint-system.md | Not yet created | Ready |
+| Burnout & Challenge System | Core | burnout-challenge-system | design/gdd/prestige-checkpoint-system.md | 8 stories | Ready |
