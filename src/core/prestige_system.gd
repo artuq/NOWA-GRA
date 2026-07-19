@@ -269,10 +269,25 @@ func on_burnout_accepted() -> void:
 ## enforces this at the source level, not just via one test run's observed
 ## behavior.
 ##
+## Sets _deferred_this_era = true (bug fix, found and fixed during
+## burnout-challenge-system Story 003's implementation, 2026-07-19):
+## final-burnout-2026-07-01.md §5 step 7 requires this write on every Defer,
+## so a second same-era trigger can grey out Choice B (PrestigeSystem.
+## has_deferred_this_era(), added by Story 003) — the original
+## prestige-checkpoint Story 006/007 implementation declared and cleared this
+## field (_sweep_era_local_flags() resets it to false on every accepted
+## burnout) but never actually SET it true here, leaving the flag
+## permanently false in real gameplay. This one-line addition is the fix;
+## prestige_defer_test.gd's existing static source-scan (see that file's own
+## header comment) already permits this token -- "_deferred_this_era" was
+## never on its forbidden list, only ClassPathSystem/PrestigeFormulas'
+## grant-machinery symbols are.
+##
 ## Example:
 ##   PrestigeSystem.on_burnout_deferred(BurnoutSystem.BURNOUT_DEFER_MORALE_COST)
 func on_burnout_deferred(morale_cost: float) -> void:
 	ResourceManager.apply_delta({&"Morale": -morale_cost})
+	_deferred_this_era = true
 	HistoryFlagManager.set_milestone(StringName("burnout_deferred_era_" + str(era_count)))
 
 
@@ -413,6 +428,18 @@ func get_era_count() -> int:
 ##   PrestigeSystem.get_meta_bonus_total(&"META_REACH_MULT")  # -> 0.0 before any grant
 func get_meta_bonus_total(bonus_type: StringName) -> float:
 	return meta_bonus_totals.get(bonus_type, 0.0)
+
+
+## Whether Choice B (Defer) has already been used this era. BurnoutSystem
+## reads this to grey out the Defer option on a second same-era trigger
+## (quick-spec final-burnout-2026-07-01.md §5) -- PrestigeSystem owns
+## _deferred_this_era (Story 007, prestige-checkpoint epic), this is its only
+## external read access. Added by burnout-challenge-system Story 003
+## (TR-pcs-007), same minimal-getter pattern as get_era_count()/
+## get_meta_bonus_total() above -- no signature change to
+## on_burnout_accepted()/on_burnout_deferred().
+func has_deferred_this_era() -> bool:
+	return _deferred_this_era
 
 
 ## Restores persisted state per the ADR-0003 boot protocol, called by

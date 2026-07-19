@@ -20,7 +20,7 @@
 ## exactly once) the moment Cringe drops below 100, and burnout_warning_changed
 ## fires every frame the warning is active.
 ##
-## Story 002 (this revision) adds the card-injection branch on top: once
+## Story 002 adds the card-injection branch on top: once
 ## _cringe_sustained_seconds >= BURNOUT_THRESHOLD, _try_inject_burnout_card()
 ## force-presents the Wypalenie card via DecisionCardSystem.inject_priority_card(),
 ## guarded so it never clobbers a normal card mid-cycle and never silently
@@ -28,13 +28,21 @@
 ## Wypalenie card's minimal real CardContentDatabase entry (id "final_burnout")
 ## was also added in this story (card_content_database.gd) -- see
 ## BURNOUT_CARD_ID's doc comment for the two option label strings Story 003
-## must match.
+## matches.
 ##
-## The following remain deferred to later stories and are NOT implemented
+## Story 003 (this revision) adds _ready()'s DecisionCardSystem.card_resolved.
+## connect() wiring and _on_card_resolved(): routes the player's Choice A/B
+## into PrestigeSystem.on_burnout_accepted()/on_burnout_deferred(), matching
+## option_chosen against the two literal label strings authored on the
+## Wypalenie card (_OPTION_LABEL_ACCEPT/_OPTION_LABEL_DEFER below) -- not a
+## semantic id, since DecisionCardSystem.resolve_choice() derives
+## option_chosen from option["label"] (decision_card_system.gd:311). An
+## unrecognized third value push_error()s rather than silently falling
+## through to either branch (ADR-0013's story-readiness-time correction --
+## see _on_card_resolved()'s own doc comment).
+##
+## The following remains deferred to a later story and is NOT implemented
 ## here (see story-002-card-injection-guard-rails.md's Out of Scope):
-##   - Story 003: _on_card_resolved() / _ready()'s DecisionCardSystem.
-##     card_resolved.connect() wiring, and routing Choice A/B into
-##     PrestigeSystem.on_burnout_accepted()/on_burnout_deferred()
 ##   - Story 004: restore_state()/serialize_state() (ADR-0003 boot protocol)
 ##     for _card_pending -- _cringe_sustained_seconds is intentionally never
 ##     persisted (Final Burnout quick-spec's Pillar 4: "no surprise burnout
@@ -94,18 +102,28 @@ const BURNOUT_WARNING_THRESHOLD: float = 180.0
 ## specifically to exclude it from _build_eligible_pool()'s normal
 ## selection -- see that entry's own comment in card_content_database.gd).
 ##
-## Story 003 (Choice A/B routing into PrestigeSystem, out of this story's
-## scope) matches DecisionCardSystem.card_resolved's option_chosen against
-## this card's authored option "label" fields -- NOT semantic identifiers --
-## since resolve_choice() derives option_chosen from option["label"]
-## (decision_card_system.gd:311), not a separate id. The two exact label
-## strings authored on this card (card_content_database.gd) are:
+## _on_card_resolved() (Story 003, below) matches DecisionCardSystem.
+## card_resolved's option_chosen against this card's authored option "label"
+## fields -- NOT semantic identifiers -- since resolve_choice() derives
+## option_chosen from option["label"] (decision_card_system.gd:311), not a
+## separate id. The two exact label strings authored on this card
+## (card_content_database.gd) are:
 ##   "Accept the Burnout" -> Choice A (PrestigeSystem.on_burnout_accepted())
 ##   "Defer the Burnout"  -> Choice B (PrestigeSystem.on_burnout_deferred())
 ## A future edit to either label string in CardContentDatabase MUST be
-## mirrored in Story 003's _on_card_resolved() comparison, or that routing
-## silently no-ops both branches.
+## mirrored in _on_card_resolved()'s _OPTION_LABEL_ACCEPT/_OPTION_LABEL_DEFER
+## consts below, or that routing silently no-ops both branches -- guarded by
+## that function's own push_error() on drift, plus this file's test suite's
+## AC-5 regression test comparing the consts against the real card entry.
 const BURNOUT_CARD_ID: StringName = &"final_burnout"
+
+## Morale cost applied to PrestigeSystem.on_burnout_deferred() when the
+## player chooses Defer (Choice B). ADR-0013/quick-spec default; see this
+## file's header comment for why this is a plain const rather than a
+## balance.json load. Passed as an explicit argument rather than read by
+## PrestigeSystem itself, so PrestigeSystem stays ignorant of BurnoutSystem's
+## own tuning (one-directional dependency discipline, ADR-0012 §1).
+const BURNOUT_DEFER_MORALE_COST: float = 50.0
 
 
 ## O(1) per live-play frame (control-manifest.md Core layer guardrail): one
@@ -161,3 +179,61 @@ func _try_inject_burnout_card() -> void:
 	else:
 		push_error("BurnoutSystem: inject_priority_card(%s) returned false -- " %
 			BURNOUT_CARD_ID + "verify this id exists in CardContentDatabase")
+
+
+## Story 003 (TR-pcs-007, ADR-0013 §Decision): wires the player's Choice A/B
+## into PrestigeSystem's two locked entry points (ADR-0012 §2). Registered
+## here rather than in a constructor since Autoload _ready() ordering
+## guarantees DecisionCardSystem already exists (project.godot registers
+## BurnoutSystem after DecisionCardSystem, ADR-0013's Ordering Note).
+func _ready() -> void:
+	DecisionCardSystem.card_resolved.connect(_on_card_resolved)
+
+
+## The two literal strings below MUST exactly match card_content_database.gd's
+## final_burnout entry's option "label" fields -- card_resolved's option_chosen
+## is derived from that label (decision_card_system.gd:311), not a semantic
+## id (see BURNOUT_CARD_ID's own doc comment). A future copy/localization
+## pass touching either label breaks this silently unless the guard in
+## _on_card_resolved() below (explicit push_error on an unrecognized third
+## value) catches it. tests/integration/burnout/burnout_choice_routing_test.gd's
+## AC-5 regression test compares these two consts against
+## CardContentDatabase's real entry directly, so a future content edit fails
+## loudly there too.
+const _OPTION_LABEL_ACCEPT: StringName = &"Accept the Burnout"
+const _OPTION_LABEL_DEFER: StringName = &"Defer the Burnout"
+
+
+## Routes the player's Choice A/B into PrestigeSystem's two locked entry
+## points, synchronously and within DecisionCardSystem.resolve_choice()'s own
+## call stack (ADR-0013's Decision section -- Godot's default,
+## non-CONNECT_DEFERRED Signal.connect() runs a listener synchronously within
+## the emitter's call stack, satisfying the zero-await/zero-CONNECT_DEFERRED
+## constraint this call graph inherits from ADR-0012, with no new coupling on
+## DecisionCardSystem -- it doesn't need to know BurnoutSystem exists).
+##
+## Ignores every card_resolved emission whose card_id isn't BURNOUT_CARD_ID --
+## BurnoutSystem only ever cares about its own forced card, never a normal
+## pool-selected one; _card_pending and neither PrestigeSystem entry point are
+## touched in that case.
+##
+## _card_pending is cleared BEFORE either PrestigeSystem call below, same
+## frame, same call stack -- this ordering is this story's own binding
+## contract (AC-1/AC-2), not incidental.
+##
+## Uses an explicit if/elif/else with a push_error() on an unrecognized third
+## value (story-readiness-time correction, 2026-07-19) rather than ADR-0013's
+## original simplified if/else -- an else-catches-everything branch would
+## silently treat any label drift as a Defer, which is worse than a loud
+## error.
+func _on_card_resolved(card_id: StringName, _path_tag: StringName, option_chosen: StringName) -> void:
+	if card_id != BURNOUT_CARD_ID:
+		return
+	_card_pending = false
+	if option_chosen == _OPTION_LABEL_ACCEPT:
+		PrestigeSystem.on_burnout_accepted()
+	elif option_chosen == _OPTION_LABEL_DEFER:
+		PrestigeSystem.on_burnout_deferred(BURNOUT_DEFER_MORALE_COST)
+	else:
+		push_error("BurnoutSystem: unrecognized Wypalenie option_chosen '%s' -- " % option_chosen +
+			"neither Accept nor Defer branch taken, card content may have drifted from routing logic")
