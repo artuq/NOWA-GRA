@@ -35,7 +35,7 @@ split and why the prestige-checkpoint epic was not reopened.
 | 004 | BurnoutSystem Persistence | Logic | Complete | ADR-0013 + ADR-0003 |
 | 005 | Challenge Catalogue + Selection Storage | Logic | Complete | ADR-0013 |
 | 006 | Modifier Application at Reward Resolution | Integration | Complete | ADR-0013 |
-| 007 | Meta-Bonus Multiplier Pull into PrestigeSystem | Integration | Ready | ADR-0013 + ADR-0012 |
+| 007 | Meta-Bonus Multiplier Pull into PrestigeSystem | Integration | Complete | ADR-0013 + ADR-0012 |
 | 008 | Era-Local Challenge Reset Wiring | Integration | Ready | ADR-0013 + ADR-0012 |
 
 ## Governing ADRs

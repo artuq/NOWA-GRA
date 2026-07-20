@@ -232,6 +232,32 @@ func get_modifier(action_id: StringName, axis: StringName) -> float:
 	return maxf(CHALLENGE_MODIFIER_FLOOR, product)
 
 
+## Story 007 (TR-pcs-007, ADR-0013's get_combined_meta_multiplier() pseudocode
+## -- implemented exactly as written): pull-model read, same shape as
+## ClassPathSystem.get_active_sponsor_multiplier() (ADR-0010 §5a). Called
+## synchronously by PrestigeSystem.on_burnout_accepted() step 4, replacing the
+## hardcoded 1.0 stub that shipped with prestige-checkpoint Story 003.
+##
+## Returns 1.0 (safe default, identical to the prior stub's behavior) when no
+## challenges are active -- the zero-challenge case must stay byte-identical
+## to already-shipped grant outcomes (this story's own AC-1).
+##
+## Multiplies every active challenge's meta_bonus_multiplier together
+## (quick-spec §5, Core Rule "combined meta-bonus multiplier is also
+## multiplicative") -- e.g. two challenges with meta_bonus_multiplier 2.0 and
+## 2.5 both active -> 5.0.
+##
+## Example:
+##   ChallengeSystem.get_combined_meta_multiplier()  # -> 1.0 if none active, else the product
+func get_combined_meta_multiplier() -> float:
+	if _active_challenge_ids.is_empty():
+		return 1.0
+	var product: float = 1.0
+	for challenge_id: StringName in _active_challenge_ids:
+		product *= _CHALLENGE_CATALOGUE[challenge_id]["meta_bonus_multiplier"]
+	return product
+
+
 ## Serializes persisted state for SaveSystem.save_now(). StringName ids are
 ## written out as plain String (JSON-serialization convention already
 ## established by ADR-0002/ADR-0010 and PrestigeSystem.serialize_state() --

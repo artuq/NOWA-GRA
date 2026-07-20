@@ -38,25 +38,24 @@
 ## override write remain independently observable, in order, via
 ## ResourceManager.resource_changed (AC-3's ordering guarantee).
 ##
-## The following step remains an intentionally stubbed/no-op placeholder,
-## filled in by a later story:
-##   - ChallengeSystem.get_combined_meta_multiplier() — ChallengeSystem does
-##     not exist yet (no ADR yet, TR-pcs-007). This story passes a fixed
-##     challenge_mult of 1.0 (GDD F1: "1.0 if no challenges active") rather
-##     than stubbing a call against a non-existent Autoload. Whichever
-##     future story wires ChallengeSystem in must replace this literal with
-##     a real ChallengeSystem.get_combined_meta_multiplier() call. The same
-##     gap means Story 007's _sweep_era_local_flags() does NOT clear "active
-##     Challenge flags" — ChallengeSystem's own quick-spec
-##     (challenge-era-runs-2026-07-01.md) has PrestigeSystem's sweep clear
-##     "challenge_active_{id}"-named flags, but with no ChallengeSystem to
-##     enumerate which ids are currently active, and no HistoryFlagManager
-##     API to clear-by-prefix (milestones are an intentional one-way ratchet
-##     — "no unset_milestone() API exists, by design" per that module's own
-##     doc comment — a structural mismatch with an era-local flag that needs
-##     clearing), there is nothing concrete for this sweep to iterate yet.
-##     Deferred to whichever future story implements ChallengeSystem for
-##     real, same precedent as the challenge_mult literal above.
+## burnout-challenge-system epic Story 007 (TR-pcs-007, ADR-0013, this
+## revision) wires ChallengeSystem.get_combined_meta_multiplier() into step 4
+## below, replacing the challenge_mult == 1.0 literal every prior revision of
+## this method used (prestige-checkpoint Story 003 onward, back when
+## ChallengeSystem did not exist yet). No other line of on_burnout_accepted()
+## changes -- this is the epic's only touch to already-shipped PrestigeSystem
+## code, per ADR-0013's own framing.
+##
+## One gap remains, still deferred to burnout-challenge-system epic Story 008
+## (era-reset wiring), unaffected by this revision: _sweep_era_local_flags()
+## does NOT clear "active Challenge flags" -- ChallengeSystem's own quick-spec
+## (challenge-era-runs-2026-07-01.md) has PrestigeSystem's sweep clear
+## "challenge_active_{id}"-named flags, but ADR-0013's actual storage
+## correction (Story 005) put active selections on ChallengeSystem's own
+## _active_challenge_ids field, not HistoryFlagManager flags at all -- so this
+## sweep has nothing to iterate under the real shipped shape. Story 008 (or a
+## future ChallengeSystem.clear_active_challenges() call from this sweep) owns
+## resolving this, not this story.
 ##
 ## Usage example:
 ##   PrestigeSystem.on_burnout_accepted()  # called by BurnoutSystem's Choice A handler
@@ -192,15 +191,14 @@ func on_burnout_accepted() -> void:
 	ClassPathSystem.reset_era_state()
 
 	# Step 4 (Story 003): META_BONUS grant computation (F1) + variety check
-	# (F1b). ChallengeSystem does not exist yet (TR-pcs-007, no ADR yet) — a
-	# fixed challenge_mult of 1.0 is used ("1.0 if no challenges active" per
-	# GDD F1) rather than stubbing a call against a non-existent Autoload.
-	# Whichever future story wires ChallengeSystem in must replace this
-	# literal with a real ChallengeSystem.get_combined_meta_multiplier() call.
+	# (F1b). challenge_mult sourced from ChallengeSystem.get_combined_meta_
+	# multiplier() (burnout-challenge-system epic Story 007, ADR-0013) --
+	# returns 1.0 when no challenges are active, byte-identical to every
+	# prior revision's hardcoded stub for the zero-challenge case.
 	if path_id != &"":
 		var bonus_type: StringName = _BONUS_TYPE_BY_PATH.get(path_id, &"")
 		if bonus_type != &"":
-			var challenge_mult: float = 1.0
+			var challenge_mult: float = ChallengeSystem.get_combined_meta_multiplier()
 			var is_first: bool = _first_burnout_pending(bonus_type)
 			var grant: float = PrestigeFormulas.grant_magnitude(bonus_type, tier, challenge_mult, is_first)
 			_apply_grant(bonus_type, grant)

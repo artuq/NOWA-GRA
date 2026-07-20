@@ -1,12 +1,12 @@
 # Story 007: Meta-Bonus Multiplier Pull into PrestigeSystem
 
 > **Epic**: Burnout & Challenge System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: S (1-2h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-20
 
 
 ## Context
@@ -92,7 +92,7 @@ Locate this line inside `on_burnout_accepted()` — it currently sits right befo
 **Required evidence**:
 - `tests/integration/prestige/prestige_challenge_multiplier_wiring_test.gd` — must exist and pass
 
-**Status**: [ ] Not yet created
+**Status**: [x] Created and passing (`tests/integration/prestige/prestige_challenge_multiplier_wiring_test.gd`, plus a supplementary `tests/unit/challenge/challenge_meta_multiplier_test.gd` covering `get_combined_meta_multiplier()` in isolation)
 
 ---
 
@@ -100,3 +100,12 @@ Locate this line inside `on_burnout_accepted()` — it currently sits right befo
 
 - Depends on: Story 005 (catalogue/storage), Story 006 (not strictly required for this story's own logic, but establishes `get_combined_meta_multiplier()`'s real data source — implement Story 005 first at minimum)
 - Unlocks: None
+
+---
+
+## Completion Notes
+**Completed**: 2026-07-20
+**Criteria**: 3/3 passing
+**Deviations**: This story's own "Out of Scope" section claimed `ChallengeSystem.get_combined_meta_multiplier()` was already implemented by Story 005/006 — it was not. Implemented here, verbatim from ADR-0013's own pseudocode, as a necessary prerequisite to this story's one-line PrestigeSystem wiring.
+**Test Evidence**: `tests/integration/prestige/prestige_challenge_multiplier_wiring_test.gd` (2/2 passing) + supplementary `tests/unit/challenge/challenge_meta_multiplier_test.gd` (4/4 passing, added during code review to close a coverage gap — the getter's single-challenge case was previously untested in isolation). Full prestige suite: 82/82 passing (80 pre-existing + 2 new), 0 regressions. Full project suite: 643/643, 0 errors.
+**Code Review**: Complete — godot-gdscript-specialist (CLEAN) + qa-tester (found 2 non-blocking gaps, both closed), both APPROVED
