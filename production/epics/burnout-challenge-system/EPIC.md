@@ -3,8 +3,8 @@
 > **Layer**: Core
 > **GDD**: design/gdd/prestige-checkpoint-system.md (system #17 parent) + design/quick-specs/final-burnout-2026-07-01.md + design/quick-specs/challenge-era-runs-2026-07-01.md
 > **Architecture Module**: BurnoutSystem (new Autoload), ChallengeSystem (new Autoload)
-> **Status**: Ready
-> **Stories**: 8 stories created (2026-07-17)
+> **Status**: Complete
+> **Stories**: 8/8 stories complete (2026-07-17 — 2026-07-20)
 
 ## Overview
 
@@ -21,9 +21,11 @@ accepted burnout, consumed by `PrestigeSystem` via a pull-model getter
 (`get_combined_meta_multiplier()`) and by `ActionSystem` at reward resolution
 (`get_modifier(action_id, axis)`).
 
-This epic does not touch `PrestigeSystem`'s already-shipped, tested code beyond one line (the
-`challenge_mult` stub → a real `ChallengeSystem` call) — see ADR-0013 for the full ownership
-split and why the prestige-checkpoint epic was not reopened.
+This epic touches `PrestigeSystem`'s already-shipped, tested code at exactly two points inside
+`on_burnout_accepted()`: the `challenge_mult` stub → a real `ChallengeSystem.get_combined_meta_
+multiplier()` call (Story 007), and one new call to `ChallengeSystem.clear_active_challenges()`
+appended to the end of the already-shipped `_sweep_era_local_flags()` (Story 008) — see ADR-0013
+for the full ownership split and why the prestige-checkpoint epic was not reopened.
 
 ## Stories
 
@@ -36,7 +38,7 @@ split and why the prestige-checkpoint epic was not reopened.
 | 005 | Challenge Catalogue + Selection Storage | Logic | Complete | ADR-0013 |
 | 006 | Modifier Application at Reward Resolution | Integration | Complete | ADR-0013 |
 | 007 | Meta-Bonus Multiplier Pull into PrestigeSystem | Integration | Complete | ADR-0013 + ADR-0012 |
-| 008 | Era-Local Challenge Reset Wiring | Integration | Ready | ADR-0013 + ADR-0012 |
+| 008 | Era-Local Challenge Reset Wiring | Integration | Complete | ADR-0013 + ADR-0012 |
 
 ## Governing ADRs
 

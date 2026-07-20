@@ -46,16 +46,14 @@
 ## changes -- this is the epic's only touch to already-shipped PrestigeSystem
 ## code, per ADR-0013's own framing.
 ##
-## One gap remains, still deferred to burnout-challenge-system epic Story 008
-## (era-reset wiring), unaffected by this revision: _sweep_era_local_flags()
-## does NOT clear "active Challenge flags" -- ChallengeSystem's own quick-spec
-## (challenge-era-runs-2026-07-01.md) has PrestigeSystem's sweep clear
-## "challenge_active_{id}"-named flags, but ADR-0013's actual storage
-## correction (Story 005) put active selections on ChallengeSystem's own
-## _active_challenge_ids field, not HistoryFlagManager flags at all -- so this
-## sweep has nothing to iterate under the real shipped shape. Story 008 (or a
-## future ChallengeSystem.clear_active_challenges() call from this sweep) owns
-## resolving this, not this story.
+## burnout-challenge-system epic Story 008 (TR-pcs-007, ADR-0013 + ADR-0012
+## §5, this revision) closes the gap Story 007 above left open:
+## _sweep_era_local_flags() now clears ChallengeSystem._active_challenge_ids
+## via ChallengeSystem.clear_active_challenges() -- see that method's own doc
+## comment for the exact ordering guarantee relative to Story 007's
+## challenge_mult read. This is the epic's LAST remaining touch to
+## already-shipped PrestigeSystem code; no further stories in this epic
+## modify this file.
 ##
 ## Usage example:
 ##   PrestigeSystem.on_burnout_accepted()  # called by BurnoutSystem's Choice A handler
@@ -360,11 +358,20 @@ func _check_variety_bonus() -> void:
 ##   - BurnoutSystem._deferred_this_era -> false, via the placeholder
 ##     _deferred_this_era field (see that field's own doc comment for why
 ##     PrestigeSystem temporarily owns it).
+##   - ChallengeSystem._active_challenge_ids -> cleared, via
+##     ChallengeSystem.clear_active_challenges() (burnout-challenge-system
+##     epic Story 008, TR-pcs-007, ADR-0013 + ADR-0012 §5, this revision).
+##     Placed AFTER the resource reset and _deferred_this_era clear, as the
+##     last step of the sweep — no ordering dependency exists between it and
+##     either of those, but it must run strictly after step 4's
+##     ChallengeSystem.get_combined_meta_multiplier() read earlier in
+##     on_burnout_accepted() (Story 007), which it already does by
+##     construction: this sweep is called after step 4 completes, so the
+##     multiplier is always consumed before this clear runs (this story's own
+##     AC-3/AC-4 ordering regression check).
 ##
-## Explicitly does NOT touch: active Challenge flags (ChallengeSystem does
-## not exist yet, TR-pcs-007, no ADR — see this file's header comment for the
-## full rationale), Class Path affiliation/tier/counters (already cleared by
-## reset_era_state(), not this sweep's job), or any meta-persistent flag
+## Explicitly does NOT touch: Class Path affiliation/tier/counters (already
+## cleared by reset_era_state(), not this sweep's job), or any meta-persistent flag
 ## (era_count, META_BONUS_totals, first_burnout_bonus_used[type],
 ## variety_bonus_used, burnout_accepted_era_N/burnout_deferred_era_N, Class
 ## Path's best_tier_reached/eras_spent_as milestones) — preserved by
@@ -386,6 +393,8 @@ func _sweep_era_local_flags() -> void:
 	ResourceManager.apply_delta(deltas)
 
 	_deferred_this_era = false
+
+	ChallengeSystem.clear_active_challenges()
 
 
 ## Applies GDD Formula F3d's era-start Sponsors override on top of the

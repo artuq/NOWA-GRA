@@ -32,12 +32,12 @@
 ## that same already-shipped pattern (docs/tech-debt-register.md tracks the
 ## project-wide extraction-to-real-data-file item; not yet scheduled).
 ##
-## The following remain intentionally out of this story's scope, for later
-## stories in this epic:
-##   - Story 006: applying the stored challenges' modifiers at reward resolution
-##   - Story 007: reading the combined meta-bonus multiplier
-##   - Story 008: clearing _active_challenge_ids on era transition
-##   - The Challenge Selection UI screen itself (future UI story)
+## Story 006 added get_modifier() (reward-axis modifiers), Story 007 added
+## get_combined_meta_multiplier() (meta-bonus grant multiplier), Story 008
+## added clear_active_challenges() (era-local reset). The Challenge Selection
+## UI screen itself remains out of scope for this whole epic (future UI
+## story) -- this Autoload's public surface is now otherwise complete per
+## ADR-0013.
 ##
 ## Usage example:
 ##   ChallengeSystem.select_challenges([&"brak_duszy", &"bez_tlumu"])
@@ -160,6 +160,22 @@ func select_challenges(challenge_ids: Array[StringName]) -> bool:
 ## silently bypass that cap.
 func get_active_challenge_ids() -> Array[StringName]:
 	return _active_challenge_ids.duplicate()
+
+
+## Story 008 (TR-pcs-007, ADR-0013 + ADR-0012 §5, Core Rule 7): clears the
+## active challenge selection. Called by
+## PrestigeSystem._sweep_era_local_flags() on every accepted burnout (Choice
+## A) -- _active_challenge_ids is era-local state, same classification as the
+## 5 resources and _deferred_this_era that sweep already clears. Never called
+## on Choice B (Defer) -- on_burnout_deferred() does not call
+## _sweep_era_local_flags() at all, so a deferred burnout leaves the active
+## selection untouched by construction, not by any special-case guard here.
+##
+## ChallengeSystem does not own the decision of WHEN an era transitions, only
+## WHAT gets cleared once PrestigeSystem decides it has -- never call this
+## directly from anywhere else.
+func clear_active_challenges() -> void:
+	_active_challenge_ids.clear()
 
 
 ## Restores persisted state per the ADR-0003 boot protocol. A missing

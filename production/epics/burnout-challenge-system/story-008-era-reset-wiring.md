@@ -1,12 +1,12 @@
 # Story 008: Era-Local Challenge Reset Wiring
 
 > **Epic**: Burnout & Challenge System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-20
 
 
 ## Context
@@ -109,3 +109,12 @@ func clear_active_challenges() -> void:
 
 - Depends on: Story 005 (catalogue/storage — `_active_challenge_ids` must exist to clear), Story 007 (the multiplier-read call site this story's ordering AC depends on), prestige-checkpoint Story 007 (`_sweep_era_local_flags()`, Complete — this story extends it)
 - Unlocks: None (last story in this epic)
+
+---
+
+## Completion Notes
+**Completed**: 2026-07-20
+**Criteria**: 4/4 passing
+**Deviations**: ADVISORY — found an internal inconsistency in ADR-0013 itself (Constraints line 41 states `on_burnout_accepted()`'s "internals" must not be modified, while line 43 explicitly directs a future story to replace the `challenge_mult` literal at that exact call site — Story 007 and this story both correctly followed line 43's explicit instruction, not line 41's general wording). Worth a follow-up ADR clarification pass; does not affect this story's correctness.
+**Test Evidence**: `tests/integration/prestige/prestige_flag_sweep_challenge_test.gd` — 4/4 passing. Full prestige suite: 86/86 (55 unit + 31 integration), 0 regressions. Full project suite: 647/647, 0 errors.
+**Code Review**: Complete — godot-gdscript-specialist (CLEAN) + qa-tester (TESTABLE, independently confirmed the effect-based AC-3/AC-4 ordering proof is logically equivalent to a direct call-order spy given `get_combined_meta_multiplier()`'s uncached pure-function shape), both APPROVED
