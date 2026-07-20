@@ -1,12 +1,12 @@
 # Story 005: Challenge Catalogue + Selection Storage
 
 > **Epic**: Burnout & Challenge System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-20
 
 
 ## Context
@@ -137,3 +137,12 @@ Catalogue data source (`assets/data/challenges.json` vs. an in-code const table)
 
 - Depends on: None (foundational ChallengeSystem story)
 - Unlocks: Story 006 (modifier application reads `_active_challenge_ids`), Story 007 (meta-multiplier reads the same), Story 008 (era-reset clears it)
+
+---
+
+## Completion Notes
+**Completed**: 2026-07-20
+**Criteria**: 5/5 passing
+**Deviations**: None blocking. One quality hardening during code review: `get_active_challenge_ids()` returns `.duplicate()` rather than the live internal array, closing a CHALLENGE_MAX_ACTIVE bypass vector external mutation would otherwise allow.
+**Test Evidence**: `tests/unit/challenge/challenge_selection_storage_test.gd` — 14/14 passing, 0 errors, 0 orphans (verified live via gdUnit4 headless run); full `tests/unit/` suite (380 cases) also green after the new ChallengeSystem Autoload registration
+**Code Review**: Complete — godot-gdscript-specialist (CLEAN) + qa-tester (TESTABLE, one low-priority advisory), both APPROVED
