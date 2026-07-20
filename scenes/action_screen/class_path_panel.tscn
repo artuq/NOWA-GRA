@@ -161,7 +161,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 text = "0 / 100"
 
 [node name="Row1StatusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row1/VBox"]
@@ -170,7 +170,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 text = ""
 
@@ -178,7 +178,7 @@ text = ""
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
@@ -188,10 +188,10 @@ text = "Invest"
 [node name="Row1InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row1/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.55, 0.4, 1)
+theme_override_colors/font_color = Color(0.91, 0.66, 0.49, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 visible = false
 text = ""
@@ -242,7 +242,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 text = "0 / 100"
 
 [node name="Row2StatusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row2/VBox"]
@@ -251,7 +251,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 text = ""
 
@@ -259,7 +259,7 @@ text = ""
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
@@ -269,10 +269,10 @@ text = "Invest"
 [node name="Row2InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row2/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.55, 0.4, 1)
+theme_override_colors/font_color = Color(0.91, 0.66, 0.49, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 visible = false
 text = ""
@@ -323,7 +323,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 text = "0 / 100"
 
 [node name="Row3StatusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row3/VBox"]
@@ -332,7 +332,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 text = ""
 
@@ -340,7 +340,7 @@ text = ""
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
@@ -350,10 +350,10 @@ text = "Invest"
 [node name="Row3InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row3/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.55, 0.4, 1)
+theme_override_colors/font_color = Color(0.91, 0.66, 0.49, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 visible = false
 text = ""
@@ -404,7 +404,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 text = "0 / 100"
 
 [node name="Row4StatusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row4/VBox"]
@@ -413,7 +413,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 text = ""
 
@@ -421,7 +421,7 @@ text = ""
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
@@ -431,10 +431,10 @@ text = "Invest"
 [node name="Row4InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row4/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.55, 0.4, 1)
+theme_override_colors/font_color = Color(0.91, 0.66, 0.49, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 visible = false
 text = ""
