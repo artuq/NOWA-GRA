@@ -41,12 +41,17 @@
 ## through to either branch (ADR-0013's story-readiness-time correction --
 ## see _on_card_resolved()'s own doc comment).
 ##
-## The following remains deferred to a later story and is NOT implemented
-## here (see story-002-card-injection-guard-rails.md's Out of Scope):
-##   - Story 004: restore_state()/serialize_state() (ADR-0003 boot protocol)
-##     for _card_pending -- _cringe_sustained_seconds is intentionally never
-##     persisted (Final Burnout quick-spec's Pillar 4: "no surprise burnout
-##     on app open")
+## Story 004 (this revision) adds restore_state()/serialize_state() (ADR-0003
+## boot protocol): only _card_pending persists -- _cringe_sustained_seconds is
+## deliberately excluded from both, always resetting to 0.0 on restore
+## regardless of what a save file contains, per the quick-spec's own Pillar 4
+## ("no surprise burnout on app open"). This is the last BurnoutSystem story
+## in the burnout-challenge-system epic (story-004-burnout-persistence.md's
+## own Dependencies section); nothing remains deferred on this Autoload.
+## Wiring these two methods into BootController/SaveSystem's restore/save
+## sequence is an explicit, separate decision tracked outside this story's
+## scope -- this story only guarantees the flag itself round-trips correctly
+## once that wiring lands.
 ##
 ## Tuning knobs (BURNOUT_THRESHOLD, BURNOUT_WARNING_THRESHOLD): ADR-0013's
 ## pseudocode comments mark these as "balance.json" values, but no
@@ -237,3 +242,46 @@ func _on_card_resolved(card_id: StringName, _path_tag: StringName, option_chosen
 	else:
 		push_error("BurnoutSystem: unrecognized Wypalenie option_chosen '%s' -- " % option_chosen +
 			"neither Accept nor Defer branch taken, card content may have drifted from routing logic")
+
+
+## Story 004 (TR-pcs-007, ADR-0013's persistence pseudocode + ADR-0003's boot
+## protocol): restores persisted state, called by BootController once
+## BurnoutSystem is wired into its restore sequence (see this file's header
+## comment for why that wiring is tracked as a separate, out-of-scope
+## decision for this story). Only _card_pending is restored;
+## _cringe_sustained_seconds is intentionally NOT restored -- it always keeps
+## its own declared 0.0 default and [param data] is never even read for that
+## key -- per the quick-spec's Pillar 4 ("no surprise burnout on app open": a
+## player who was mid-sustained-Cringe when the app closed does not resume
+## already partway to a forced card on their next session). A missing
+## "_card_pending" key defaults safely to false -- same default-on-missing-key
+## pattern as every other Autoload in this project (PrestigeSystem.
+## restore_state(), ADR-0012 §6 precedent).
+##
+## A restored _card_pending == true means the Wypalenie card was injected and
+## still awaiting the player's A/B choice when the app last closed. This
+## story's contract ends at restoring that flag correctly -- the actual
+## re-presentation on the next available frame is Story 002's
+## _try_inject_burnout_card() / this file's own _process() guard
+## (`_cringe_sustained_seconds >= BURNOUT_THRESHOLD and not _card_pending`)
+## reacting to state this method sets, not new logic added here.
+##
+## Example:
+##   BurnoutSystem.restore_state(data.get("burnout", {}))
+func restore_state(data: Dictionary) -> void:
+	_card_pending = bool(data.get("_card_pending", false))
+	# _cringe_sustained_seconds intentionally NOT restored -- resets to 0.0,
+	# per the quick-spec's own Pillar 4 "no surprise burnout on app open" rule.
+
+
+## Story 004 (TR-pcs-007, ADR-0013/ADR-0003): serializes persisted state for
+## SaveSystem.save_now(). Only _card_pending is included in the returned
+## Dictionary -- _cringe_sustained_seconds is deliberately absent entirely
+## (not merely written out as 0.0), so the key's absence itself proves this is
+## a deliberate exclusion rather than an accidental omission (see
+## restore_state()'s own doc comment for the full rationale).
+##
+## Example:
+##   var data: Dictionary = BurnoutSystem.serialize_state()
+func serialize_state() -> Dictionary:
+	return {"_card_pending": _card_pending}

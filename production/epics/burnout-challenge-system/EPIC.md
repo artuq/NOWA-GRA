@@ -32,7 +32,7 @@ split and why the prestige-checkpoint epic was not reopened.
 | 001 | Trigger Detection — Sustained Cringe Timer + Warning Countdown | Logic | Complete | ADR-0013 |
 | 002 | Forced Card Injection with Guard Rails | Integration | Complete | ADR-0013 |
 | 003 | Choice Routing into PrestigeSystem | Integration | Complete | ADR-0013 + ADR-0012 |
-| 004 | BurnoutSystem Persistence | Logic | Ready | ADR-0013 + ADR-0003 |
+| 004 | BurnoutSystem Persistence | Logic | Complete | ADR-0013 + ADR-0003 |
 | 005 | Challenge Catalogue + Selection Storage | Logic | Ready | ADR-0013 |
 | 006 | Modifier Application at Reward Resolution | Integration | Ready | ADR-0013 |
 | 007 | Meta-Bonus Multiplier Pull into PrestigeSystem | Integration | Ready | ADR-0013 + ADR-0012 |

@@ -1,12 +1,12 @@
 # Story 004: BurnoutSystem Persistence
 
 > **Epic**: Burnout & Challenge System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Logic
 > **Estimate**: S (1-2h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-20
 
 
 ## Context
@@ -103,3 +103,12 @@ This closes the deferred half of prestige-checkpoint's `story-008-transition-ato
 
 - Depends on: Story 001 (defines the `_cringe_sustained_seconds`/`_card_pending` fields this story persists)
 - Unlocks: None (last BurnoutSystem story in this epic)
+
+---
+
+## Completion Notes
+**Completed**: 2026-07-20
+**Criteria**: 4/4 passing (AC-4's flag-contract half proven by AC-1's test; the re-presentation trigger itself is correctly out of this story's scope, per this story's own Implementation Notes)
+**Deviations**: None — implementation is a literal match to ADR-0013's persistence pseudocode
+**Test Evidence**: `tests/unit/burnout/burnout_persistence_test.gd` — 5/5 passing, 0 errors, 0 orphans (verified live via gdUnit4 headless run)
+**Code Review**: Complete — godot-gdscript-specialist (CLEAN) + qa-tester (TESTABLE, no gaps), both APPROVED with zero required changes
