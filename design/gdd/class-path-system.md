@@ -253,6 +253,7 @@ active_path =
 **Depended on by:**
 - **Prestige/Checkpoint System** (Alpha, Designed 2026-07-12) — reads `best_tier_reached[path]` and `eras_spent_as[path]` meta-flags for informational/era-summary UI display only *(corrected 2026-07-13, `/design-review` on `prestige-checkpoint-system.md` found this line contradicted that GDD's own locked Formulas — the actual META_BONUS magnitude formula (F1) reads only live `get_active_path()`/`get_tier()` at burnout time, never these two lifetime-meta flags)*. This is the dependency this GDD exists to unblock.
 - **Cosmetic Persona Customization** (Full Vision, undesigned) — expected to read active path for cosmetic-flavor gating (provisional — no contract defined yet, flagged for that system's own GDD).
+- **Main Navigation/Screen Flow** (Vertical Slice, In Design 2026-07-20) — `ClassPathPanel` is one of the two overlay panels this system coordinates (at-most-one-panel-open rule); added to correct a one-directional dependency found while authoring that GDD.
 
 ## Tuning Knobs
 
