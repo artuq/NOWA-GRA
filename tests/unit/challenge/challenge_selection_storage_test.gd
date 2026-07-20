@@ -54,7 +54,7 @@ func test_ac1_przepros_na_niby_matches_quick_spec_table_exactly() -> void:
 
 	assert_that(data["modifier_type"]).is_equal(&"cringe_multiplier")
 	assert_float(data["modifier_value"]).is_equal_approx(0.3, 0.0001)
-	assert_array(data["applies_to"]).is_equal([&"przepros_w_internecie"])
+	assert_array(data["applies_to"]).is_equal([&"przeprosiny"])
 	assert_float(data["meta_bonus_multiplier"]).is_equal_approx(1.8, 0.0001)
 
 
@@ -74,7 +74,7 @@ func test_ac1_wypalony_ale_core_matches_quick_spec_table_exactly() -> void:
 
 	assert_that(data["modifier_type"]).is_equal(&"morale_multiplier")
 	assert_float(data["modifier_value"]).is_equal_approx(0.6, 0.0001)
-	assert_array(data["applies_to"]).is_equal([&"przepros_w_internecie"])
+	assert_array(data["applies_to"]).is_equal([&"przeprosiny"])
 	assert_float(data["meta_bonus_multiplier"]).is_equal_approx(2.0, 0.0001)
 
 

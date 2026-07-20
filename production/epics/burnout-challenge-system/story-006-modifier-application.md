@@ -1,12 +1,12 @@
 # Story 006: Modifier Application at Reward Resolution
 
 > **Epic**: Burnout & Challenge System
-> **Status**: Ready
+> **Status**: Complete
 > **Layer**: Core
 > **Type**: Integration
 > **Estimate**: M (2-4h)
 > **Manifest Version**: 2026-06-20
-> **Last Updated**:
+> **Last Updated**: 2026-07-20
 
 
 ## Context
@@ -133,3 +133,15 @@ Round-half-up is `ActionSystem`'s existing convention (already used for Formula 
 
 - Depends on: Story 005 (catalogue + active-selection storage), Action System epic (Complete — `ActionSystem`'s reward resolution call site already exists, this story adds one call into it)
 - Unlocks: None (independent of Story 007/008)
+
+---
+
+## Completion Notes
+**Completed**: 2026-07-20
+**Criteria**: 7/7 passing
+**Deviations**: Three, all documented in the shipped code:
+1. Real Godot 4 runtime bug in ADR-0013's literal `get_modifier()` pseudocode (`applies_to != "all"` throws `Invalid operands 'Array' and 'String'`) — fixed with an `is Array` type check, identical outcome.
+2. Real stale action-id bug: `przepros_na_niby`/`wypalony_ale_core` targeted the quick-spec's `przepros_w_internecie`, which doesn't exist in the shipped `ActionSystem.ACTION_REWARDS` (real id: `przeprosiny`) — without the fix, both challenges' modifiers would never have applied in actual gameplay. Fixed at the catalogue source; Story 005's own test updated to match; 2 new regression tests added in this story's suite to protect the `Array.has()` code path specifically (the field-equality assertion alone wouldn't have caught a future revert).
+3. Undocumented-by-ADR ordering decision: challenge modifier applied as a third multiplicative pass on Reach, after the existing Morale-multiplier and Class-Path-bonus passes (from a different, already-shipped epic ADR-0013 wasn't cross-referenced against) — least invasive choice, documented in `_on_action_timeout()`'s own doc comment.
+**Test Evidence**: `tests/integration/challenge/challenge_modifier_resolution_test.gd` — 13/13 passing, 0 errors, 0 orphans (verified live via gdUnit4 headless run); full suite (637 cases, 64 suites) also green
+**Code Review**: Complete — godot-gdscript-specialist (CLEAN, one non-blocking advisory) + qa-tester (found one real gap, closed with 2 added regression tests), both APPROVED

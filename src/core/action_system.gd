@@ -240,6 +240,19 @@ func clear_queue() -> void:
 ## No-ops if there is no active action (guards against a direct/duplicate
 ## call when `current_action_id == &""` — the Timer itself never triggers
 ## this case, since it only fires after `start_action()` sets a valid id).
+##
+## Story 006 (TR-pcs-007, ADR-0013): adds `ChallengeSystem.get_modifier()` as
+## a further multiplicative pass on all three axes -- Reach, Cringe, Morale --
+## per the quick-spec's Rule 2/4. Ordering choice (not specified by ADR-0013,
+## which was written without cross-referencing this already-shipped
+## `path_bonus` step from a different epic): the challenge modifier is applied
+## AFTER the existing Morale-multiplier + Class-Path-bonus passes, as an
+## additional third `roundf()` step on Reach, rather than inserted between
+## them -- the least invasive ordering, preserving both already-shipped
+## passes' existing behavior unchanged when no challenge is active (challenge
+## modifier defaults to 1.0, a true no-op). For Cringe/Morale, the modifier
+## scales the declared delta directly (no existing multiplicative pass exists
+## there to order against) and is rounded with the same convention.
 func _on_action_timeout() -> void:
 	if current_action_id == &"":
 		return
@@ -253,10 +266,19 @@ func _on_action_timeout() -> void:
 	# Class path tier bonus (ADR-0010 pull model): 1.0 when no active path.
 	var path_bonus: float = ClassPathSystem.get_active_multiplier(completed_id)
 	scaled_reach = roundf(scaled_reach * path_bonus)
+	# Challenge modifiers (ADR-0013 pull model): 1.0 when no active challenge
+	# targets this action/axis. Third multiplicative pass, after Morale +
+	# Class Path -- see this method's own doc comment for the ordering choice.
+	var reach_challenge_mod: float = ChallengeSystem.get_modifier(completed_id, &"reach_multiplier")
+	scaled_reach = roundf(scaled_reach * reach_challenge_mod)
+	var cringe_challenge_mod: float = ChallengeSystem.get_modifier(completed_id, &"cringe_multiplier")
+	var scaled_cringe: float = roundf(base_rewards[&"Cringe"] * cringe_challenge_mod)
+	var morale_challenge_mod: float = ChallengeSystem.get_modifier(completed_id, &"morale_multiplier")
+	var scaled_morale: float = roundf(base_rewards[&"Morale"] * morale_challenge_mod)
 	var deltas: Dictionary[StringName, float] = {
 		&"Reach": scaled_reach,
-		&"Cringe": base_rewards[&"Cringe"],
-		&"Morale": base_rewards[&"Morale"],
+		&"Cringe": scaled_cringe,
+		&"Morale": scaled_morale,
 	}
 	ResourceManager.apply_delta(deltas)
 	action_completed.emit(completed_id, deltas)

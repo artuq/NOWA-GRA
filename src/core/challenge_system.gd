@@ -50,6 +50,13 @@ extends Node
 ## project.
 const CHALLENGE_MAX_ACTIVE: int = 3
 
+## Hard floor applied to get_modifier()'s stacked product (quick-spec §6 /
+## Formulas table, "safety" category) -- prevents a misconfigured catalogue
+## entry (modifier_value == 0.0) from ever zeroing a reward outright. Plain
+## const per this file's header comment -- no balance.json exists yet in this
+## project.
+const CHALLENGE_MODIFIER_FLOOR: float = 0.05
+
 ## The 5 designed challenges (design/quick-specs/challenge-era-runs-2026-07-01.md,
 ## "Challenge Catalogue (5 Designed Examples)" section), field values
 ## reproduced verbatim from that section's per-challenge tables -- not
@@ -58,6 +65,17 @@ const CHALLENGE_MAX_ACTIVE: int = 3
 ## row) meaning every base action -- callers reading this field must handle
 ## both shapes; Story 006 (modifier application) owns interpreting it, this
 ## story only stores it faithfully.
+##
+## One correction from the quick-spec's own literal text (found+fixed during
+## Story 006's implementation, 2026-07-20): `przepros_na_niby` and
+## `wypalony_ale_core` both target the quick-spec's `przepros_w_internecie`
+## action id, but the real, already-shipped `ActionSystem.ACTION_REWARDS` key
+## is `przeprosiny` (action-system epic, Complete) -- same "the quick-spec is
+## the stale artifact, not the shipped code" precedent ADR-0013 itself already
+## established for other terminology drift in these same quick-specs (its own
+## "GDD SYNC REQUIRED" section). Left uncorrected, these two challenges'
+## modifiers would silently never match any real action id and never apply in
+## actual gameplay -- `get_modifier()`'s Array.has() check would always miss.
 const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 	&"brak_duszy": {
 		"id": &"brak_duszy",
@@ -80,7 +98,7 @@ const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 		"name": "Przeproś, ale nie za bardzo",
 		"modifier_type": &"cringe_multiplier",
 		"modifier_value": 0.3,
-		"applies_to": [&"przepros_w_internecie"],
+		"applies_to": [&"przeprosiny"],
 		"meta_bonus_multiplier": 1.8,
 	},
 	&"bez_tlumu": {
@@ -96,7 +114,7 @@ const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 		"name": "Wypalony, ale core",
 		"modifier_type": &"morale_multiplier",
 		"modifier_value": 0.6,
-		"applies_to": [&"przepros_w_internecie"],
+		"applies_to": [&"przeprosiny"],
 		"meta_bonus_multiplier": 2.0,
 	},
 }
@@ -158,6 +176,60 @@ func restore_state(data: Dictionary) -> void:
 	_active_challenge_ids.clear()
 	for id_str: String in ids_in:
 		_active_challenge_ids.append(StringName(id_str))
+
+
+## Story 006 (TR-pcs-007, ADR-0013's get_modifier() pseudocode -- implemented
+## exactly as written, no deviation): returns the combined multiplicative
+## modifier every active challenge applies to [param action_id] on
+## [param axis] (one of &"reach_multiplier"/&"cringe_multiplier"/
+## &"morale_multiplier", matching a catalogue entry's own "modifier_type"
+## field). Pure function of _active_challenge_ids + the catalogue -- no side
+## effects, no ResourceManager/other Autoload reads (Control Manifest
+## guardrail, this story's Context section).
+##
+## Stacking (quick-spec §4): multiple active challenges targeting the same
+## (action_id, axis) pair multiply together, not add or override -- two 0.5x
+## Reach modifiers on the same action combine to 0.25x, matching AC-3's own
+## worked example.
+##
+## The "all" sentinel (bez_tlumu's own catalogue entry): applies_to may be
+## either an Array[StringName] of specific action ids, or the literal String
+## "all" meaning every base action -- checked explicitly before the Array
+## cast, since casting "all" (a String) to Array would be a type error, not a
+## silent false.
+##
+## Returns exactly 1.0 (a true no-op multiply, not a missing-key error) when
+## no active challenge targets this (action_id, axis) pair at all -- including
+## when _active_challenge_ids is empty (no challenges active this era).
+##
+## Always clamped to at least CHALLENGE_MODIFIER_FLOOR via maxf() -- even a
+## product that computes to exactly 0.0 (a hypothetically misconfigured
+## catalogue entry) never reaches a caller as a true zero.
+##
+## Example:
+##   ChallengeSystem.get_modifier(&"nagraj_vloga", &"reach_multiplier")  # -> 0.3 if brak_duszy active, else 1.0
+##
+## Deviation from ADR-0013's literal pseudocode (found+fixed 2026-07-20, same
+## behavior/outcome, different implementation): the ADR's own text is
+## `if applies_to != "all" and not (applies_to as Array).has(action_id):`,
+## but Godot 4 GDScript throws a runtime error ("Invalid operands 'Array' and
+## 'String' in operator '!='") when applies_to holds an Array and is compared
+## against the String "all" with `!=` -- unlike Python/JS, GDScript's `!=`
+## does not gracefully fall back to "different types, so not equal" for
+## Array-vs-String. Rewritten as an explicit `is Array` type check instead,
+## which sidesteps the illegal cross-type comparison entirely while producing
+## the identical pass/skip decision for both applies_to shapes.
+func get_modifier(action_id: StringName, axis: StringName) -> float:
+	var product: float = 1.0
+	for challenge_id: StringName in _active_challenge_ids:
+		var entry: Dictionary = _CHALLENGE_CATALOGUE[challenge_id]
+		if entry["modifier_type"] != axis:
+			continue
+		var applies_to: Variant = entry["applies_to"]
+		if applies_to is Array and not (applies_to as Array).has(action_id):
+			continue
+		product *= entry["modifier_value"]
+	return maxf(CHALLENGE_MODIFIER_FLOOR, product)
 
 
 ## Serializes persisted state for SaveSystem.save_now(). StringName ids are
