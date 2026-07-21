@@ -2,7 +2,7 @@
 
 > **Status**: Draft
 > **Created**: 2026-06-19
-> **Last Updated**: 2026-06-19
+> **Last Updated**: 2026-07-21
 > **Source Concept**: design/gdd/game-concept.md
 
 ---
@@ -30,7 +30,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | 11 | Onboarding/Tutorial (inferred) | Meta | MVP | Designed | design/gdd/onboarding-tutorial.md | Action System, Decision Card System |
 | 12 | Class Path System | Progression | Vertical Slice | Designed | design/gdd/class-path-system.md | History Flag System, Decision Card System |
 | 13 | Juice/Feedback System (inferred) | Audio | Vertical Slice | Designed | design/gdd/juice-feedback-system.md | Action System, Decision Card System |
-| 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | Designed | design/gdd/main-navigation-screen-flow.md | Action UI, Card UI, Offline Report Screen |
+| 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | In Review | design/gdd/main-navigation-screen-flow.md | Action UI, Class Path System, Settings System, Decision Card System, Offline Report Screen |
 | 15 | Team/Staff Management | Economy | Alpha | Not Started | — | Resource System, Offline Progress System |
 | 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Not Started | — | Team/Staff Management |
 | 17 | Prestige/Checkpoint System | Progression | Alpha | Designed | design/gdd/prestige-checkpoint-system.md | Class Path System, Offline Progress System, Save/Persistence System |
@@ -93,7 +93,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 3. Offline Report Screen — depends on: Offline Progress System
 4. Staff/Sponsor UI — depends on: Team/Staff Management
 5. Cosmetic Persona Customization — depends on: Class Path System
-6. Main Navigation/Screen Flow — depends on: Action UI, Card UI, Offline Report Screen
+6. Main Navigation/Screen Flow — depends on: Action UI, Class Path System, Settings System, Decision Card System, Offline Report Screen
 7. Juice/Feedback System — depends on: Action System, Decision Card System
 
 ### Polish Layer (depends on everything)
