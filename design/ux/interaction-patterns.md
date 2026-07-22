@@ -64,6 +64,8 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," o
 **When to Use**: Any bounded-duration wait the player is meant to perceive as progressing (reinforces the select-and-wait loop's core feel).
 **When NOT to Use**: Indeterminate-duration waits — use a different indicator (spinner) since a progress bar implies a known endpoint.
 
+**Descending variant** (added 2026-07-22, `/ux-review` finding — Burnout Warning HUD Indicator): the same per-frame update discipline applies to real-time countdowns, just inverted — `fill_ratio = clamp(seconds_remaining / window, 0, 1)`, shrinking rather than filling. Same neutral-track rule, same "never bar alone" pairing with text. Used in: Burnout Warning HUD Indicator.
+
 ---
 
 ### Swipe-to-Commit (distance OR velocity)
