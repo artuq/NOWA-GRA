@@ -16,7 +16,7 @@
 | Aspect | Detail |
 | ---- | ---- |
 | **Genre** | Idle/Incremental Tycoon + narrative decision cards |
-| **Platform** | Mobile (Android, docelowo iOS) |
+| **Platform** | Android + Web (HTML5, portale typu CrazyGames) — iOS poza zakresem (2026-07-22) |
 | **Target Audience** | Fani Melvor Idle / Idle Research, którzy chcą głębi systemowej z satyrycznym tematem |
 | **Player Count** | Single-player |
 | **Session Length** | 5-20 min aktywnej sesji, długie okresy offline |
@@ -179,7 +179,7 @@ Zastosowano jednolitą listę pytań playtestowych (`production/playtests/playte
 | **Age range** | 18-35 |
 | **Gaming experience** | Mid-core (komfortowi z systemami liczbowymi, ale na mobile, sesyjnie) |
 | **Time availability** | Krótkie sesje 5-20 min, kilka razy dziennie + długie okresy offline |
-| **Platform preference** | Android (docelowo iOS) |
+| **Platform preference** | Android + Web/CrazyGames |
 | **Current games they play** | Melvor Idle, Idle Research: Endless Tycoon, Beggar's Life |
 | **What they're looking for** | Głęboką progresję numeryczną z czytelnym, satyrycznym tematem — coś więcej niż kolejny generyczny clicker |
 | **What would turn them away** | Przeładowane UI, nadmiar aktywnego klikania, moralizujące wykłady zamiast satyry przez mechanikę |
