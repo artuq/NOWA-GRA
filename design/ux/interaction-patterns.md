@@ -2,14 +2,14 @@
 
 > **Status**: In Design
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-06-20
+> **Last Updated**: 2026-07-22
 > **Template**: Interaction Pattern Library
 
 ---
 
 ## Overview
 
-This library catalogs the touch-interaction patterns used in "Król Cringe'u," extracted from the 3 GDDs with UI Requirements sections (Action UI, Card UI, Offline Report Screen). The game is touch-only on Android — every pattern assumes large touch areas and zero hover-only interactions, per `technical-preferences.md`. Goal: new screens (Vertical Slice+) reference these patterns by name rather than reinventing them.
+This library catalogs the touch-interaction patterns used in "Król Cringe'u," originally extracted from the 3 GDDs with UI Requirements sections (Action UI, Card UI, Offline Report Screen), and extended by later `/ux-design` sessions (Meta-Bonus Visibility). The game is touch-first (Android + Web with mouse-emulated touch) — every pattern assumes large touch areas and zero hover-only interactions, per `technical-preferences.md`. Goal: new screens (Vertical Slice+) reference these patterns by name rather than reinventing them.
 
 ---
 
@@ -24,6 +24,7 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," e
 | Headline Count-Up Number | Feedback | Offline Report Screen |
 | Locked/Muted Slot | Data Display | Action UI |
 | Tap-Anywhere-or-Button Dismiss | Input | Offline Report Screen |
+| Event-Driven Progress-to-Cap Bar | Feedback | Meta-Bonus Visibility |
 
 ---
 
@@ -150,6 +151,23 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," e
 
 ---
 
+### Event-Driven Progress-to-Cap Bar
+
+**Category**: Feedback
+**Used In**: Meta-Bonus Visibility
+
+**Description**: A progress bar showing how close a permanent value is to its lifetime ceiling. Unlike Per-Frame Progress Bar, it does not update continuously against elapsed time — it recomputes only when the underlying value changes (a grant event), then holds static until the next change.
+
+**Specification**:
+- `fill_ratio = clamp(current_value / cap_value, 0, 1)` — recomputed on grant/update events only, never per-frame
+- Always paired with the numeric current value as text — the bar alone never carries the information (accessibility, no-color-alone rule)
+- At `fill_ratio == 1.0` (capped), pairs with an explicit textual/iconic "MAX" indicator, not just a visually full bar — a full bar and a capped bar must be distinguishable without inferring from position alone
+
+**When to Use**: Any permanent, slowly-accumulating value with a known ceiling that the player checks periodically, not something they watch tick up in real time.
+**When NOT to Use**: Time-bounded waits with a known duration — use Per-Frame Progress Bar instead, which implies "this is currently running," not "this is where you stand."
+
+---
+
 ## Gaps & Patterns Needed
 
 - **Toast/banner pattern** (passive, non-blocking notification) — needed once a system requires a notification that doesn't block play; flagged above as the right tool versus Full-Screen Blocking Modal for low-urgency notices.
@@ -160,5 +178,4 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," e
 
 ## Open Questions
 
-- **Accessibility tier not yet defined** — no `design/accessibility-requirements.md` exists. Consider WCAG-AA as a baseline. *Owner: this skill, next file to create. Target: before `/gate-check pre-production`.*
 - **Exact touch-target sizing** — patterns reference "44×44dp Android minimum" as platform guidance, but no per-screen spec has pinned final dimensions yet. *Owner: per-screen `/ux-design` sessions. Target: Pre-Production.*
