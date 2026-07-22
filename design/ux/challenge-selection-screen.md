@@ -156,7 +156,7 @@ Wejście: fade-in ~150-200ms po załadowaniu sceny (ten sam zakres co Full-Scree
 | Katalog 5 challenge'ów | `ChallengeSystem.get_challenge_data(id)` | Read | Już istnieje |
 | `CHALLENGE_MAX_ACTIVE` | Tuning knob const | Read | Już istnieje |
 | Żywy `combined_meta_multiplier` (przed Confirm) | **Lokalna matematyka UI**, nie wywołanie do `ChallengeSystem` | Read (local compute) | Iloczyn `meta_bonus_multiplier` zaznaczonych kart z już wczytanego katalogu — nic nie jest jeszcze zapisane do systemu przed Confirm, więc nie ma czego odpytywać. Nie nowe API. |
-| `MetaBonusGrantedLabel` (kwota z Wypalenia) | `PrestigeSystem` — **NOWA potrzeba** (patrz Component Inventory) | Read | Dziedziczy flagowaną potrzebę: `era_transitioned` payload lub queryable "ostatni grant"; musi rozróżniać "nic nie przyznano" (No Bonus Granted state) od realnego zera |
+| `MetaBonusGrantedLabel` (kwota z Wypalenia) | `PrestigeSystem.get_last_grant()` (ADR-0017) | Read | `{granted, type, amount}` — `granted == false` rozróżnia "nic nie przyznano" (No Bonus Granted state) od realnego zera |
 | Confirm → `select_challenges(challenge_ids)` | `ChallengeSystem` | Write | Już w pełni zaprojektowane — zapisuje era-local flagi (Events Fired) |
 
 Jedyny nowy wymóg architektoniczny: ten sam co w `wypalenie-card-modal.md` (kwota ostatniego grantu) — nie duplikowany tu jako osobny problem, to ten sam brakujący kawałek API czytany w dwóch miejscach.
@@ -199,7 +199,7 @@ Ta sama flaga co pozostałe spec'i: język UI gry to angielski, nie polski.
 
 ## Open Questions
 
-- **Kwota ostatniego grantu — nowe API potrzebne.** `PrestigeSystem.era_transitioned` nie ma dziś payloadu. Ten sam brakujący kawałek co w `wypalenie-card-modal.md` Open Questions — nie duplikowany tu jako osobny problem. *Owner: `/architecture-decision` lub amendment do ADR-0012, przed implementacją obu ekranów.*
+- ~~**Kwota ostatniego grantu — nowe API potrzebne.**~~ — **RESOLVED 2026-07-22**: `ADR-0017` written — `PrestigeSystem.get_last_grant() -> Dictionary{granted, type, amount}`, queryable po `era_transitioned`. Ta sama funkcja bazowa (`compute_next_grant()`) co Wypalenie card's preview — gwarancja identycznych liczb, nie przybliżenia.
 - **Scene-swap wywołany runtime eventem — luka w pokryciu ADR.** Patrz Navigation Position: ani ADR-0003 (tylko boot sequence), ani ADR-0014 (tylko koordynacja paneli wewnątrz `action_screen.tscn`) nie pokrywa przejścia `action_screen.tscn` → `challenge_selection.tscn` → z powrotem wywołanego `era_transitioned`. *Owner: nowy `/architecture-decision` przed implementacją tego ekranu — prawdopodobnie mały ADR, wzorem ADR-0009's precedent dla podobnego przypadku (Offline Report Screen).*
 - **Dokładne wartości fade** (120-150ms/100ms zakres) — kierunek ustalony, liczby do feel-testu.
 - **Język UI (Polish→English audit)** — ta sama flaga co pozostałe spec'i.

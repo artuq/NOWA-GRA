@@ -138,7 +138,7 @@ Wejście: ten sam fade+scrim mechanizm co Full-Screen Blocking Modal (pattern), 
 |---|---|---|---|
 | `has_deferred_this_era()` | `PrestigeSystem` | Read | Już istnieje |
 | `BURNOUT_DEFER_MORALE_COST` | Tuning knob const | Read | Już istnieje |
-| **Podgląd meta-bonusu (F1 formuła), bez commitu** | **NOWA funkcja — nie istnieje jeszcze** | Read (pure, no side effects) | `PrestigeSystem`/`PrestigeFormulas` musi wystawić preview czytający te same inputy co prawdziwy grant (`ClassPathSystem.get_active_path()`/`get_tier()`, `ChallengeSystem.get_combined_meta_multiplier()`, `first_burnout_bonus_used[type]`) — bez mutacji stanu. **Flagowane jako nowe wymaganie architektoniczne** (patrz Open Questions) |
+| Podgląd meta-bonusu (F1 formuła), bez commitu | `PrestigeSystem.compute_next_grant(path_id, tier)` (ADR-0017) | Read (pure, no side effects) | Wołane jako `compute_next_grant(ClassPathSystem.get_active_path(), ClassPathSystem.get_tier(...))` — ta sama funkcja co realny grant, gwarancja identycznych liczb |
 | `get_active_path()` zwraca puste (null handling) | `ClassPathSystem` | Read | Gdy puste: preview pomija liczbę całkowicie, pokazuje ostrzeżenie zamiast niej (No Active Path state) — nie `0` ani placeholder liczbowy, żeby nie sugerować fałszywie że jakaś (choćby zerowa) nagroda istnieje |
 | Copy karty (HeadlineText, flavor) | Statyczna treść (CardContentDatabase, `BURNOUT_CARD_ID` entry) | Read | Treść, nie stan gry |
 | Choice A/B commit → cała era-transition machinery | `DecisionCardSystem.resolve_choice()` → `BurnoutSystem` → `PrestigeSystem` | Write | Już w pełni zaprojektowane (ADR-0012/0013) — patrz Events Fired |
@@ -183,7 +183,7 @@ Ta sama flaga co `meta-bonus-visibility.md`: język UI gry to angielski, nie pol
 
 ## Open Questions
 
-- **Preview meta-bonusu — nowa architektura potrzebna.** `PrestigeFormulas`'s F1 formuła już istnieje jako czysta funkcja, ale nic dziś nie woła jej bez commitu — potrzebny pure-read wrapper (`PrestigeSystem.preview_meta_bonus_grant()` lub podobny), czytający te same inputy co prawdziwy grant. *Owner: `/architecture-decision` lub amendment do ADR-0012, przed implementacją tego ekranu.*
+- ~~**Preview meta-bonusu — nowa architektura potrzebna.**~~ — **RESOLVED 2026-07-22**: `ADR-0017` written — `PrestigeSystem.compute_next_grant(path_id, tier) -> Dictionary{granted, type, amount}`, pure, called by this card as `compute_next_grant(ClassPathSystem.get_active_path(), ClassPathSystem.get_tier(...))` before any swipe commits. Same function `on_burnout_accepted()` uses for the real grant — guaranteed identical numbers.
 - **Dokładne wartości wizualnej intensywności** (ciemność scrimu, dokładny czas wejścia w zakresie 250-300ms) — kierunek ustalony, liczby do feel-testu. *Owner: po pierwszym playteście.*
 - **Niezapowiedziana mechanika dla pierwszego gracza** — ten spec projektuje samą kartę zakładając widziany countdown w sesji, ale nie rozwiązuje szerszego pytania już śledzonego w `prestige-checkpoint-system.md` Open Questions (dodane 2026-07-22): gra nigdy nie zapowiada mechaniki era-reset przed pierwszym napotkaniem. *Owner: ten sam co tamto pytanie, nie duplikowany tu.*
 - **Język UI (Polish→English audit)** — ta sama flaga co `meta-bonus-visibility.md`, część już śledzonego długu.

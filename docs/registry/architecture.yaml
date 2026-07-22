@@ -210,6 +210,22 @@ interfaces:
     source: docs/architecture/adr-0014-main-navigation-coordinator.md
     referenced_by: []
 
+  - name: compute_next_grant
+    signature: "compute_next_grant(path_id: StringName, tier: int) -> Dictionary{granted: bool, type: StringName, amount: float}"
+    type: method
+    owner: PrestigeSystem
+    note: "Pure given explicit path_id/tier params (NOT fetched internally — ClassPathSystem.reset_era_state() clears that state before the real grant runs inside on_burnout_accepted(), so an internal fetch would silently break). amount is the post-F2-cap/4b-i-ceiling applied delta, not the raw grant_magnitude() output. Single implementation shared by pre-commit preview (Wypalenie card) and the real grant — guarantees the two never diverge."
+    source: docs/architecture/adr-0017-prestige-grant-preview-api.md
+    referenced_by: []
+
+  - name: get_last_grant
+    signature: "get_last_grant() -> Dictionary{granted: bool, type: StringName, amount: float}"
+    type: method
+    owner: PrestigeSystem
+    note: "Returns the cached result of the most recent real grant, set inside on_burnout_accepted() via compute_next_grant(). Persisted (serialize_state()/restore_state()) so it survives a restart between era_transitioned firing and Challenge Selection confirming. {granted:false,...} before any burnout ever accepted."
+    source: docs/architecture/adr-0017-prestige-grant-preview-api.md
+    referenced_by: []
+
 api_decisions:
   - decision: "ResourceFormulas (res://src/core/resource_formulas.gd, class_name ResourceFormulas) is a stateless static-method utility class shared between live-play (ActionSystem) and offline simulation (OfflineProgressSystem) call sites"
     rationale: "Guarantees online/offline formula consistency by construction — one implementation, two call sites, no risk of drift"
