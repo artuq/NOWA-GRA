@@ -272,6 +272,27 @@ formulas:
     source: design/gdd/prestige-checkpoint-system.md
     referenced_by: []
 
+  - name: staff_multiplier
+    expression: "staff_multiplier(type, n) = 1.0 + (MAX_MULTIPLIER[type] - 1.0) * [n / (n + STAFF_HALF_POINT[type])]"
+    variables: [type, n, MAX_MULTIPLIER, STAFF_HALF_POINT]
+    output_range: "[1.0, MAX_MULTIPLIER[type]) — asymptotic, never reaches cap for any finite n"
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: hire_cost
+    expression: "hire_cost(type, n) = HIRE_BASE_COST[type] * HIRE_COST_GROWTH[type]^n"
+    variables: [type, n, HIRE_BASE_COST, HIRE_COST_GROWTH]
+    output_range: "[HIRE_BASE_COST[type], unbounded) — deliberately uncapped, the sink itself"
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: h_rate_final_with_staff
+    expression: "H_rate_final = H_rate(C) * staff_multiplier(troll, n) * (1 - META_HATERS_RESIST_total)"
+    variables: ["H_rate(C)", "staff_multiplier(troll, n)", META_HATERS_RESIST_total]
+    output_range: "extends meta_haters_resist (above) with Troll's multiplicative factor"
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
 meta_bonus_types:
   - name: META_REACH_MULT
     active_path: pato_streamer
@@ -284,23 +305,23 @@ meta_bonus_types:
     active_path: guru_celebryta
     effect: "permanent multiplier on Sponsor income"
     cap: 0.50
-    note: "Lowered from 0.60 (2026-07-13 /design-review) — economy review flagged a permanent never-revocable bonus into a zero-sink resource as riskier than the cap alone can fix; capped at parity with META_REACH_MULT as a Vertical-Slice-scoped mitigation, not a full fix. See prestige-checkpoint-system.md's locked 'Zero-sink Sponsor scope decision.'"
+    note: "Lowered from 0.60 (2026-07-13 /design-review) — economy review flagged a permanent never-revocable bonus into a zero-sink resource as riskier than the cap alone can fix; capped at parity with META_REACH_MULT as a Vertical-Slice-scoped mitigation, not a full fix. See prestige-checkpoint-system.md's locked 'Zero-sink Sponsor scope decision' — RESOLVED 2026-07-22 by team-staff-management.md's hire_cost() sink; cap re-examined and left unchanged."
     source: design/gdd/prestige-checkpoint-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/team-staff-management.md]
 
   - name: META_HATERS_RESIST
     active_path: ekspert_niszowy
     effect: "permanent reduction on Haters growth rate, online and offline"
     cap: 0.40
     source: design/gdd/prestige-checkpoint-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/team-staff-management.md]
 
   - name: META_SPONSOR_FLOOR
     active_path: biznesmen_contentu
     effect: "permanent minimum Sponsor income floor at era start (overrides default reset of 0)"
     cap: 100.0
     source: design/gdd/prestige-checkpoint-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/team-staff-management.md]
 
 class_paths:
   - name: pato_streamer
@@ -634,4 +655,81 @@ constants:
     safe_range: [1.0, 4.0]
     note: "New 2026-07-13 /design-review re-review. Multiplies BASE_INCREMENT[type] for the one-time completionist grant to all 4 types (fires once per save when the 4th type first goes nonzero)."
     source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: MAX_MULTIPLIER_troll
+    value: 2.5
+    safe_range: [1.0, 3.0]
+    note: "Asymptotic ceiling staff_multiplier(troll, n) approaches as n->inf, never reaches."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: MAX_MULTIPLIER_assistant
+    value: 2.0
+    safe_range: [1.0, 3.0]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: MAX_MULTIPLIER_sponsor_manager
+    value: 2.0
+    safe_range: [1.0, 3.0]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: STAFF_HALF_POINT_troll
+    value: 4
+    safe_range: [1, 20]
+    note: "Hire count at which staff_multiplier reaches half its total bonus range."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: STAFF_HALF_POINT_assistant
+    value: 5
+    safe_range: [1, 20]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: STAFF_HALF_POINT_sponsor_manager
+    value: 4
+    safe_range: [1, 20]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_BASE_COST_troll
+    value: 4
+    safe_range: [3, 10]
+    note: "Cost in Sponsors of the 1st hire (n=0)."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_BASE_COST_assistant
+    value: 5
+    safe_range: [3, 10]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_BASE_COST_sponsor_manager
+    value: 6
+    safe_range: [3, 10]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_COST_GROWTH_troll
+    value: 1.6
+    safe_range: [1.3, 2.0]
+    note: "Per-hire geometric growth rate on hire_cost()."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_COST_GROWTH_assistant
+    value: 1.6
+    safe_range: [1.3, 2.0]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_COST_GROWTH_sponsor_manager
+    value: 1.7
+    safe_range: [1.3, 2.0]
+    note: "Faster than troll/assistant — dampens the self-referential Sponsors income feedback loop (Sponsor Manager boosts the same currency that buys more Sponsor Managers)."
+    source: design/gdd/team-staff-management.md
     referenced_by: []

@@ -31,7 +31,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | 12 | Class Path System | Progression | Vertical Slice | Designed | design/gdd/class-path-system.md | History Flag System, Decision Card System |
 | 13 | Juice/Feedback System (inferred) | Audio | Vertical Slice | Designed | design/gdd/juice-feedback-system.md | Action System, Decision Card System |
 | 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | In Review | design/gdd/main-navigation-screen-flow.md | Action UI, Class Path System, Settings System, Decision Card System, Offline Report Screen |
-| 15 | Team/Staff Management | Economy | Alpha | Not Started | — | Resource System, Offline Progress System |
+| 15 | Team/Staff Management | Economy | Alpha | Designed | design/gdd/team-staff-management.md | Resource System, Offline Progress System, Prestige/Checkpoint System, Decision Card System |
 | 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Not Started | — | Team/Staff Management |
 | 17 | Prestige/Checkpoint System | Progression | Alpha | Designed | design/gdd/prestige-checkpoint-system.md | Class Path System, Offline Progress System, Save/Persistence System |
 | 18 | Cosmetic Persona Customization | UI | Full Vision | Not Started | — | Class Path System |
@@ -150,7 +150,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 19 |
-| Design docs started | 14 |
+| Design docs started | 15 |
 | Design docs reviewed | 0 |
 | Design docs approved | 0 |
 | MVP systems designed | 11/11 |
