@@ -25,6 +25,7 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," o
 | Locked/Muted Slot | Data Display | Action UI |
 | Tap-Anywhere-or-Button Dismiss | Input | Offline Report Screen |
 | Event-Driven Progress-to-Cap Bar | Feedback | Meta-Bonus Visibility |
+| Disabled-State Tooltip | Feedback | Action System, Class Path System, Wypalenie Card Modal |
 
 ---
 
@@ -165,6 +166,24 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," o
 
 **When to Use**: Any permanent, slowly-accumulating value with a known ceiling that the player checks periodically, not something they watch tick up in real time.
 **When NOT to Use**: Time-bounded waits with a known duration — use Per-Frame Progress Bar instead, which implies "this is currently running," not "this is where you stand."
+
+---
+
+### Disabled-State Tooltip
+
+**Category**: Feedback
+**Used In**: Action System (Queue full), Class Path System (disabled Invest control), Wypalenie Card Modal (Choice B unavailable)
+
+**Description**: A short text explanation shown on tap of a visibly-present but non-interactable element, explaining *why* it's disabled. Formalizes a pattern already used three times independently before being cataloged here.
+
+**Specification**:
+- Triggered by tap on the disabled element itself (not a separate info icon) — the element remains tappable for this purpose even though its primary action is blocked
+- Disabled state itself is communicated by dimming/greying (never color alone — pairs with the disabled visual treatment, not a replacement for it)
+- Tooltip text is short, states the specific reason (not a generic "unavailable")
+- Dismissed by tapping elsewhere or automatically after a short duration (exact timing not yet pinned — flag as gap if a screen needs it before a future revision sets one)
+
+**When to Use**: Any element that is meaningfully present (per this project's "never hide, show muted" convention — see Locked/Muted Slot) but currently non-actionable for a reason the player would reasonably want to know.
+**When NOT to Use**: Elements that are simply not yet unlocked with no interesting reason beyond "not yet" — use Locked/Muted Slot's generic icon instead, don't invent a tooltip explanation for the obvious.
 
 ---
 
