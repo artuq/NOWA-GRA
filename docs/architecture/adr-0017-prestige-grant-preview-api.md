@@ -1,7 +1,7 @@
 # ADR-0017: PrestigeSystem — Unified Grant Preview/Last-Grant Query API
 
 ## Status
-Proposed
+Accepted (2026-07-22, following independent `/architecture-review` in a fresh session — verdict PASS, capture-before-reset ordering re-verified against `prestige_system.gd:182-202` exactly matching the ADR's design, no conflicts with ADR-0012. TR-pcs-008 registered, tr-registry.yaml v7→v8.)
 
 ## Date
 2026-07-22

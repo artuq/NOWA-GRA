@@ -1,7 +1,7 @@
 # ADR-0014: Main Navigation Coordinator — Panel Ownership, Card-Interrupt Priority, Android/Web Back Gesture
 
 ## Status
-Proposed
+Accepted (2026-07-22, following independent `/architecture-review` in a fresh session — verdict PASS, no cross-ADR conflicts, no coverage gaps, all dependencies Accepted, shipped-code claims re-verified. TR-nav-001 through TR-nav-004 registered, tr-registry.yaml v7→v8.)
 
 > **Revision note (2026-07-22)**: extended to cover a third coordinated panel, `BonusesPanel`, per `design/ux/meta-bonus-visibility.md` (`/ux-design` + `/ux-review` APPROVED same day, resolving `prestige-checkpoint-system.md`'s BLOCKING-before-Alpha meta-bonus visibility gap). The resolver architecture generalizes without change — `PANEL_OPEN` was never panel-specific — but every place this ADR originally said "two panels" or "six entry points" is corrected below to three panels / eight entry points.
 
@@ -139,7 +139,7 @@ Android's `quit_on_go_back` requirement is a **Project Settings change**, not ru
 - **Rejection Reason**: Wrong lifetime model — this is scene-scoped coordination state, not global game state. `ActionUI` (ADR-0007) already established the "scene-owned script coordinates scene-owned siblings" pattern for exactly this shape of problem.
 
 ### Alternative 2: Central event bus (string-keyed signal dispatch)
-- **Description**: A generic `EventBus` Autoload that all 6 entry points publish to, with `MainNavCoordinator` subscribing.
+- **Description**: A generic `EventBus` Autoload that all 8 entry points publish to, with `MainNavCoordinator` subscribing.
 - **Pros**: Decouples publishers from the coordinator entirely.
 - **Cons**: Explicitly forbidden by this project's registered architecture stance (`docs/registry/architecture.yaml`, forbidden_patterns: "Central EventBus autoload"). Also weakens the "same frame" synchronous-resolver guarantee the GDD requires — event bus dispatch commonly introduces signal-ordering ambiguity exactly where determinism is required (card-interrupt priority).
 - **Rejection Reason**: Forbidden pattern; also directly undermines the GDD's core correctness requirement.
@@ -192,7 +192,7 @@ Android's `quit_on_go_back` requirement is a **Project Settings change**, not ru
 
 ## Validation Criteria
 
-Covered by the GDD's existing Acceptance Criteria (state-machine tests, collision/priority tests, Close/back-gesture parity tests). Implementation story must include an integration test asserting `coordination_state` and both panels' `visible` fields are mutually consistent after each of the 6 entry points fires, including the triple-collision case (GDD Edge Cases).
+Covered by the GDD's existing Acceptance Criteria (state-machine tests, collision/priority tests, Close/back-gesture parity tests). Implementation story must include an integration test asserting `coordination_state` and all three panels' `visible` fields are mutually consistent after each of the 8 entry points fires, including the triple-collision case (GDD Edge Cases).
 
 ## Related Decisions
 - ADR-0003 (scene boot order — unmodified dependency)

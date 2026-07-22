@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-07-17
-version: 7
+last_updated: 2026-07-22
+version: 8
 
 requirements:
   - id: TR-res-001
@@ -290,3 +290,53 @@ requirements:
     adr: [ADR-0013]
     status: covered
     note: ADR-0013 Accepted 2026-07-17 (independent /architecture-review, verdict CONCERNS overall but no conflicts against this ADR) — resolves the ownership drift the 2026-07-14 ruling deferred (quick-specs predate ADR-0012, assumed BurnoutSystem owned era_count/resets/grants). BurnoutSystem/ChallengeSystem have zero code yet — ready for /create-epics + /create-stories.
+
+  - id: TR-nav-001
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: coordination_state single source of truth, at most one panel visible, panel visible is an effect of state not independently set
+    adr: [ADR-0014]
+    status: covered
+
+  - id: TR-nav-002
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: Card-interrupt priority (card_presented > back-gesture > panel-tap) resolved via one synchronous resolver
+    adr: [ADR-0014]
+    status: covered
+
+  - id: TR-nav-003
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: Android (NOTIFICATION_WM_GO_BACK_REQUEST + quit_on_go_back=false) and Web (JavaScriptBridge/pushState) back gesture; iOS explicitly out of scope
+    adr: [ADR-0014]
+    status: covered
+
+  - id: TR-nav-004
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: Close-button rewire via close_requested signal on ClassPathPanel/SettingsScreen/BonusesPanel, no self-managed visible=false bypass
+    adr: [ADR-0014]
+    status: covered
+
+  - id: TR-set-001
+    system: settings-system
+    gdd: design/art/art-bible.md (§7 — no dedicated GDD)
+    requirement: SettingsSystem Autoload, reduce_motion sole-write-path via set_reduce_motion(), persisted via restore_state()
+    adr: [ADR-0015]
+    status: covered
+    note: retrofit ADR — documents already-shipped code, no design change.
+
+  - id: TR-dcs-003
+    system: decision-card-system
+    gdd: design/gdd/decision-card-system.md
+    requirement: inject_priority_card() internal state==COOLDOWN reentrancy guard, self-contained (not caller-enforced)
+    adr: [ADR-0016]
+    status: covered
+
+  - id: TR-pcs-008
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md, design/ux/wypalenie-card-modal.md, design/ux/challenge-selection-screen.md
+    requirement: Unified compute_next_grant() preview + get_last_grant() query, single formula shared pre/post-commit, persisted _last_grant
+    adr: [ADR-0017]
+    status: covered

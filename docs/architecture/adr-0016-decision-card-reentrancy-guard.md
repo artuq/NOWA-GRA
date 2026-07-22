@@ -1,7 +1,7 @@
 # ADR-0016: DecisionCardSystem — `inject_priority_card()` Internal Reentrancy Guard
 
 ## Status
-Proposed
+Accepted (2026-07-22, following independent `/architecture-review` in a fresh session — verdict PASS, premise re-verified against `decision_card_system.gd:273-283` (bug confirmed real, not already fixed), no conflicts with ADR-0013's external guard. TR-dcs-003 registered, tr-registry.yaml v7→v8.)
 
 ## Date
 2026-07-22

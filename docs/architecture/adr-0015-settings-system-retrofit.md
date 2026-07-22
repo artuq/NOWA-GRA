@@ -1,7 +1,7 @@
 # ADR-0015: Settings System — Autoload Shape and `reduce_motion` Ownership (Retrofit)
 
 ## Status
-Proposed
+Accepted (2026-07-22, following independent `/architecture-review` in a fresh session — verdict PASS, shipped-code claims re-verified against `settings_system.gd:21-58` line-by-line, no conflicts. TR-set-001 registered, tr-registry.yaml v7→v8.)
 
 ## Date
 2026-07-22
