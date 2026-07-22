@@ -1,6 +1,6 @@
 # UX Spec: Wypalenie Card Modal
 
-> **Status**: Complete — pending `/ux-review`
+> **Status**: Complete — `/ux-review` NEEDS REVISION → fixed same session (2026-07-22, 1 blocking finding: missing locked "no active path" warning state — resolved)
 > **Author**: user + ux-designer
 > **Last Updated**: 2026-07-22
 > **Platform**: Android + Web (HTML5, CrazyGames)
@@ -60,7 +60,7 @@ Identyczny mechanizm gestu co zwykłe karty Card UI (mięśniowa pamięć gracza
 - `Scrim` — nieinteraktywny, ciemniejszy/intensywniejszy niż standardowy Full-Screen Blocking Modal, bez valence-koloru
 - `CardBody` — większa skala niż zwykła karta Card UI, reużywa `CardSwipeMath` (ADR-0008)
 - `HeadlineText` — nieinteraktywny, copy tłumaczący stawkę dla gracza bez wcześniejszej wiedzy o mechanice (Section B finding)
-- `ChoiceALabel` + `MetaBonusPreviewLabel` — dynamiczna liczba, ten sam format co `BonusValueLabel` (`meta-bonus-visibility.md`)
+- `ChoiceALabel` + `MetaBonusPreviewLabel` — dynamiczna liczba, ten sam format co `BonusValueLabel` (`meta-bonus-visibility.md`); zastąpiony ostrzeżeniem tekstowym w stanie No Active Path (States & Variants) — locked wymóg GDD, nie opcjonalny
 - `ChoiceBLabel` + `MoraleCostLabel` — statyczny koszt (`BURNOUT_DEFER_MORALE_COST`), LUB greyed treatment + `Tooltip` gdy `has_deferred_this_era() == true`
 
 **Nowy pattern — Tooltip**: użyty już w 3 miejscach projektu (Queue full — `action-system.md`, Class Path disabled Invest — `class-path-system.md`, teraz Choice B greyed) ale nigdy niesformalizowany w `interaction-patterns.md`. Flagowany do dodania w Section 5.
@@ -94,6 +94,7 @@ Identyczny mechanizm gestu co zwykłe karty Card UI (mięśniowa pamięć gracza
 |---|---|---|
 | Default | `has_deferred_this_era() == false` | Choice B w pełni dostępny, koszt Morale widoczny |
 | Deferred-already | `has_deferred_this_era() == true` | Choice B greyed, tooltip zamiast kosztu, swipe w tę stronę zawsze bounce-back (Entry & Exit Points) |
+| No Active Path | `ClassPathSystem.get_active_path()` puste (niezafiliowany LUB ambiguous per Class Path F5) w momencie pokazania karty | `MetaBonusPreviewLabel` zastąpiony jawnym ostrzeżeniem ("Brak aktywnej ścieżki — to Wypalenie nie przyzna trwałego bonusu") zamiast liczby. **Locked wymóg GDD** (`prestige-checkpoint-system.md`, linia 254, `/design-review` 2026-07-13 — "MUST surface this before the player confirms", nie opcjonalne). Reset wciąż następuje normalnie przy Choice A — brak aktywnej ścieżki nigdy nie blokuje resetu, tylko usuwa nagrodę. |
 | Error | N/A | Podgląd meta-bonusu liczony synchronicznie PRZED pokazaniem karty (Data Requirements) — nic nie może się nie udać w trakcie wyświetlania |
 | Loading | N/A | Zero async — karta pojawia się dopiero gdy wszystkie dane są już policzone |
 | Platform variant | Android vs Web | Brak różnicy layoutu |
@@ -138,6 +139,7 @@ Wejście: ten sam fade+scrim mechanizm co Full-Screen Blocking Modal (pattern), 
 | `has_deferred_this_era()` | `PrestigeSystem` | Read | Już istnieje |
 | `BURNOUT_DEFER_MORALE_COST` | Tuning knob const | Read | Już istnieje |
 | **Podgląd meta-bonusu (F1 formuła), bez commitu** | **NOWA funkcja — nie istnieje jeszcze** | Read (pure, no side effects) | `PrestigeSystem`/`PrestigeFormulas` musi wystawić preview czytający te same inputy co prawdziwy grant (`ClassPathSystem.get_active_path()`/`get_tier()`, `ChallengeSystem.get_combined_meta_multiplier()`, `first_burnout_bonus_used[type]`) — bez mutacji stanu. **Flagowane jako nowe wymaganie architektoniczne** (patrz Open Questions) |
+| `get_active_path()` zwraca puste (null handling) | `ClassPathSystem` | Read | Gdy puste: preview pomija liczbę całkowicie, pokazuje ostrzeżenie zamiast niej (No Active Path state) — nie `0` ani placeholder liczbowy, żeby nie sugerować fałszywie że jakaś (choćby zerowa) nagroda istnieje |
 | Copy karty (HeadlineText, flavor) | Statyczna treść (CardContentDatabase, `BURNOUT_CARD_ID` entry) | Read | Treść, nie stan gry |
 | Choice A/B commit → cała era-transition machinery | `DecisionCardSystem.resolve_choice()` → `BurnoutSystem` → `PrestigeSystem` | Write | Już w pełni zaprojektowane (ADR-0012/0013) — patrz Events Fired |
 
@@ -175,6 +177,7 @@ Ta sama flaga co `meta-bonus-visibility.md`: język UI gry to angielski, nie pol
 - [ ] GIVEN Choice B greyed, WHEN gracz tapnie tę stronę karty, THEN tooltip pokazuje wyjaśnienie ("już raz odłożyłeś/aś tej ery")
 - [ ] Wszystkie interaktywne elementy (tooltip-trigger) mają touch target ≥44×44dp
 - [ ] Tekst kontrastu (HeadlineText, labels, liczby) ≥4.5:1
+- [ ] GIVEN `ClassPathSystem.get_active_path()` puste (niezafiliowany lub ambiguous), WHEN karta Wypalenie się pokazuje, THEN ostrzeżenie "brak aktywnej ścieżki, brak trwałego bonusu" widoczne PRZED jakimkolwiek swipe'em — nigdy cichy zero-reward burnout (locked GDD requirement, `prestige-checkpoint-system.md` linia 254)
 
 ---
 
