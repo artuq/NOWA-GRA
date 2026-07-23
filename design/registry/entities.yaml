@@ -16,7 +16,7 @@ resources:
     display_name_pl: Zasięgi
     type: primary_currency
     source: design/gdd/resource-system.md
-    referenced_by: [design/gdd/card-content-database.md]
+    referenced_by: [design/gdd/card-content-database.md, design/gdd/class-path-system.md, design/gdd/prestige-checkpoint-system.md]
 
   - name: Cringe
     type: risk_buffer
@@ -184,7 +184,7 @@ formulas:
     variables: ["Δt_seconds", Cringe_fixed, H0, M0]
     output_range: "{final_H, final_M, total_Z_gained, capped}"
     source: design/gdd/offline-progress-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/offline-report-screen.md, design/gdd/prestige-checkpoint-system.md, design/gdd/team-staff-management.md]
 
   - name: magnitude
     expression: "magnitude(deltas) = clamp(max over r in deltas of contribution(r), 0.0, 1.0); contribution(r) = |delta_r|/norm_ref(r) for bounded resources, log(1+|delta_r|)/log(1+Z_norm_ref) for unbounded"
@@ -219,7 +219,7 @@ formulas:
     variables: [card_contribution, investment_contribution]
     output_range: "[0.0, 100.0]"
     source: design/gdd/class-path-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/prestige-checkpoint-system.md, design/gdd/team-staff-management.md]
 
   - name: class_path_tier
     expression: "tier[path] = max({t in {0..5} | affiliation[path] >= TIER_THRESHOLDS[t]})"
@@ -284,7 +284,7 @@ formulas:
     variables: [type, n, HIRE_BASE_COST, HIRE_COST_GROWTH]
     output_range: "[HIRE_BASE_COST[type], unbounded) — deliberately uncapped, the sink itself"
     source: design/gdd/team-staff-management.md
-    referenced_by: []
+    referenced_by: [design/gdd/prestige-checkpoint-system.md]
 
   - name: h_rate_final_with_staff
     expression: "H_rate_final = H_rate(C) * staff_multiplier(troll, n) * (1 - META_HATERS_RESIST_total)"
@@ -330,7 +330,7 @@ class_paths:
     investment_cost_per_affiliation: 10
     card_counter: pato_streamer_choices_count
     source: design/gdd/class-path-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
 
   - name: guru_celebryta
     display_name_pl: "Guru-Celebryta"
@@ -338,7 +338,7 @@ class_paths:
     investment_cost_per_affiliation: 5
     card_counter: guru_celebryta_choices_count
     source: design/gdd/class-path-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
 
   - name: ekspert_niszowy
     display_name_pl: "Ekspert Niszowy"
@@ -346,7 +346,7 @@ class_paths:
     investment_cost_per_affiliation: 8
     card_counter: ekspert_niszowy_choices_count
     source: design/gdd/class-path-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
 
   - name: biznesmen_contentu
     display_name_pl: "Biznesmen Contentu"
@@ -354,7 +354,7 @@ class_paths:
     investment_cost_per_affiliation: 50
     card_counter: biznesmen_contentu_choices_count
     source: design/gdd/class-path-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
 
 constants:
   - name: H_base
@@ -442,7 +442,7 @@ constants:
     value: "5 / 10 / 6"
     note: "Base Zasięgi per action, before Morale multiplier"
     source: design/gdd/action-system.md
-    referenced_by: [design/gdd/action-ui.md]
+    referenced_by: [design/gdd/action-ui.md, design/gdd/prestige-checkpoint-system.md]
 
   - name: action_cringe_delta
     value: "+2 / +20 / -15"
@@ -607,7 +607,7 @@ constants:
     safe_range: [40.0, 75.0]
     note: "Matches shipped src/core/class_path_system.gd MVP constant — load-bearing, do not change without updating live code"
     source: design/gdd/class-path-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/team-staff-management.md]
 
   - name: PATH_AFFILIATION_TIE_BREAK_MARGIN
     value: 5.0
