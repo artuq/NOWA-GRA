@@ -100,6 +100,7 @@ This system has no continuous formulas — unlike Resource System (rates, decay 
 **Downstream (depends on this system):**
 - **Decision Card System** (hard) — writes milestone flags when specific cards resolve; writes pattern counters on every decision; reads both types to weight the card pool.
 - **Class Path System** (hard) — calls `resolve_path_eligibility()` to determine path eligibility; owns the decision of when/how to permanently commit a path.
+- **Cosmetic Persona Customization** (hard, read-only) — added 2026-07-23 (design-review, bidirectional-dependency gap fix): calls `has_milestone("class_path.{path}.best_tier.{N}")` directly to derive unlock state for its 20-entry cosmetic table; no registration or extension of this system's own API required, unlike Class Path System's `resolve_path_eligibility()` contract above.
 
 ## Tuning Knobs
 
