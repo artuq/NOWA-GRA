@@ -32,7 +32,7 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | 13 | Juice/Feedback System (inferred) | Audio | Vertical Slice | Designed | design/gdd/juice-feedback-system.md | Action System, Decision Card System |
 | 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | In Review | design/gdd/main-navigation-screen-flow.md | Action UI, Class Path System, Settings System, Decision Card System, Offline Report Screen |
 | 15 | Team/Staff Management | Economy | Alpha | Designed | design/gdd/team-staff-management.md | Resource System, Offline Progress System, Prestige/Checkpoint System, Decision Card System |
-| 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Not Started | — | Team/Staff Management |
+| 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Designed (via /ux-design, no separate GDD) | design/ux/staff-sponsor-ui.md | Team/Staff Management |
 | 17 | Prestige/Checkpoint System | Progression | Alpha | Designed | design/gdd/prestige-checkpoint-system.md | Class Path System, Offline Progress System, Save/Persistence System |
 | 18 | Cosmetic Persona Customization | UI | Full Vision | Not Started | — | Class Path System |
 | 19 | Settings System (inferred, no dedicated GDD) | Core | Vertical Slice | Designed (retrofit) | design/art/art-bible.md §7 + docs/architecture/adr-0015-settings-system-retrofit.md | — |
