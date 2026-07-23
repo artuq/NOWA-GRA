@@ -69,7 +69,7 @@ state_ownership:
     source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
     referenced_by: []
 
-  - state: "coordination_state (CoordinationState enum: NO_OVERLAY/PANEL_OPEN/CARD_PRESENTED) — which of ClassPathPanel/SettingsScreen/BonusesPanel is open, if any (BonusesPanel added 2026-07-22 revision, ADR-0014)"
+  - state: "coordination_state (CoordinationState enum: NO_OVERLAY/PANEL_OPEN/CARD_PRESENTED) — which of ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel is open, if any (BonusesPanel added 2026-07-22, StaffPanel added 2026-07-23, both ADR-0014 revisions)"
     owner: MainNavCoordinator (action_screen.gd — not a new Autoload, scene-owned script per ADR-0007 precedent)
     interface: "no public setter — changes exclusively through 6 entry-point wrappers funneling into private _apply_state_change()"
     source: docs/architecture/adr-0014-main-navigation-coordinator.md
@@ -204,7 +204,7 @@ interfaces:
   - name: close_requested
     signature: "close_requested()"
     type: signal
-    emitter: ClassPathPanel, SettingsScreen, BonusesPanel (identical pattern on all three; BonusesPanel added 2026-07-22 revision)
+    emitter: ClassPathPanel, SettingsScreen, BonusesPanel, StaffPanel (identical pattern on all four; BonusesPanel added 2026-07-22, StaffPanel added 2026-07-23)
     subscribers: [MainNavCoordinator (action_screen.gd)]
     note: "Replaces the previous self-managed visible=false in each panel's Close handler. Peer/notification signal per Architecture Principle 2 — panel does not hold a reference to the coordinator, stays testable in isolation."
     source: docs/architecture/adr-0014-main-navigation-coordinator.md
@@ -327,7 +327,7 @@ api_decisions:
     source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
     referenced_by: []
 
-  - decision: "MainNavCoordinator is the existing action_screen.gd script extended, not a new Autoload — 8 real entry points (PathButton/SettingsButton/BonusesButton press, ClassPathPanel/SettingsScreen/BonusesPanel close_requested, back-gesture, DecisionCardSystem/CardScreen read-only pair; BonusesButton/BonusesPanel added 2026-07-22 revision) are thin wrappers funneling into one private synchronous resolver, _apply_state_change(). Never writes CardScreen.visible (mirror not hub, ADR-0008 precedent). Android back-gesture via NOTIFICATION_WM_GO_BACK_REQUEST + project.godot's quit_on_go_back=false; Web via JavaScriptBridge.eval()/.create_callback() + preventive history.pushState() (ADR-0014)"
+  - decision: "MainNavCoordinator is the existing action_screen.gd script extended, not a new Autoload — 10 real entry points (PathButton/SettingsButton/BonusesButton/StaffButton press, ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel close_requested, back-gesture, DecisionCardSystem/CardScreen read-only pair; BonusesButton/BonusesPanel added 2026-07-22, StaffButton/StaffPanel added 2026-07-23) are thin wrappers funneling into one private synchronous resolver, _apply_state_change(). Extraction to a separate helper class explicitly considered and deferred at 4 panels (YAGNI, no concrete pain yet — revisit at 6+ panels or a real readability finding). Never writes CardScreen.visible (mirror not hub, ADR-0008 precedent). Android back-gesture via NOTIFICATION_WM_GO_BACK_REQUEST + project.godot's quit_on_go_back=false; Web via JavaScriptBridge.eval()/.create_callback() + preventive history.pushState() (ADR-0014)"
     rationale: "coordination_state is scene-scoped, not global game state — an Autoload would need to guard against being meaningless outside action_screen.tscn and would lose @onready's direct sibling references. Extends the already-shipped 'scene-owned script coordinates scene-owned siblings' pattern (ADR-0007) instead of introducing a new architectural shape. Central event bus alternative rejected as an existing forbidden pattern."
     source: docs/architecture/adr-0014-main-navigation-coordinator.md
     referenced_by: []

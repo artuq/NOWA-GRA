@@ -63,7 +63,7 @@ Class Path System, Prestige/Checkpoint System, Burnout System, and Challenge Sys
 | `PrestigeSystem` | Feature | `era_count`, `meta_bonus_totals`, deferred-this-era flag, reset+grant sequence | `on_burnout_accepted()`, `on_burnout_deferred()`, `get_era_count()`, `get_meta_bonus_total()`, `has_deferred_this_era()`, signal `era_transitioned` (no args) | ResourceManager, ClassPathSystem (`reset_era_state()`), ChallengeSystem (`get_combined_meta_multiplier()`, `clear_active_challenges()`), SaveSystem | Autoload (LOW) |
 | `BurnoutSystem` | Feature | sustained-Cringe timer, warning countdown, forced-card-pending flag | signal `burnout_warning_changed(active, seconds_remaining)` | ResourceManager (Cringe reads), `DecisionCardSystem.inject_priority_card()`/`.card_resolved`, `PrestigeSystem.on_burnout_accepted()`/`.on_burnout_deferred()` | Autoload, registered strictly after DecisionCardSystem (LOW) |
 | `ChallengeSystem` | Feature | challenge catalogue, active-selection set, per-axis modifier storage | `get_challenge_data()`, `select_challenges()`, `get_active_challenge_ids()`, `clear_active_challenges()`, `get_modifier(action_id, axis)`, `get_combined_meta_multiplier()` | — (pull-model only; read by ActionSystem and PrestigeSystem) | Autoload (LOW) |
-| `MainNavCoordinator` (planned, not yet implemented — ADR-0014 Proposed) | Presentation | which-panel-is-open state (`NO_OVERLAY`/`PANEL_OPEN`/`CARD_PRESENTED`) | closes its own three panels (`ClassPathPanel`/`SettingsScreen`/`BonusesPanel`, latter added 2026-07-22 per `meta-bonus-visibility.md`) on card-interrupt; never writes `CardScreen.visible` (mirror-not-hub, per Architecture Principle 8) | `ClassPathPanel`/`SettingsScreen`/`BonusesPanel` open/close signals, `DecisionCardSystem.card_presented`/`.card_resolved`, `CardScreen.visibility_changed` | `Control`, platform back-gesture APIs (Android: gated by `application/config/quit_on_go_back`; Web: `JavaScriptBridge` + `history.pushState()` pattern, unverified; iOS out of scope — 2026-07-22) |
+| `MainNavCoordinator` (planned, not yet implemented — ADR-0014 Accepted) | Presentation | which-panel-is-open state (`NO_OVERLAY`/`PANEL_OPEN`/`CARD_PRESENTED`) | closes its own four panels (`ClassPathPanel`/`SettingsScreen`/`BonusesPanel`/`StaffPanel`, added 2026-07-22/2026-07-23 per `meta-bonus-visibility.md`/`staff-sponsor-ui.md`) on card-interrupt; never writes `CardScreen.visible` (mirror-not-hub, per Architecture Principle 8) | `ClassPathPanel`/`SettingsScreen`/`BonusesPanel`/`StaffPanel` open/close signals, `DecisionCardSystem.card_presented`/`.card_resolved`, `CardScreen.visibility_changed` | `Control`, platform back-gesture APIs (Android: gated by `application/config/quit_on_go_back`; Web: `JavaScriptBridge` + `history.pushState()` pattern, unverified; iOS out of scope — 2026-07-22) |
 | `TeamStaffManagement`, `StaffSponsorUI`, `CosmeticPersonaCustomization` | Feature / Presentation / Presentation | — (Not Started, no GDD — placeholder layer assignment only, per `systems-index.md` rows 15/16/18) | — | — | — |
 
 ```
@@ -96,10 +96,10 @@ ActionUI ─┐                    CardUI ─┐              OfflineReportScree
 
    ActionSystem.on_action_completed ──> ChallengeSystem.get_modifier() [pull, reward resolution]
 
-   MainNavCoordinator (planned) ──reads──> ClassPathPanel/SettingsScreen/BonusesPanel open state,
+   MainNavCoordinator (planned) ──reads──> ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel open state,
                                             DecisionCardSystem.card_presented/.card_resolved,
                                             CardScreen.visibility_changed
-                       ──closes──> ClassPathPanel, SettingsScreen, BonusesPanel (never CardScreen — mirror not hub)
+                       ──closes──> ClassPathPanel, SettingsScreen, BonusesPanel, StaffPanel (never CardScreen — mirror not hub)
 ```
 
 ## Data Flow
@@ -151,7 +151,7 @@ BurnoutSystem detects sustained Cringe=100 (_process accumulator) → emits burn
 Player opens ClassPathPanel or SettingsScreen → panel sets its own visible=true (existing behavior, unchanged)
   → MainNavCoordinator observes the panel's open signal → coordination_state: NO_OVERLAY → PANEL_OPEN
 Card interrupt while a panel is open (DecisionCardSystem.card_presented fires):
-  → MainNavCoordinator closes whichever of its three panels is open (ClassPathPanel/SettingsScreen/BonusesPanel only —
+  → MainNavCoordinator closes whichever of its four panels is open (ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel only —
     never writes CardScreen.visible, per the mirror-not-hub boundary)
   → coordination_state: PANEL_OPEN → CARD_PRESENTED
   → on CardScreen.visibility_changed (false) → coordination_state: CARD_PRESENTED → NO_OVERLAY
@@ -250,7 +250,7 @@ signal card_resolved(card_id: StringName, path_tag: StringName, option_chosen: S
 
 # MainNavCoordinator (planned — API surface as specified by the GDD, not yet implemented)
 # coordination_state: NO_OVERLAY | PANEL_OPEN | CARD_PRESENTED (enum, GDD States/Transitions table)
-# Invariant (mirror not hub): reads ClassPathPanel/SettingsScreen/BonusesPanel open signals and DecisionCardSystem
+# Invariant (mirror not hub): reads ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel open signals and DecisionCardSystem
 # signals; may call close() on the two panels it coordinates; NEVER writes CardScreen.visible directly.
 # Known pre-existing bug this module must work around (found during /design-review, not yet fixed):
 # SettingsScreen/ClassPathPanel Close buttons currently set visible=false on themselves directly,
