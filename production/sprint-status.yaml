@@ -123,13 +123,13 @@ stories:
 
   - id: "12-7"
     name: "Retro, Sprint 10+11 combined"
-    file: ""
+    file: "production/retrospectives/retro-sprint-10-11-2026-07-24.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.3
-    blocker: "Depends on 12-5"
-    completed: ""
+    blocker: ""
+    completed: "2026-07-24"
 
   - id: "12-8"
     name: "Stand up production/risk-register/"
