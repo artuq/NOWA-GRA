@@ -1,7 +1,7 @@
 # ADR-0018: Era-Transition Scene Swap — Challenge Selection Screen
 
 ## Status
-Proposed
+Accepted (2026-07-24, following independent `/architecture-review` in a fresh session — verdict PASS: shipped code (commit 05d74f5, story 12-2) verified accurate to the ADR line-by-line, zero cross-ADR conflicts, engine-clean, all dependencies (ADR-0009/0014/0017) Accepted. TR-nav-005 registered.)
 
 ## Date
 2026-07-23

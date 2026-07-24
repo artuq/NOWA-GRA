@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-07-22
-version: 8
+last_updated: 2026-07-24
+version: 9
 
 requirements:
   - id: TR-res-001
@@ -315,9 +315,10 @@ requirements:
   - id: TR-nav-004
     system: main-navigation-screen-flow
     gdd: design/gdd/main-navigation-screen-flow.md
-    requirement: Close-button rewire via close_requested signal on ClassPathPanel/SettingsScreen/BonusesPanel, no self-managed visible=false bypass
+    requirement: Close-button rewire via close_requested signal on ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel, no self-managed visible=false bypass
     adr: [ADR-0014]
     status: covered
+    note: Panel list extended to StaffPanel (4th coordinated panel) by ADR-0014 revision 2026-07-23; resolver architecture unchanged.
 
   - id: TR-set-001
     system: settings-system
@@ -340,3 +341,11 @@ requirements:
     requirement: Unified compute_next_grant() preview + get_last_grant() query, single formula shared pre/post-commit, persisted _last_grant
     adr: [ADR-0017]
     status: covered
+
+  - id: TR-nav-005
+    system: main-navigation-screen-flow
+    gdd: design/ux/challenge-selection-screen.md
+    requirement: era_transitioned drives synchronous scene swap main.tscn<->challenge_selection.tscn; Confirm sole exit (back-gesture/Esc no-op Android+Web); screen reads get_last_grant()/get_challenge_data() via pull-model, no signal payload on era_transitioned
+    adr: [ADR-0018]
+    status: covered
+    note: Registered 2026-07-24 (/architecture-review). ADR-0018 Proposed but design already shipped (commit 05d74f5, story 12-2) and verified accurate against action_screen.gd + challenge_selection.gd. Scene swap sits outside coordination_state (ADR-0014) by construction. Ready Proposed->Accepted.
