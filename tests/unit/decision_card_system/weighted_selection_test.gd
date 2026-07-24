@@ -8,19 +8,19 @@
 ## isolation each test instantiates a fresh instance directly from the
 ## script, matching Story 001's precedent. This suite reads the real
 ## ResourceManager Autoload's Cringe value (via apply_delta) and the real
-## CardContentDatabase's 12 "always"-eligible MVP cards for the exact-value
+## CardContentDatabase's "always"-eligible cards for the exact-value
 ## assertions, following save_core_test.gd's established snapshot/restore
 ## pattern for ResourceManager.
 ##
 ## Story class-path-full/004 (2026-07-13) added 4 Tier-5 signature cards to
 ## CardContentDatabase, gated by a "class_path_tier:..." trigger_condition
-## instead of "always". This suite's exact weight/probability/ratio
-## constants are locked to the original 12 always-eligible cards (per the
-## GDD's Formulas table), so `_always_eligible_cards()` below filters
-## `CardContentDatabase.get_all_cards()` down to `trigger_condition ==
-## "always"` rather than reading the raw 16-card array -- keeps this suite's
-## intent (the "always" MVP pool) correct regardless of future card-count
-## growth, instead of hardcoding a new magic total.
+## instead of "always" -- excluded by `_always_eligible_cards()` below, which
+## filters `CardContentDatabase.get_all_cards()` down to `trigger_condition
+## == "always"` rather than reading the raw card array, keeping this suite's
+## intent (the "always" pool) correct regardless of future card-count growth.
+## Sprint 12 story 12-6 (2026-07-24) added 4 more "always" cards (12 -> 16);
+## this suite's exact weight/probability constants were updated to match --
+## see _EXPECTED_WEIGHTS_AT_100/_EXPECTED_PROBABILITIES_AT_100's own notes.
 ##
 ## Per QL-STORY-READY's review of this story, all float comparisons use
 ## is_equal_approx() with a small epsilon, never ==, even though these are
@@ -36,17 +36,29 @@ const _RISKY_SAFE_IDS: Array[String] = [
 const _NEUTRAL_IDS: Array[String] = [
 	"fan_in_trouble", "brand_deal_choice", "algorithm_hack", "burnout_warning",
 ]
-## Exact weights at Cringe=100 per the GDD's Formulas table.
+## Exact weights at Cringe=100 per the GDD's Formulas table, plus the 4
+## Sprint 12 wave-2 cards (weight = BASE_WEIGHT + risky-option Cringe delta,
+## per _card_weight()/_card_intensity()): quarterly_content_review 10+20=30,
+## engagement_farming 10+28=38, deep_dive_or_trend 10+18=28,
+## thousand_true_fans 10+15=25.
 const _EXPECTED_WEIGHTS_AT_100: Dictionary = {
 	"staged_drama": 45.0, "leaked_dm": 42.0, "cancel_threat": 40.0,
 	"exposed_friend": 38.0, "hater_callout": 35.0, "competitor_drama": 34.0,
 	"sponsor_offer_shady": 32.0, "apology_tour": 30.0,
+	"engagement_farming": 38.0, "quarterly_content_review": 30.0,
+	"deep_dive_or_trend": 28.0, "thousand_true_fans": 25.0,
 }
-## Exact probabilities at Cringe=100 (pool weight=336), per the GDD's table.
+## Exact probabilities at Cringe=100 -- pool weight is 457.0 as of Sprint 12
+## story 12-6 (was 336.0 for the original 12 "always" cards; +121.0 from the
+## 4 wave-2 cards' own weights: 25+28+38+30=121). The original 8 risky/safe
+## cards' raw weights are unchanged, but their probability (weight/total)
+## shifted since the denominator grew -- recomputed against 457.0 below.
 const _EXPECTED_PROBABILITIES_AT_100: Dictionary = {
-	"staged_drama": 0.134, "leaked_dm": 0.125, "cancel_threat": 0.119,
-	"exposed_friend": 0.113, "hater_callout": 0.104, "competitor_drama": 0.101,
-	"sponsor_offer_shady": 0.095, "apology_tour": 0.089,
+	"staged_drama": 0.0985, "leaked_dm": 0.0919, "cancel_threat": 0.0875,
+	"exposed_friend": 0.0832, "hater_callout": 0.0766, "competitor_drama": 0.0744,
+	"sponsor_offer_shady": 0.0700, "apology_tour": 0.0656,
+	"engagement_farming": 0.0832, "quarterly_content_review": 0.0656,
+	"deep_dive_or_trend": 0.0613, "thousand_true_fans": 0.0547,
 }
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
@@ -92,9 +104,9 @@ func _set_cringe(value: float) -> void:
 	ResourceManager.apply_delta({&"Cringe": value - ResourceManager.get_resource(&"Cringe")})
 
 
-## The 12 original MVP cards only -- excludes the 4 Tier-5 signature cards
-## (Story class-path-full/004), which use a "class_path_tier:..."
-## trigger_condition, not "always". See file header.
+## All "always"-gated cards (16 as of Sprint 12 story 12-6) -- excludes the
+## 4 Tier-5 signature cards (Story class-path-full/004), which use a
+## "class_path_tier:..." trigger_condition, not "always". See file header.
 func _always_eligible_cards() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for card: Dictionary in CardContentDatabase.get_all_cards():
@@ -115,8 +127,12 @@ func _synthetic_card(id: String, milestone: Variant = null) -> Dictionary:
 	}
 
 
-## AC-1/AC-2: Cringe=0, all 12 real cards -> every weight == BASE_WEIGHT,
-## uniform 8.33% probability each.
+## AC-1/AC-2: Cringe=0, all "always"-eligible real cards -> every weight ==
+## BASE_WEIGHT, uniform 1/N probability each -- N is the live pool size, not
+## a hardcoded count (see _always_eligible_cards()'s own header note on why:
+## Sprint 12 story 12-6 added 4 more "always" cards, 12 -> 16, and this test
+## should stay correct through future pool-size changes rather than needing
+## a manual update each time).
 func test_cringe_zero_all_cards_have_base_weight() -> void:
 	_set_cringe(0.0)
 	var dcs: Node = _new_decision_card_system()
@@ -130,11 +146,13 @@ func test_cringe_zero_all_cards_have_base_weight() -> void:
 
 	for card: Dictionary in pool:
 		var probability: float = dcs._card_weight(card, 0.0) / total
-		assert_float(probability).is_equal_approx(1.0 / 12.0, 0.001)
+		assert_float(probability).is_equal_approx(1.0 / pool.size(), 0.001)
 
 
-## AC-3/AC-4/AC-5: Cringe=100, all 12 real cards -> exact weights,
-## probabilities, and a 4.5x ratio between the top card and a neutral card.
+## AC-3/AC-4/AC-5: Cringe=100, all "always"-eligible real cards -> exact
+## weights, probabilities, and a 4.5x ratio between the top card and a
+## neutral card. Pool total is 457.0 as of Sprint 12 story 12-6 (see
+## _EXPECTED_PROBABILITIES_AT_100's own header note).
 func test_cringe_hundred_exact_weights_probabilities_and_ratio() -> void:
 	var dcs: Node = _new_decision_card_system()
 	var pool: Array[Dictionary] = _always_eligible_cards()
@@ -151,14 +169,14 @@ func test_cringe_hundred_exact_weights_probabilities_and_ratio() -> void:
 	for card_id: String in _NEUTRAL_IDS:
 		assert_float(weight_by_id[card_id]).is_equal_approx(10.0, 0.0001)
 
-	assert_float(total).is_equal_approx(336.0, 0.0001)
+	assert_float(total).is_equal_approx(457.0, 0.0001)
 
 	for card_id: String in _EXPECTED_PROBABILITIES_AT_100:
 		var probability: float = weight_by_id[card_id] / total
 		assert_float(probability).is_equal_approx(_EXPECTED_PROBABILITIES_AT_100[card_id], 0.001)
 	for card_id: String in _NEUTRAL_IDS:
 		var probability: float = weight_by_id[card_id] / total
-		assert_float(probability).is_equal_approx(0.030, 0.001)
+		assert_float(probability).is_equal_approx(10.0 / 457.0, 0.001)
 
 	var top_weight: float = weight_by_id["staged_drama"]
 	var neutral_weight: float = weight_by_id["fan_in_trouble"]

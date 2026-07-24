@@ -63,63 +63,63 @@ updated: "2026-07-23"
 stories:
   - id: "12-1"
     name: "Run full test suite headless, fix any red"
-    file: ""
+    file: "production/qa/smoke-2026-07-24-sprint12.md"
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.5
     blocker: ""
-    completed: ""
+    completed: "2026-07-24"  # 660 test cases, 657 deterministically green. Found+fixed 2 real bugs exposed by this sprint's own work (weighted_selection_test.gd's hardcoded card-count constants, a GDScript lambda-capture bug in challenge_selection_screen_test.gd). 1 pre-existing flaky test filed as BUG-004, not fixed (out of scope, unrelated system).
 
   - id: "12-2"
     name: "Era-start/challenge-selection screen implementation (carried from 11-5, per design/ux/challenge-selection-screen.md)"
     file: "src/ui/challenge_selection.gd"
     priority: must-have
-    status: review
+    status: done
     owner: ""
     estimate_days: 1
-    blocker: "Code + tests written and godot-gdscript-specialist reviewed 2026-07-24 (1 blocking JS-bridge fix applied); not yet confirmed green by an actual test run -- no Godot binary in this environment. Also required implementing 2 undiscovered gaps first: ADR-0017 (compute_next_grant()/get_last_grant(), Accepted 2026-07-22 but never coded) and ChallengeSystem.get_all_challenge_ids() (missing getter). ADR-0018 written to cover the scene-swap architecture (Proposed, not yet Accepted -- needs fresh-session /architecture-review)."
-    completed: ""
+    blocker: ""
+    completed: "2026-07-24"  # Confirmed green by real test execution (12-1), not just file presence. ADR-0018 Accepted.
 
   - id: "12-3"
     name: "Playtest the full era loop (burnout -> reset -> meta-bonus -> challenge selection)"
     file: ""
     priority: must-have
-    status: backlog
+    status: ready-for-dev
     owner: ""
     estimate_days: 1
-    blocker: "Depends on 12-2"
+    blocker: ""
     completed: ""
 
   - id: "12-4"
     name: "Retroactive QA plan + sign-off, Sprint 10 and Sprint 11"
     file: "production/qa/qa-signoff-sprint-10-2026-07-24.md"
     priority: must-have
-    status: review
+    status: done
     owner: ""
     estimate_days: 1
-    blocker: "Both sign-offs written (APPROVED WITH CONDITIONS) via desk review -- file presence + structural coverage confirmed, not a fresh green run (no Godot binary in this environment). Condition to fully close: 12-1's actual test execution."
-    completed: ""
+    blocker: ""
+    completed: "2026-07-24"  # Condition (12-1's real test execution) now satisfied -- 11-2/11-4's test files confirmed passing for real, not just structurally present.
 
   - id: "12-5"
     name: "Sync sprint-status.yaml + story files to actual shipped state"
     file: ""
     priority: must-have
-    status: ready-for-dev
+    status: done
     owner: ""
     estimate_days: 0.3
     blocker: ""
-    completed: ""
+    completed: "2026-07-24"
 
   - id: "12-6"
     name: "Card wave 2 — new decision cards toward doubled pool (carried from 11-3, unstarted)"
     file: "src/core/card_content_database.gd"
     priority: should-have
-    status: review
+    status: done
     owner: ""
     estimate_days: 1
-    blocker: "Re-scoped to 4 cards (2x ekspert_niszowy, 2x biznesmen_contentu, the two most-starved paths) rather than the original 12 -- targeted fix, not a full doubled pool. Code + tests written; not yet confirmed green by an actual test run (no Godot binary in this environment)."
-    completed: ""
+    blocker: ""
+    completed: "2026-07-24"  # Re-scoped to 4 cards (2x ekspert_niszowy, 2x biznesmen_contentu). Confirmed green by real test execution.
 
   - id: "12-7"
     name: "Retro, Sprint 10+11 combined"

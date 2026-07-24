@@ -57,19 +57,27 @@ func test_zero_selected_confirm_uses_multiplier_1_and_emits_swap() -> void:
 	var runner: GdUnitSceneRunner = scene_runner(_SCENE_PATH)
 	var screen: Control = runner.scene()
 
-	var swap_path: String = ""
-	var swap_ids: Array = []
+	# GDScript lambdas capture outer locals by value, not by reference -- a
+	# plain `var swap_path: String` written inside the lambda below would
+	# mutate an invisible copy, never the outer variable (found the hard way:
+	# an earlier draft asserted against an always-empty string that still
+	# printed as if it matched, since the failure report shows the expected
+	# value on both sides for an empty actual). The fix is the standard
+	# GDScript idiom: capture a single mutable container (Dictionary) instead
+	# -- writing to its keys IS visible outside, since the container
+	# reference itself, not its contents, is what gets captured.
+	var captured: Dictionary = {"path": "", "ids": []}
 	screen.scene_swap_requested.connect(func(path: String, ids: Array[StringName]) -> void:
-		swap_path = path
-		swap_ids = ids
+		captured["path"] = path
+		captured["ids"] = ids
 	)
 
 	assert_str((screen.find_child("CombinedMultiplierLabel") as Label).text).contains("1.0")
 
 	runner.invoke("_on_confirm_pressed")
 
-	assert_str(swap_path).is_equal(screen.main_scene_path)
-	assert_array(swap_ids).is_empty()
+	assert_str(captured["path"]).is_equal(screen.main_scene_path)
+	assert_array(captured["ids"]).is_empty()
 	assert_array(ChallengeSystem.get_active_challenge_ids()).is_empty()
 
 
