@@ -93,12 +93,12 @@ stories:
 
   - id: "12-4"
     name: "Retroactive QA plan + sign-off, Sprint 10 and Sprint 11"
-    file: ""
+    file: "production/qa/qa-signoff-sprint-10-2026-07-24.md"
     priority: must-have
-    status: ready-for-dev
+    status: review
     owner: ""
     estimate_days: 1
-    blocker: "Depends on 12-1"
+    blocker: "Both sign-offs written (APPROVED WITH CONDITIONS) via desk review -- file presence + structural coverage confirmed, not a fresh green run (no Godot binary in this environment). Condition to fully close: 12-1's actual test execution."
     completed: ""
 
   - id: "12-5"
