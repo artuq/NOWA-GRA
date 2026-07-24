@@ -55,6 +55,19 @@
 ## already-shipped PrestigeSystem code; no further stories in this epic
 ## modify this file.
 ##
+## ADR-0017 (this revision, 2026-07-24 -- implementing an ADR Accepted
+## 2026-07-22 that had no code yet): extracted step 4's inline grant-
+## computation block into compute_next_grant(path_id, tier) -- a pure
+## function, safe to call any number of times, used both for the real grant
+## (on_burnout_accepted()) and for a pre-commit UI preview (Wypalenie card)
+## without risking the two ever silently diverging. _apply_grant() is
+## retired -- its cap math now lives inside compute_next_grant(), and
+## on_burnout_accepted() applies the already-post-cap amount directly. A new
+## _last_grant field (persisted) caches the most recent real grant's result
+## for get_last_grant(), needed by the Challenge Selection screen's era-
+## summary recap (design/ux/challenge-selection-screen.md) and by meta-bonus-
+## visibility.md's consistency requirement.
+##
 ## Usage example:
 ##   PrestigeSystem.on_burnout_accepted()  # called by BurnoutSystem's Choice A handler
 ##   PrestigeSystem.get_meta_bonus_total(&"META_REACH_MULT")  # -> 0.1071 after one grant
@@ -124,6 +137,16 @@ var _last_captured_tier: int = -1
 ## shape.
 var _deferred_this_era: bool = false
 
+## Caches the most recent real grant computed by on_burnout_accepted() (ADR-
+## 0017), queryable via get_last_grant(). Default matches "no burnout has
+## ever been accepted yet" -- the same shape compute_next_grant() itself
+## returns for a no-active-path call, so callers never need a separate
+## first-session branch. Persisted via serialize_state()/restore_state() --
+## if the app closes between era_transitioned firing and the Challenge
+## Selection screen being confirmed, the recap must still be correct on the
+## next boot.
+var _last_grant: Dictionary = {"granted": false, "type": &"", "amount": 0.0}
+
 ## Era-start resource defaults (Final Burnout quick-spec §4.2, Core Rules ->
 ## "4. Choice A — Accept Burnout" step 2): the 5 values every resource is
 ## reset to on every accepted burnout, before F3d's Sponsors override is
@@ -188,20 +211,23 @@ func on_burnout_accepted() -> void:
 
 	ClassPathSystem.reset_era_state()
 
-	# Step 4 (Story 003): META_BONUS grant computation (F1) + variety check
-	# (F1b). challenge_mult sourced from ChallengeSystem.get_combined_meta_
-	# multiplier() (burnout-challenge-system epic Story 007, ADR-0013) --
-	# returns 1.0 when no challenges are active, byte-identical to every
-	# prior revision's hardcoded stub for the zero-challenge case.
-	if path_id != &"":
-		var bonus_type: StringName = _BONUS_TYPE_BY_PATH.get(path_id, &"")
-		if bonus_type != &"":
-			var challenge_mult: float = ChallengeSystem.get_combined_meta_multiplier()
-			var is_first: bool = _first_burnout_pending(bonus_type)
-			var grant: float = PrestigeFormulas.grant_magnitude(bonus_type, tier, challenge_mult, is_first)
-			_apply_grant(bonus_type, grant)
-			if is_first:
-				HistoryFlagManager.set_milestone(StringName("prestige.first_burnout_used." + String(bonus_type)))
+	# Step 4 (Story 003; extracted into compute_next_grant() by ADR-0017,
+	# this revision): META_BONUS grant computation (F1) + variety check
+	# (F1b). path_id/tier are the values captured above, BEFORE reset_era_
+	# state() -- compute_next_grant() is pure given these explicit inputs,
+	# so passing them here (rather than letting it re-fetch internally) is
+	# what keeps this call correct after the reset that already ran two
+	# lines above (ADR-0017's Engine Specialist Validation finding).
+	var grant_result: Dictionary = compute_next_grant(path_id, tier)
+	_last_grant = grant_result
+	if grant_result["granted"]:
+		var bonus_type: StringName = grant_result["type"]
+		# amount is ALREADY the post-F2-cap/4b-i-ceiling applied delta (see
+		# compute_next_grant()'s own doc comment) -- a single addition, not
+		# a second cap computation. Replaces the retired _apply_grant().
+		meta_bonus_totals[bonus_type] = meta_bonus_totals.get(bonus_type, 0.0) + grant_result["amount"]
+		if _first_burnout_pending(bonus_type):
+			HistoryFlagManager.set_milestone(StringName("prestige.first_burnout_used." + String(bonus_type)))
 	_check_variety_bonus()  # Core Rule 4c — fires at most once per save
 
 	# Step 5 (Story 007): flag classification sweep (Core Rule 7), then F3d's
@@ -295,28 +321,77 @@ func _first_burnout_pending(bonus_type: StringName) -> bool:
 	return not HistoryFlagManager.has_milestone(StringName("prestige.first_burnout_used." + String(bonus_type)))
 
 
-## Adds [param grant] to [param bonus_type]'s running total, clamped at
-## PrestigeFormulas.META_BONUS_MAX[bonus_type] (F2, Core Rule 1 — Story 004).
-## Routes through PrestigeFormulas.apply_stacking_and_cap() unconditionally:
-## a type already sitting at its cap still calls this, absorbing the grant
-## with zero effect rather than skipping the call — this is what guarantees
-## a fully-absorbed grant never blocks on_burnout_accepted()'s reset/save
-## sequence (no softlock, per this story's Implementation Notes).
-func _apply_grant(bonus_type: StringName, grant: float) -> void:
+## Pure preview/compute function (ADR-0017): given an explicit [param path_id]/
+## [param tier] pair, returns exactly what a real grant would apply --
+## {"granted": bool, "type": StringName, "amount": float} -- without mutating
+## any state. [param path_id]/[param tier] are caller-supplied, NOT fetched
+## internally (ClassPathSystem.get_active_path()/get_tier()), specifically so
+## this stays correct whether called before ClassPathSystem.reset_era_state()
+## (on_burnout_accepted()'s real grant, which captures path_id/tier first) or
+## entirely independently of any reset (a pre-commit UI preview, e.g. the
+## Wypalenie card, which reads live ClassPathSystem state itself). The caller
+## owns capturing path_id/tier at the correct moment -- see this method's own
+## Engine Specialist Validation note in ADR-0017 for why an earlier draft that
+## fetched internally was wrong.
+##
+## "amount" is the ACTUAL applied delta -- current_total AFTER
+## PrestigeFormulas.apply_stacking_and_cap() (F2's clamp, Core Rule 1) minus
+## current_total BEFORE -- not the pre-cap PrestigeFormulas.grant_magnitude()
+## raw output. A recap screen showing "amount" must match what actually landed
+## in meta_bonus_totals, not an unclamped intermediate value.
+##
+## Returns {"granted": false, "type": &"", "amount": 0.0} for a no-active-path
+## call ([param path_id] == &"") or an unrecognized path id -- distinguishes
+## "nothing was granted" from "a grant computed to a small/zero number",
+## per prestige-checkpoint-system.md line 254's locked requirement.
+##
+## challenge_mult/meta_bonus_totals ARE read internally (unlike path_id/tier)
+## because reset_era_state() never touches either -- only ClassPathSystem's
+## own affiliation state is cleared by that call, so no equivalent ordering
+## hazard exists for these two reads.
+##
+## Example:
+##   PrestigeSystem.compute_next_grant(ClassPathSystem.get_active_path(), ClassPathSystem.get_tier(path))
+func compute_next_grant(path_id: StringName, tier: int) -> Dictionary:
+	if path_id == &"":
+		return {"granted": false, "type": &"", "amount": 0.0}
+	var bonus_type: StringName = _BONUS_TYPE_BY_PATH.get(path_id, &"")
+	if bonus_type == &"":
+		return {"granted": false, "type": &"", "amount": 0.0}
+	var challenge_mult: float = ChallengeSystem.get_combined_meta_multiplier()
+	var is_first: bool = _first_burnout_pending(bonus_type)
+	var raw_grant: float = PrestigeFormulas.grant_magnitude(bonus_type, tier, challenge_mult, is_first)
 	var current_total: float = meta_bonus_totals.get(bonus_type, 0.0)
 	var cap: float = PrestigeFormulas.META_BONUS_MAX[bonus_type]
-	meta_bonus_totals[bonus_type] = PrestigeFormulas.apply_stacking_and_cap(bonus_type, current_total, grant, cap)
+	var post_cap_total: float = PrestigeFormulas.apply_stacking_and_cap(bonus_type, current_total, raw_grant, cap)
+	return {"granted": true, "type": bonus_type, "amount": post_cap_total - current_total}
+
+
+## Returns the cached result of the most recent real grant computed by
+## on_burnout_accepted() (ADR-0017) -- {"granted": false, "type": &"",
+## "amount": 0.0} before any burnout has ever been accepted (first-session
+## default, same missing-key-default convention as every other peer Autoload
+## in this project). Queryable any time after era_transitioned fires --
+## needed by the Challenge Selection screen's era-summary recap
+## (design/ux/challenge-selection-screen.md) so it shows the exact number the
+## Wypalenie card previously previewed via compute_next_grant(), not an
+## approximation.
+##
+## Example:
+##   PrestigeSystem.get_last_grant()  # -> {"granted": true, "type": &"META_REACH_MULT", "amount": 0.0107}
+func get_last_grant() -> Dictionary:
+	return _last_grant
 
 
 ## Cross-type variety-completionist check (GDD Formula F1b, Core Rule 4c).
 ## Fires at most once per save: the moment all four META_BONUS_total[type]
 ## values are simultaneously nonzero (checked as a side-effect of every
 ## accepted-burnout grant, including the very grant that makes the fourth
-## type nonzero for the first time — this method runs AFTER _apply_grant()
-## in on_burnout_accepted(), never before), each of the four types
+## type nonzero for the first time — this method runs AFTER step 4's grant
+## application in on_burnout_accepted(), never before), each of the four types
 ## additionally receives PrestigeFormulas.variety_bonus_increment(type), and
 ## the "prestige.variety_bonus_used" milestone is set so this never fires
-## again. Same F2 clamp as _apply_grant() (Story 004): each type's flat
+## again. Same F2 clamp as compute_next_grant()'s own cap (ADR-0017): each type's flat
 ## variety increment is applied through PrestigeFormulas.
 ## apply_stacking_and_cap() too, so a type already at its cap when the
 ## completionist bonus fires absorbs its share with zero effect, same as any
@@ -468,11 +543,23 @@ func restore_state(data: Dictionary) -> void:
 	var totals_in: Dictionary = data.get("meta_bonus_totals", {})
 	for key in totals_in:
 		meta_bonus_totals[StringName(key)] = float(totals_in[key])
+	# ADR-0017: _last_grant, StringName type re-encoded from plain String same
+	# as every other StringName field in this method. Missing key (saves
+	# predating this field) defaults to the same "nothing granted yet" shape
+	# _last_grant itself already defaults to -- no separate first-session branch.
+	var grant_in: Dictionary = data.get("_last_grant", {"granted": false, "type": "", "amount": 0.0})
+	_last_grant = {
+		"granted": bool(grant_in.get("granted", false)),
+		"type": StringName(grant_in.get("type", "")),
+		"amount": float(grant_in.get("amount", 0.0)),
+	}
 
 
 ## Serializes persisted state for SaveSystem.save_now(). Story 003 scope
 ## adds meta_bonus_totals (plain String keys — see restore_state()'s doc
-## comment) to Story 001's era_count.
+## comment) to Story 001's era_count. ADR-0017 (this revision) adds
+## _last_grant, its "type" field re-encoded as plain String (StringName is
+## not a JSON type, same convention as meta_bonus_totals' keys).
 ##
 ## Example:
 ##   var data: Dictionary = PrestigeSystem.serialize_state()
@@ -480,4 +567,9 @@ func serialize_state() -> Dictionary:
 	var totals_out: Dictionary = {}
 	for key: StringName in meta_bonus_totals:
 		totals_out[String(key)] = meta_bonus_totals[key]
-	return {"era_count": era_count, "meta_bonus_totals": totals_out}
+	var grant_out: Dictionary = {
+		"granted": _last_grant["granted"],
+		"type": String(_last_grant["type"]),
+		"amount": _last_grant["amount"],
+	}
+	return {"era_count": era_count, "meta_bonus_totals": totals_out, "_last_grant": grant_out}

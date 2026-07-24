@@ -15,6 +15,15 @@
 ## deliberately separate entry point from ClassPathHudIndicator, which stays
 ## untouched by this story (it is a PanelContainer, not a Button, and has no
 ## tap affordance; AC-3 of that story explicitly says not to rebuild it).
+##
+## ADR-0018 (this revision, 2026-07-24): listens for PrestigeSystem.
+## era_transitioned and drives the scene swap to Challenge Selection Screen.
+## This is intentionally the ONLY addition this story makes here -- ADR-0014
+## (MainNavCoordinator: coordination_state, BonusesPanel/StaffPanel,
+## close_requested wiring, back-gesture handling) has no implementation yet
+## and is explicitly out of scope for this story (Sprint 12, 12-2 minimal
+## scope decision) -- SettingsButton/PathButton stay on their pre-ADR-0014
+## direct visible=true handling, unchanged.
 class_name ActionScreen
 extends Control
 
@@ -27,6 +36,7 @@ extends Control
 func _ready() -> void:
 	_settings_button.pressed.connect(_on_settings_button_pressed)
 	_path_button.pressed.connect(_on_path_button_pressed)
+	PrestigeSystem.era_transitioned.connect(_on_era_transitioned)
 
 
 func _on_settings_button_pressed() -> void:
@@ -35,3 +45,11 @@ func _on_settings_button_pressed() -> void:
 
 func _on_path_button_pressed() -> void:
 	_class_path_panel.visible = true
+
+
+## ADR-0018: fires synchronously inside the signal handler -- change_scene_
+## to_file() itself defers to end-of-frame regardless (same documented
+## behavior ADR-0003/ADR-0009 already rely on), so nothing here needs to wait
+## for or check the swap's completion.
+func _on_era_transitioned() -> void:
+	get_tree().change_scene_to_file("res://scenes/challenge_selection/challenge_selection.tscn")

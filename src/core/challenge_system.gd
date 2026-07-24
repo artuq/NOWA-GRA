@@ -135,6 +135,19 @@ func get_challenge_data(challenge_id: StringName) -> Dictionary:
 	return _CHALLENGE_CATALOGUE.get(challenge_id, {})
 
 
+## Returns all 5 designed challenge ids, in the catalogue's declared order --
+## added for the Challenge Selection screen (design/ux/challenge-selection-
+## screen.md, ADR-0018), which needs to enumerate the full catalogue to render
+## its 5 ChallengeCards. Same minimal-getter precedent as get_challenge_data()
+## above -- Dictionary.keys() preserves insertion order in GDScript, so this
+## does not need its own separately-maintained id list.
+func get_all_challenge_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for id: StringName in _CHALLENGE_CATALOGUE:
+		ids.append(id)
+	return ids
+
+
 ## Sets the active challenge selection for this era, replacing any prior
 ## selection. Rejects (returns false, leaves _active_challenge_ids completely
 ## unchanged -- not partially updated) if [param challenge_ids] exceeds

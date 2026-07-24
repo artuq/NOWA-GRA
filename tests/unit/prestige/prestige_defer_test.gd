@@ -152,7 +152,7 @@ func test_on_burnout_deferred_calls_zero_grant_machinery_static_scan() -> void:
 		"get_active_path", "get_tier", "reset_era_state",
 		"grant_magnitude", "apply_stacking_and_cap",
 		"ClassPathSystem", "PrestigeFormulas",
-		"_apply_grant", "_check_variety_bonus",
+		"compute_next_grant", "_check_variety_bonus",
 	]
 	for token: String in forbidden:
 		assert_bool(body.contains(token)).override_failure_message(

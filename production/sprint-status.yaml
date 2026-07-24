@@ -73,12 +73,12 @@ stories:
 
   - id: "12-2"
     name: "Era-start/challenge-selection screen implementation (carried from 11-5, per design/ux/challenge-selection-screen.md)"
-    file: "design/ux/challenge-selection-screen.md"
+    file: "src/ui/challenge_selection.gd"
     priority: must-have
-    status: ready-for-dev
+    status: review
     owner: ""
     estimate_days: 1
-    blocker: "Depends on 12-1"
+    blocker: "Code + tests written and godot-gdscript-specialist reviewed 2026-07-24 (1 blocking JS-bridge fix applied); not yet confirmed green by an actual test run -- no Godot binary in this environment. Also required implementing 2 undiscovered gaps first: ADR-0017 (compute_next_grant()/get_last_grant(), Accepted 2026-07-22 but never coded) and ChallengeSystem.get_all_challenge_ids() (missing getter). ADR-0018 written to cover the scene-swap architecture (Proposed, not yet Accepted -- needs fresh-session /architecture-review)."
     completed: ""
 
   - id: "12-3"

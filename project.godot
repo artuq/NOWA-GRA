@@ -13,6 +13,7 @@ config_version=5
 config/name="King of Cringe"
 run/main_scene="res://scenes/boot/boot.tscn"
 config/features=PackedStringArray("4.6", "C#")
+config/quit_on_go_back=false
 
 [autoload]
 
