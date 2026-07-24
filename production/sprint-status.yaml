@@ -133,13 +133,13 @@ stories:
 
   - id: "12-8"
     name: "Stand up production/risk-register/"
-    file: ""
+    file: "production/risk-register/risks.md"
     priority: should-have
-    status: backlog
+    status: done
     owner: ""
     estimate_days: 0.2
     blocker: ""
-    completed: ""
+    completed: "2026-07-24"
 
   - id: "12-9"
     name: "10-3 perf pass + memory ceiling (if Android device available)"
