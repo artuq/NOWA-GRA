@@ -337,6 +337,11 @@ api_decisions:
     source: docs/architecture/adr-0015-settings-system-retrofit.md
     referenced_by: []
 
+  - decision: "action_screen.gd (the existing MainNavCoordinator script, ADR-0014) listens directly for PrestigeSystem.era_transitioned and drives the round-trip scene swap main.tscn -> challenge_selection.tscn -> main.tscn on Confirm — no new Autoload/controller class, no payload added to era_transitioned. ChallengeSelectionScreen reads everything via existing pull-model getters (PrestigeSystem.get_last_grant() per ADR-0017, ChallengeSystem.get_challenge_data()). Back-gesture/Esc suppressed on the new scene by reusing ADR-0014's exact NOTIFICATION_WM_GO_BACK_REQUEST no-op + JavaScriptBridge pushState/popstate mechanism verbatim (ADR-0018)"
+    rationale: "One connect() call does not justify a BootController-style dedicated controller (YAGNI, same threshold ADR-0014 already set for panel extraction); every value the new screen needs is already queryable, so no transient-field hand-off (ADR-0009's pattern) is needed either"
+    source: docs/architecture/adr-0018-era-transition-scene-swap.md
+    referenced_by: []
+
 forbidden_patterns:
   - pattern: "Adding instance vars or @export fields to ResourceFormulas"
     reason: "Must remain stateless — shared by two independent call sites (live play and offline simulation); any state would silently leak across unrelated contexts"
