@@ -113,12 +113,12 @@ stories:
 
   - id: "12-6"
     name: "Card wave 2 — new decision cards toward doubled pool (carried from 11-3, unstarted)"
-    file: ""
+    file: "src/core/card_content_database.gd"
     priority: should-have
-    status: backlog
+    status: review
     owner: ""
     estimate_days: 1
-    blocker: ""
+    blocker: "Re-scoped to 4 cards (2x ekspert_niszowy, 2x biznesmen_contentu, the two most-starved paths) rather than the original 12 -- targeted fix, not a full doubled pool. Code + tests written; not yet confirmed green by an actual test run (no Godot binary in this environment)."
     completed: ""
 
   - id: "12-7"

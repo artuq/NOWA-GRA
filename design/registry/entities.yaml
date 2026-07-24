@@ -102,6 +102,26 @@ cards:
     type: neutral_card
     source: design/gdd/card-content-database.md
     referenced_by: []
+  - name: thousand_true_fans
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- ekspert_niszowy path_tag, closes the zero-reachable-cards gap for this path below Tier 5"
+    source: src/core/card_content_database.gd
+    referenced_by: []
+  - name: deep_dive_or_trend
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- ekspert_niszowy path_tag"
+    source: src/core/card_content_database.gd
+    referenced_by: []
+  - name: engagement_farming
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- biznesmen_contentu path_tag, closes the zero-reachable-cards gap for this path below Tier 5"
+    source: src/core/card_content_database.gd
+    referenced_by: []
+  - name: quarterly_content_review
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- biznesmen_contentu path_tag"
+    source: src/core/card_content_database.gd
+    referenced_by: []
 
 counters:
   - name: risky_choices_count

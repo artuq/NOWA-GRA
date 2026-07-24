@@ -25,6 +25,7 @@ const CardContentDatabaseScript: GDScript = preload("res://src/core/card_content
 const _RISKY_SAFE_IDS: Array[String] = [
 	"exposed_friend", "sponsor_offer_shady", "hater_callout", "staged_drama",
 	"competitor_drama", "leaked_dm", "cancel_threat", "apology_tour",
+	"thousand_true_fans", "deep_dive_or_trend", "engagement_farming", "quarterly_content_review",
 ]
 const _NEUTRAL_IDS: Array[String] = [
 	"fan_in_trouble", "brand_deal_choice", "algorithm_hack", "burnout_warning",
@@ -45,6 +46,10 @@ const _EXPECTED_REACH_RATIOS: Dictionary = {
 	"leaked_dm": 1.8095,
 	"cancel_threat": 1.8182,
 	"apology_tour": 1.5789,
+	"thousand_true_fans": 1.7333,
+	"deep_dive_or_trend": 1.75,
+	"engagement_farming": 1.7593,
+	"quarterly_content_review": 1.75,
 }
 
 var _db: Node
@@ -61,14 +66,16 @@ func after_test() -> void:
 
 
 ## AC-1: every card has exactly 2 options.
-## Count is 17 as of Story burnout-challenge-system/002 (2026-07-17): the 12
-## original MVP cards, plus 4 Tier-5 signature cards (ADR-0010 §10,
-## TR-cps-006), plus the Wypalenie ("Final Burnout") card (ADR-0013,
-## TR-pcs-007) -- id "final_burnout", trigger_condition "never" so it is
-## reachable only via BurnoutSystem's forced injection, never the normal pool.
+## Count is 21 as of Sprint 12 story 12-6 (2026-07-24): the 12 original MVP
+## cards, plus 4 Tier-5 signature cards (ADR-0010 §10, TR-cps-006), plus the
+## Wypalenie ("Final Burnout") card (ADR-0013, TR-pcs-007) -- id
+## "final_burnout", trigger_condition "never" so it is reachable only via
+## BurnoutSystem's forced injection, never the normal pool -- plus 4 more
+## risky/safe cards (2x ekspert_niszowy, 2x biznesmen_contentu) closing the
+## zero-reachable-cards gap those two paths had below Tier 5.
 func test_all_cards_have_exactly_two_options() -> void:
 	var cards: Array[Dictionary] = _db.get_all_cards()
-	assert_int(cards.size()).is_equal(17)
+	assert_int(cards.size()).is_equal(21)
 	for card: Dictionary in cards:
 		assert_int(card["options"].size()).is_equal(2)
 
@@ -224,10 +231,10 @@ func test_algorithm_hack_milestone_has_no_current_consumer() -> void:
 ## AC-17: the non-milestone-bearing cards' options (plus the non-milestone
 ## option on each of the 3 milestone cards) structurally lack the
 ## milestone_to_set key -- confirming absence is correct, not missing data.
-## Count is 31 as of Story burnout-challenge-system/002 (2026-07-17): 17
-## cards * 2 options = 34, minus the 3 milestone-bearing options -- none of
-## the 4 Tier-5 signature cards nor the Wypalenie ("Final Burnout") card
-## carries a milestone_to_set.
+## Count is 39 as of Sprint 12 story 12-6 (2026-07-24): 21 cards * 2 options
+## = 42, minus the 3 milestone-bearing options -- none of the 4 Tier-5
+## signature cards, the Wypalenie ("Final Burnout") card, nor the 4 wave-2
+## cards carries a milestone_to_set.
 func test_absence_of_milestone_to_set_is_structural_not_missing() -> void:
 	var non_milestone_option_count: int = 0
 	for card: Dictionary in _db.get_all_cards():
@@ -240,7 +247,7 @@ func test_absence_of_milestone_to_set_is_structural_not_missing() -> void:
 			if not is_the_milestone_option:
 				assert_bool(option.has("milestone_to_set")).is_false()
 				non_milestone_option_count += 1
-	assert_int(non_milestone_option_count).is_equal(31)
+	assert_int(non_milestone_option_count).is_equal(39)
 
 
 ## get_card() returns an empty Dictionary for an unknown id -- not tested by

@@ -1,9 +1,11 @@
 ## CardContentDatabase owns the static decision card content: the 12 MVP
 ## cards (8 risky/safe + 4 neutral) plus 4 Tier-5 signature cards (Story
 ## class-path-full/004, ADR-0010 §10) — one per Class Path, each gated by a
-## "class_path_tier:{path_id}:5" trigger_condition instead of "always". Every
-## card has exactly 2 options and their resource deltas, counter increments,
-## and optional milestone flags.
+## "class_path_tier:{path_id}:5" trigger_condition instead of "always" — plus
+## 4 more risky/safe cards added by Sprint 12 story 12-6 (2× ekspert_niszowy,
+## 2× biznesmen_contentu — the two paths that had zero reachable path_tag
+## cards before Tier 5). 17 total cards. Every card has exactly 2 options and
+## their resource deltas, counter increments, and optional milestone flags.
 ##
 ## Implements ADR-0001: a read-only Autoload — this module owns no mutation
 ## logic and emits no signals. Decision Card System (downstream, not yet
@@ -154,6 +156,59 @@ const CARDS: Array[Dictionary] = [
 		"options": [
 			{"label": "Push through", "resolution_reaction": "One more upload shipped. The reach came. So did the headache.", "resource_deltas": {&"Reach": 130.0}, "counter_increments": {}},
 			{"label": "Take a day off", "resolution_reaction": "Phone off for a day. Nothing was posted. Nothing was missed.", "resource_deltas": {&"Morale": 10.0}, "counter_increments": {}},
+		],
+	},
+
+	# --- Card wave 2 (Sprint 12, story 12-6): 2 risky/safe pairs each for
+	# ekspert_niszowy and biznesmen_contentu -- the two paths with zero
+	# reachable path_tag cards before Tier 5 (their only existing tagged
+	# card, kult_niszowy/ipo_influencera above, is trigger-gated behind
+	# "class_path_tier:{path}:5" and can't be the card that GETS a player
+	# to Tier 5 in the first place). Same schema/tone as the 8 existing
+	# MVP risky/safe pairs; risky_safe_zasiegi_ratio kept in the locked
+	# 1.4x-1.8x band (registry). No Sponsors resource_deltas -- the
+	# registry's sponsorzy_qualifying_cards constant locks that key to
+	# sponsor_offer_shady/brand_deal_choice only; extending it was
+	# considered and deliberately not done here (a balance decision
+	# outside this story's scope, not an oversight).
+	{
+		"id": "thousand_true_fans",
+		"path_tag": "ekspert_niszowy",
+		"trigger_condition": "always",
+		"text": "A 50M-follower giveaway account wants a paid shoutout. Your actual community is 340 people who reply to everything you post.",
+		"options": [
+			{"label": "Take the giveaway deal", "resolution_reaction": "Shoutout posted. Reach spiked. Three regulars asked if you're okay.", "resource_deltas": {&"Reach": 130.0, &"Cringe": 15.0, &"Morale": -10.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Stay with your 340", "resolution_reaction": "No shoutout. Someone in the replies said this is why they still watch.", "resource_deltas": {&"Reach": 75.0, &"Cringe": -6.0, &"Morale": 8.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "deep_dive_or_trend",
+		"path_tag": "ekspert_niszowy",
+		"trigger_condition": "always",
+		"text": "This week's trend is a 15-second dance. Your last upload -- 47 minutes on one specific bolt pattern -- still gets comments daily.",
+		"options": [
+			{"label": "Chase the trend", "resolution_reaction": "Dance posted. It performed fine. It also wasn't you.", "resource_deltas": {&"Reach": 140.0, &"Cringe": 18.0, &"Morale": -9.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Make another deep-dive", "resolution_reaction": "47 more minutes on bolts. The comment about the last one is still going.", "resource_deltas": {&"Reach": 80.0, &"Cringe": -7.0, &"Morale": 9.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "engagement_farming",
+		"path_tag": "biznesmen_contentu",
+		"trigger_condition": "always",
+		"text": "The dashboard flags a format that reliably outperforms everything else you make: rage-bait comment-section debates. You've never cared about the topic.",
+		"options": [
+			{"label": "Run the numbers, not the topic", "resolution_reaction": "Debate video posted. Comments: 4,200. Position held: none, specifically.", "resource_deltas": {&"Reach": 190.0, &"Cringe": 28.0, &"Morale": -3.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Pass on the format", "resolution_reaction": "Format skipped. The dashboard logs the missed opportunity and says nothing else.", "resource_deltas": {&"Reach": 108.0, &"Cringe": -10.0, &"Morale": 3.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "quarterly_content_review",
+		"path_tag": "biznesmen_contentu",
+		"trigger_condition": "always",
+		"text": "Your creative process this quarter is a spreadsheet: post times, retention curves, thumbnail A/B tests. It's working. You haven't watched your own video in three weeks.",
+		"options": [
+			{"label": "Let the spreadsheet decide everything", "resolution_reaction": "Spreadsheet-optimal video shipped. Retention curve: excellent. Your notes on it: none.", "resource_deltas": {&"Reach": 210.0, &"Cringe": 20.0, &"Morale": -4.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Override the data once", "resolution_reaction": "You picked the thumbnail yourself this time. The curve dipped 2%. You watched the whole video.", "resource_deltas": {&"Reach": 120.0, &"Cringe": -8.0, &"Morale": 4.0}, "counter_increments": {&"safe_choices_count": 1}},
 		],
 	},
 
