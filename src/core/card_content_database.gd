@@ -197,7 +197,7 @@ const CARDS: Array[Dictionary] = [
 		"trigger_condition": "always",
 		"text": "The dashboard flags a format that reliably outperforms everything else you make: rage-bait comment-section debates. You've never cared about the topic.",
 		"options": [
-			{"label": "Run the numbers, not the topic", "resolution_reaction": "Debate video posted. Comments: 4,200. Position held: none, specifically.", "resource_deltas": {&"Reach": 190.0, &"Cringe": 28.0, &"Morale": -3.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Run the numbers", "resolution_reaction": "Debate video posted. Comments: 4,200. Position held: none, specifically.", "resource_deltas": {&"Reach": 190.0, &"Cringe": 28.0, &"Morale": -3.0}, "counter_increments": {&"risky_choices_count": 1}},
 			{"label": "Pass on the format", "resolution_reaction": "Format skipped. The dashboard logs the missed opportunity and says nothing else.", "resource_deltas": {&"Reach": 108.0, &"Cringe": -10.0, &"Morale": 3.0}, "counter_increments": {&"safe_choices_count": 1}},
 		],
 	},
@@ -207,8 +207,8 @@ const CARDS: Array[Dictionary] = [
 		"trigger_condition": "always",
 		"text": "Your creative process this quarter is a spreadsheet: post times, retention curves, thumbnail A/B tests. It's working. You haven't watched your own video in three weeks.",
 		"options": [
-			{"label": "Let the spreadsheet decide everything", "resolution_reaction": "Spreadsheet-optimal video shipped. Retention curve: excellent. Your notes on it: none.", "resource_deltas": {&"Reach": 210.0, &"Cringe": 20.0, &"Morale": -4.0}, "counter_increments": {&"risky_choices_count": 1}},
-			{"label": "Override the data once", "resolution_reaction": "You picked the thumbnail yourself this time. The curve dipped 2%. You watched the whole video.", "resource_deltas": {&"Reach": 120.0, &"Cringe": -8.0, &"Morale": 4.0}, "counter_increments": {&"safe_choices_count": 1}},
+			{"label": "Trust the spreadsheet", "resolution_reaction": "Spreadsheet-optimal video shipped. Retention curve: excellent. Your notes on it: none.", "resource_deltas": {&"Reach": 210.0, &"Cringe": 20.0, &"Morale": -4.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Override it once", "resolution_reaction": "You picked the thumbnail yourself this time. The curve dipped 2%. You watched the whole video.", "resource_deltas": {&"Reach": 120.0, &"Cringe": -8.0, &"Morale": 4.0}, "counter_increments": {&"safe_choices_count": 1}},
 		],
 	},
 

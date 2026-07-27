@@ -106,6 +106,7 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 30
 text = "«« Option A"
 horizontal_alignment = 0
+autowrap_mode = 3
 
 [node name="OptionBLabel" type="Label" parent="Card/VBox/Options"]
 unique_name_in_owner = true
@@ -118,3 +119,4 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 30
 text = "Option B »»"
 horizontal_alignment = 2
+autowrap_mode = 3
