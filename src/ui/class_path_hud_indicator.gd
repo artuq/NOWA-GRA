@@ -19,9 +19,18 @@ extends PanelContainer
 ## "Trash Streamer" chosen over a literal "Pato-Streamer" (user decision,
 ## 2026-07-05): "patostream" is a Polish-only term with no meaning to the
 ## game's English-speaking audience. Internal path ids stay as-is.
+##
+## "Niche Expert" / "Content Mogul" added 2026-07-27 (live playtest 12-3):
+## the 2-path MVP HUD map was never extended when the 4-path Vertical Slice
+## landed, so ekspert_niszowy/biznesmen_contentu fell through to the raw
+## snake_case id ("biznesmen_contentu T1") in the top-bar Path indicator.
+## Names match class_path_panel.gd's _DISPLAY_NAMES exactly (kept in sync;
+## user re-confirmed both 2026-07-27).
 const _DISPLAY_NAMES: Dictionary[StringName, String] = {
 	&"pato_streamer": "Trash Streamer",
 	&"guru_celebryta": "Guru Celeb",
+	&"ekspert_niszowy": "Niche Expert",
+	&"biznesmen_contentu": "Content Mogul",
 }
 
 @onready var _label: Label = %ClassPathLabel
