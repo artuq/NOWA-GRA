@@ -31,6 +31,12 @@ const START_SCREEN_SCENE: String = "res://scenes/start_screen/start_screen.tscn"
 static var _start_screen_shown: bool = false
 
 func _ready() -> void:
+	# CrazyGames portal glue (web only, no-op everywhere else): the engine is
+	# up and about to route to a real screen — tell the portal loading is
+	# done. kocSDK itself no-ops when the SDK is absent (see export_presets
+	# head_include), so this is safe on any host.
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.kocSDK && window.kocSDK.gameReady();", true)
 	var data: Dictionary = SaveSystem.load_save()
 	if should_show_start_screen(data, _start_screen_shown):
 		_start_screen_shown = true

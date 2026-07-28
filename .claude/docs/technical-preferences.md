@@ -20,7 +20,7 @@
 - **Primary Input**: Touch
 - **Gamepad Support**: None
 - **Touch Support**: Full
-- **Platform Notes**: Wszystkie akcje podstawowe muszą działać przez duże, dotykowe obszary realizowane standardowym węzłem `Button` (otrzymuje syntezowane zdarzenia dotykowe project-wide), nie `TouchScreenButton` — to przestarzały węzeł `Node2D` niezintegrowany z układem/themingiem `Control` (per ADR-0007, engine-specialist 2026-06-24). Brak hover-only interakcji.
+- **Platform Notes**: Wszystkie akcje podstawowe muszą działać przez duże, dotykowe obszary realizowane standardowym węzłem `Button` (otrzymuje syntezowane zdarzenia dotykowe project-wide), nie `TouchScreenButton` — to przestarzały węzeł `Node2D` niezintegrowany z układem/themingiem `Control` (per ADR-0007, engine-specialist 2026-06-24). Brak hover-only interakcji. **CrazyGames SDK v3 zintegrowany (2026-07-28)**: bootstrap w `export_presets.cfg` `html/head_include` (`window.kocSDK` — init + loadingStart/Stop + gameplayStart + happytime), wywołania z GDScript przez `JavaScriptBridge` gated na `OS.has_feature("web")`; wszystko no-op poza portalem (lokalny serwer/tunel działa identycznie). Monetyzacja: DECYZJA OTWARTA — obecnie zero adsów (portal rev-share only); rewarded ads wymagałyby rozszerzenia tej integracji + decyzji designowej (satyra vs hazard).
 
 ## Naming Conventions
 
