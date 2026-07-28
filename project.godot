@@ -30,6 +30,7 @@ SettingsSystem="*res://src/core/settings_system.gd"
 PrestigeSystem="*res://src/core/prestige_system.gd"
 BurnoutSystem="*res://src/core/burnout_system.gd"
 ChallengeSystem="*res://src/core/challenge_system.gd"
+StaffSystem="*res://src/core/staff_system.gd"
 
 [display]
 

@@ -7,6 +7,17 @@ Accepted (2026-07-22, following independent `/architecture-review` in a fresh se
 >
 > **Revision note (2026-07-23)**: extended to cover a fourth coordinated panel, `StaffPanel`, per `design/ux/staff-sponsor-ui.md` (`/ux-design` + `/ux-review` APPROVED same day, resolving `team-staff-management.md`'s UI Requirements flag). Same generalization, no architectural change — "three panels/eight entry points" corrected to four panels/ten entry points. This ADR's own Consequences → Negative section anticipated this exact moment ("if a fourth coordinated panel is ever proposed, revisit whether `action_screen.gd` should keep absorbing entry points") — **revisited and confirmed**: stays in `action_screen.gd`, extraction to a separate helper class deferred as premature abstraction with no concrete pain yet (YAGNI) — revisit again only on a real signal (6+ panels, or an actual code-review readability finding), not preemptively.
 
+> **Implementation note (2026-07-28)**: implemented in `action_screen.gd` as
+> specified. All four panels are live: ClassPathPanel and SettingsScreen had
+> their Close handlers rewired to `close_requested` (the two documented bypass
+> bugs, now fixed), BonusesPanel and StaffPanel followed the contract from day
+> one. The Web back-gesture branch deviates deliberately: it is implemented as
+> a pure-JS history trap with NO `create_callback()`, because this scene is
+> freed on every era transition and a `window`-level listener holding a
+> GDScript Callable is a use-after-free by construction (found and fixed the
+> same day). Web therefore only prevents leaving the game; the panel-closing
+> branch of Rule 6 remains fully live on Android's native hook.
+
 ## Date
 2026-07-22
 

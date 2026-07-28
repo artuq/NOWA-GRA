@@ -31,8 +31,8 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | 12 | Class Path System | Progression | Vertical Slice | Designed | design/gdd/class-path-system.md | History Flag System, Decision Card System |
 | 13 | Juice/Feedback System (inferred) | Audio | Vertical Slice | Designed | design/gdd/juice-feedback-system.md | Action System, Decision Card System |
 | 14 | Main Navigation/Screen Flow (inferred) | UI | Vertical Slice | Designed | design/gdd/main-navigation-screen-flow.md | Action UI, Class Path System, Settings System, Decision Card System, Offline Report Screen |
-| 15 | Team/Staff Management | Economy | Alpha | Designed | design/gdd/team-staff-management.md | Resource System, Offline Progress System, Prestige/Checkpoint System, Decision Card System |
-| 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Designed (via /ux-design, no separate GDD) | design/ux/staff-sponsor-ui.md | Team/Staff Management |
+| 15 | Team/Staff Management | Economy | Alpha | Implemented (2026-07-28) | design/gdd/team-staff-management.md | Resource System, Offline Progress System, Prestige/Checkpoint System, Decision Card System |
+| 16 | Staff/Sponsor UI (inferred) | UI | Alpha | Implemented (2026-07-28, StaffPanel) | design/ux/staff-sponsor-ui.md | Team/Staff Management |
 | 17 | Prestige/Checkpoint System | Progression | Alpha | Designed | design/gdd/prestige-checkpoint-system.md | Class Path System, Offline Progress System, Save/Persistence System |
 | 18 | Cosmetic Persona Customization | UI | Full Vision | Designed (revised post-review) | design/gdd/cosmetic-persona-customization.md | Class Path System, History Flag Manager |
 | 19 | Settings System (inferred, no dedicated GDD) | Core | Vertical Slice | Designed (retrofit) | design/art/art-bible.md §7 + docs/architecture/adr-0015-settings-system-retrofit.md | — |

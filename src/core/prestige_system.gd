@@ -210,6 +210,9 @@ func on_burnout_accepted() -> void:
 	SaveSystem.suppress_autosave()
 
 	ClassPathSystem.reset_era_state()
+	# Staff is era-local too (team-staff-management.md Core Rule 2): hires are
+	# part of what the burnout costs, not an exception to it.
+	StaffSystem.reset_era_state()
 
 	# Step 4 (Story 003; extracted into compute_next_grant() by ADR-0017,
 	# this revision): META_BONUS grant computation (F1) + variety check

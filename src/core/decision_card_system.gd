@@ -322,9 +322,16 @@ func resolve_choice(option_index: int) -> void:
 	# read): positive Sponsors card rewards scale under guru T5 (×2) /
 	# biznesmen T3 (×1.5); 1.0 (no-op) otherwise. Negative deltas (costs)
 	# are never scaled — income multiplier, not a cost discount.
+	# Sponsors income scaling, both pull-model (never pushed): the class path's
+	# tier effect (guru T5 / biznesmen T3) and the Sponsor Manager staff role
+	# (team-staff-management.md F3b — scope-locked to the AMOUNT a qualifying
+	# card grants, never the card's draw weight). Costs (negative deltas) are
+	# never scaled by either.
 	if resource_deltas.get(&"Sponsors", 0.0) > 0.0:
 		resource_deltas[&"Sponsors"] = roundf(
-			resource_deltas[&"Sponsors"] * ClassPathSystem.get_sponsor_income_multiplier()
+			resource_deltas[&"Sponsors"]
+			* ClassPathSystem.get_sponsor_income_multiplier()
+			* StaffSystem.get_sponsor_multiplier()
 		)
 	if not resource_deltas.is_empty():
 		ResourceManager.apply_delta(resource_deltas)

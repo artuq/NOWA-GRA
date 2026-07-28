@@ -8,9 +8,9 @@
 ## ADR-0014 (implemented 2026-07-28): this script IS the MainNavCoordinator.
 ## It owns coordination_state (NO_OVERLAY / PANEL_OPEN / CARD_PRESENTED) as
 ## the single source of truth for the three coordinated overlay panels
-## (ClassPathPanel, SettingsScreen, BonusesPanel — StaffPanel joins whenever
-## the Team/Staff system actually ships; wiring a panel for a nonexistent
-## system now would be dead code). Panel `visible` flags are EFFECTS of state
+## (ClassPathPanel, SettingsScreen, BonusesPanel, StaffPanel — the fourth
+## joined 2026-07-28 when the Team/Staff system shipped). Panel `visible`
+## flags are EFFECTS of state
 ## changes applied by the one synchronous resolver (_apply_state_change),
 ## never independently set — the GDD's "same frame" guarantee is exactly
 ## "one synchronous resolver call per entry point," no signal-order races.
@@ -40,7 +40,7 @@ enum CoordinationState { NO_OVERLAY, PANEL_OPEN, CARD_PRESENTED }
 ## Single source of truth for overlay coordination. No public setter —
 ## changes exclusively through the entry-point handlers below, each
 ## funneling into _apply_state_change(). After ANY entry point returns,
-## this and the three panels' `visible` flags are mutually consistent.
+## this and the four panels' `visible` flags are mutually consistent.
 var coordination_state: CoordinationState = CoordinationState.NO_OVERLAY
 
 ## Which panel PANEL_OPEN refers to (null under any other state).
@@ -52,6 +52,8 @@ var _open_panel: Control = null
 @onready var _class_path_panel: Control = %ClassPathPanel
 @onready var _bonuses_button: Button = %BonusesButton
 @onready var _bonuses_panel: Control = %BonusesPanel
+@onready var _staff_button: Button = %StaffButton
+@onready var _staff_panel: Control = %StaffPanel
 @onready var _card_screen: Control = $CardScreen
 
 
@@ -59,9 +61,11 @@ func _ready() -> void:
 	_settings_button.pressed.connect(_on_settings_button_pressed)
 	_path_button.pressed.connect(_on_path_button_pressed)
 	_bonuses_button.pressed.connect(_on_bonuses_button_pressed)
+	_staff_button.pressed.connect(_on_staff_button_pressed)
 	_class_path_panel.close_requested.connect(_on_panel_close_requested)
 	_settings_screen.close_requested.connect(_on_panel_close_requested)
 	_bonuses_panel.close_requested.connect(_on_panel_close_requested)
+	_staff_panel.close_requested.connect(_on_panel_close_requested)
 	DecisionCardSystem.card_presented.connect(_on_card_presented)
 	_card_screen.visibility_changed.connect(_on_card_screen_visibility_changed)
 	PrestigeSystem.era_transitioned.connect(_on_era_transitioned)
@@ -82,6 +86,10 @@ func _on_settings_button_pressed() -> void:
 
 func _on_bonuses_button_pressed() -> void:
 	_request_panel(_bonuses_panel)
+
+
+func _on_staff_button_pressed() -> void:
+	_request_panel(_staff_panel)
 
 
 func _on_panel_close_requested() -> void:
@@ -134,7 +142,7 @@ func _request_panel(panel: Control) -> void:
 
 ## The ONE resolver every entry point funnels through (GDD's "same frame"
 ## contract). Sets coordination_state, then applies panel visibility as an
-## EFFECT — at most one of the three panels visible, and only under
+## EFFECT — at most one of the four panels visible, and only under
 ## PANEL_OPEN. Never touches CardScreen.visible under any branch.
 func _apply_state_change(new_state: CoordinationState, panel: Control) -> void:
 	coordination_state = new_state
@@ -142,6 +150,7 @@ func _apply_state_change(new_state: CoordinationState, panel: Control) -> void:
 	_class_path_panel.visible = _open_panel == _class_path_panel
 	_settings_screen.visible = _open_panel == _settings_screen
 	_bonuses_panel.visible = _open_panel == _bonuses_panel
+	_staff_panel.visible = _open_panel == _staff_panel
 	# Web: keep the history trap primed while anything consumable is up —
 	# synchronously, inside the resolver (ADR-0014 Risks: the pushState trap
 	# must be armed before the next possible back gesture).

@@ -114,7 +114,11 @@ func simulate_offline(elapsed_seconds: int) -> Dictionary:
 	# same online+offline precedent as META_HATERS_RESIST (prestige GDD,
 	# locked 2026-07-12). All three default to neutral with no active path,
 	# leaving the sim byte-identical to its pre-tier-fill behavior.
-	var haters_mult: float = ClassPathSystem.get_haters_growth_multiplier()
+	# Staff effects (team-staff-management.md, snapshotted once like the rest):
+	# Troll multiplies the Haters growth rate (F3), Assistant multiplies the
+	# offline income rate (Core Rule 6 — offline only, no live-play effect).
+	var haters_mult: float = ClassPathSystem.get_haters_growth_multiplier() * StaffSystem.get_haters_multiplier()
+	var assistant_mult: float = StaffSystem.get_offline_rate_multiplier()
 	var drain_mult: float = ClassPathSystem.get_morale_drain_multiplier()
 	# min(floor, starting m): the floor blocks drain from crossing it but
 	# never lifts a Morale that already sits below it (no free Morale from
@@ -135,7 +139,7 @@ func simulate_offline(elapsed_seconds: int) -> Dictionary:
 			m = max(morale_floor, m - m_drain * dt_minutes)
 
 			var mult: float = ResourceFormulas.action_effectiveness_multiplier(m)
-			z_gained += ResourceFormulas.passive_zasiegi_income(h, mult, float(dt))
+			z_gained += ResourceFormulas.passive_zasiegi_income(h, mult, float(dt)) * assistant_mult
 
 			seg_remaining -= dt
 

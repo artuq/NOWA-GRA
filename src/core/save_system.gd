@@ -112,6 +112,7 @@ func _ready() -> void:
 	ClassPathSystem.restore_state(data.get("class_path", {}))
 	SettingsSystem.restore_state(data.get("settings", {}))
 	PrestigeSystem.restore_state(data.get("prestige", {}))
+	StaffSystem.restore_state(data.get("staff", {}))
 	state = State.READY
 
 	_debounce_timer = Timer.new()
@@ -203,6 +204,7 @@ func save_now() -> void:
 		"class_path": ClassPathSystem.serialize_state(),
 		"settings": SettingsSystem.serialize_state(),
 		"prestige": PrestigeSystem.serialize_state(),
+		"staff": StaffSystem.serialize_state(),
 	}
 	_write_atomic(data)
 	state = State.READY

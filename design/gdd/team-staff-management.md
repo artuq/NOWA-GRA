@@ -1,8 +1,21 @@
 # Team/Staff Management
 
-> **Status**: In Design
+> **Status**: Implemented (2026-07-28) — `src/core/staff_system.gd` + `src/ui/staff_panel.gd`
 > **Author**: user + agents
-> **Last Updated**: 2026-07-22
+> **Last Updated**: 2026-07-28
+>
+> **Implementation note (2026-07-28)**: shipped as designed, with F1/F2 and the
+> locked `ceil()` rule asserted against this document's own worked examples
+> (`tests/unit/staff/staff_formulas_test.gd`). All three pull-model getters are
+> wired: Sponsor Manager into `DecisionCardSystem`'s card resolution (F3b, next
+> to the Class Path sponsor multiplier), Troll and Assistant into
+> `OfflineProgressSystem.simulate_offline()` (F3 / Core Rule 6). Era-local reset
+> runs from `PrestigeSystem.on_burnout_accepted()` beside
+> `ClassPathSystem.reset_era_state()` (Core Rule 2), and counts round-trip
+> through `SaveSystem`/`BootController`. UNCHANGED pre-existing gap, exactly as
+> this GDD's Core Rule 5 states: the live-play call site for the whole
+> `H_rate(C) x META_HATERS_RESIST` pipe still does not exist, so Troll's
+> multiplier currently only takes effect offline.
 > **Implements Pillar**: Pillar 4 (offline pierwsza klasa — Asystent multiplier bezpośrednio przyspiesza offline progression) primarily; Pillar 3 (satyra przez mechanikę) przez taksonomię ról (trolle/asystenci/sponsor managerowie jako komentarz do ekonomii influencerów); Pillar 2 (decyzje mają pamięć) przez era-lokalny reset jako część stawki Wypalenia.
 
 ## Overview

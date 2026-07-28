@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/action_screen/resource_hud.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/action_grid.tscn" id="2"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://scenes/action_screen/class_path_panel.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/burnout_warning_indicator.tscn" id="11"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/bonuses_panel.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/staff_panel.tscn" id="13"]
 
 [sub_resource type="StyleBoxFlat" id="AppBackground"]
 bg_color = Color(0.082353, 0.082353, 0.101961, 1)
@@ -85,6 +86,14 @@ size_flags_vertical = 4
 theme_override_font_sizes/font_size = 24
 text = "Bonuses"
 
+[node name="StaffButton" type="Button" parent="MainLayout/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "Team"
+
 [node name="SettingsButton" type="Button" parent="MainLayout/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
@@ -124,6 +133,10 @@ unique_name_in_owner = true
 layout_mode = 1
 
 [node name="BonusesPanel" parent="." instance=ExtResource("12")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="StaffPanel" parent="." instance=ExtResource("13")]
 unique_name_in_owner = true
 layout_mode = 1
 
