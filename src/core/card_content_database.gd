@@ -4,7 +4,10 @@
 ## "class_path_tier:{path_id}:5" trigger_condition instead of "always" — plus
 ## 4 more risky/safe cards added by Sprint 12 story 12-6 (2× ekspert_niszowy,
 ## 2× biznesmen_contentu — the two paths that had zero reachable path_tag
-## cards before Tier 5). 17 total cards. Every card has exactly 2 options and
+## cards before Tier 5), plus 8 wave-3 cards (2026-07-28: +2 guru, +2 ekspert,
+## +2 biznesmen, +2 neutral — pool distribution now pato 6 / guru 4 /
+## ekspert 4 / biznesmen 4 / neutral 6). 29 total cards (24 "always" +
+## 4 tier-gated signatures + Wypalenie). Every card has exactly 2 options and
 ## their resource deltas, counter increments, and optional milestone flags.
 ##
 ## Implements ADR-0001: a read-only Autoload — this module owns no mutation
@@ -209,6 +212,94 @@ const CARDS: Array[Dictionary] = [
 		"options": [
 			{"label": "Trust the spreadsheet", "resolution_reaction": "Spreadsheet-optimal video shipped. Retention curve: excellent. Your notes on it: none.", "resource_deltas": {&"Reach": 210.0, &"Cringe": 20.0, &"Morale": -4.0}, "counter_increments": {&"risky_choices_count": 1}},
 			{"label": "Override it once", "resolution_reaction": "You picked the thumbnail yourself this time. The curve dipped 2%. You watched the whole video.", "resource_deltas": {&"Reach": 120.0, &"Cringe": -8.0, &"Morale": 4.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+
+	# --- Card wave 3 (2026-07-28, "everything to the finish line" push):
+	# +2 guru_celebryta (previously 2 reachable tagged cards vs pato's 6),
+	# +2 ekspert_niszowy, +2 biznesmen_contentu (4 each now), +2 neutral.
+	# Same schema/tone/band discipline as wave 2: risky/safe Reach ratio in
+	# the locked 1.4x-1.8x band, no Sponsors resource_deltas (registry's
+	# sponsorzy_qualifying_cards stays locked to the original two — same
+	# deliberate scope call wave 2 documented above).
+	{
+		"id": "masterclass_launch",
+		"path_tag": "guru_celebryta",
+		"trigger_condition": "always",
+		"text": "Your audience asks how you got here. You could tell them — or you could sell them 'Manifest The Algorithm', a $999 masterclass.",
+		"options": [
+			{"label": "Launch the masterclass", "resolution_reaction": "Course live. Module 3 is a 40-minute video about believing in yourself. It has a workbook.", "resource_deltas": {&"Reach": 180.0, &"Cringe": 26.0, &"Morale": -8.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Post it for free", "resolution_reaction": "Free guide posted. Someone commented that it's the only honest one in the niche. It didn't trend.", "resource_deltas": {&"Reach": 105.0, &"Cringe": -7.0, &"Morale": 6.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "guru_retreat",
+		"path_tag": "guru_celebryta",
+		"trigger_condition": "always",
+		"text": "You're planning a 'digital detox retreat' for your followers. Tickets are $500. You are planning to livestream it.",
+		"options": [
+			{"label": "Livestream the detox", "resolution_reaction": "Retreat streamed in 4K. Attendees meditated in front of a camera crane. Engagement: excellent.", "resource_deltas": {&"Reach": 165.0, &"Cringe": 24.0, &"Morale": -12.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Actually unplug", "resolution_reaction": "No stream. Twelve people sat by a lake. One of them was you.", "resource_deltas": {&"Reach": 100.0, &"Cringe": -8.0, &"Morale": 9.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "wikipedia_correction",
+		"path_tag": "ekspert_niszowy",
+		"trigger_condition": "always",
+		"text": "A 4M-subscriber creator got your entire field wrong in a viral video. You have receipts. You always have receipts.",
+		"options": [
+			{"label": "Post the takedown", "resolution_reaction": "Correction video up. Their fans arrived first, your citations arrived second.", "resource_deltas": {&"Reach": 150.0, &"Cringe": 16.0, &"Morale": -6.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Email them privately", "resolution_reaction": "Correction sent. They pinned a quiet errata comment. Nobody clipped it.", "resource_deltas": {&"Reach": 90.0, &"Cringe": -5.0, &"Morale": 7.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "sponsored_inaccuracy",
+		"path_tag": "ekspert_niszowy",
+		"trigger_condition": "always",
+		"text": "A brand loves your explainer — they just need you to simplify one detail. The simplified version is, technically, false.",
+		"options": [
+			{"label": "Read the script", "resolution_reaction": "Ad read delivered. The detail is now wrong in 200,000 heads, but the transition was smooth.", "resource_deltas": {&"Reach": 145.0, &"Cringe": 20.0, &"Morale": -11.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Correct the script", "resolution_reaction": "Brand accepted the accurate version. The campaign manager called it 'a compromise'.", "resource_deltas": {&"Reach": 88.0, &"Cringe": -6.0, &"Morale": 8.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "ai_content_farm",
+		"path_tag": "biznesmen_contentu",
+		"trigger_condition": "always",
+		"text": "A vendor demo shows your face and voice generating 40 videos a week without you. The demo video of you is already rendered.",
+		"options": [
+			{"label": "Deploy the clone", "resolution_reaction": "Pipeline live. Your channel uploaded twice while you read this sentence.", "resource_deltas": {&"Reach": 230.0, &"Cringe": 30.0, &"Morale": -5.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Stay handmade", "resolution_reaction": "Vendor declined. Output unchanged: one video, made by a person, on purpose.", "resource_deltas": {&"Reach": 130.0, &"Cringe": -9.0, &"Morale": 3.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "merch_drop_qa",
+		"path_tag": "biznesmen_contentu",
+		"trigger_condition": "always",
+		"text": "The merch shipment arrived with your logo printed slightly off-center. Reprinting costs a quarter of the margin. Pre-orders are sold out.",
+		"options": [
+			{"label": "Ship it anyway", "resolution_reaction": "Units shipped. The off-center logo is now a 'limited misprint edition', per your own tweet.", "resource_deltas": {&"Reach": 185.0, &"Cringe": 27.0, &"Morale": -7.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Eat the reprint cost", "resolution_reaction": "Reprint ordered. Margin gone. The logo is exactly where logos go.", "resource_deltas": {&"Reach": 110.0, &"Cringe": -9.0, &"Morale": 6.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "trend_hijack_tragedy",
+		"path_tag": "",
+		"trigger_condition": "always",
+		"text": "A tragedy is the top trend worldwide. Your editor drafted a 'raising awareness' video with your best-performing thumbnail face.",
+		"options": [
+			{"label": "Post the awareness video", "resolution_reaction": "Video live. It's your biggest reach this month. The comments are turned off.", "resource_deltas": {&"Reach": 175.0, &"Cringe": 30.0, &"Morale": -12.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Sit this one out", "resolution_reaction": "Nothing posted. The trend moved on within a day. So did everyone who did post.", "resource_deltas": {&"Reach": 100.0, &"Cringe": -10.0, &"Morale": 8.0}, "counter_increments": {&"safe_choices_count": 1}},
+		],
+	},
+	{
+		"id": "old_friend_collab",
+		"path_tag": "",
+		"trigger_condition": "always",
+		"text": "A friend from before the follower count asks to collab. Their content is, honestly, not good. Their DM is very excited.",
+		"options": [
+			{"label": "Mine the nostalgia", "resolution_reaction": "Collab posted, cut around their parts. It performed. They texted 'we should do this more'.", "resource_deltas": {&"Reach": 155.0, &"Cringe": 22.0, &"Morale": -9.0}, "counter_increments": {&"risky_choices_count": 1}},
+			{"label": "Help them off-camera", "resolution_reaction": "You spent an evening fixing their setup instead. No video exists of it.", "resource_deltas": {&"Reach": 92.0, &"Cringe": -6.0, &"Morale": 9.0}, "counter_increments": {&"safe_choices_count": 1}},
 		],
 	},
 

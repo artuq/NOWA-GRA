@@ -58,12 +58,12 @@ func test_pato_t5_all_action_reach() -> void:
 ## path only, {} everywhere else.
 func test_secondary_yields() -> void:
 	var cps: Node = _make_cps_at(&"pato_streamer", 3)
-	assert_that(cps.get_secondary_yield(&"zrob_drame")).is_equal({&"Sponsors": 3.0})
+	assert_that(cps.get_secondary_yield(&"zrob_drame")).is_equal({&"Sponsors": 1.0})
 	assert_that(cps.get_secondary_yield(&"nagraj_vloga")).is_equal({})
 	# Below T3: no yield yet.
 	assert_that(_make_cps_at(&"pato_streamer", 2).get_secondary_yield(&"zrob_drame")).is_equal({})
 	# Cumulative: still present at T5.
-	assert_that(_make_cps_at(&"ekspert_niszowy", 5).get_secondary_yield(&"nagraj_vloga")).is_equal({&"Morale": 5.0})
+	assert_that(_make_cps_at(&"ekspert_niszowy", 5).get_secondary_yield(&"nagraj_vloga")).is_equal({&"Morale": 2.0})
 	# No active path: nothing.
 	assert_that(_make_cps_at(&"", 0).get_secondary_yield(&"zrob_drame")).is_equal({})
 

@@ -181,14 +181,13 @@ func test_card_without_milestone_remains_eligible() -> void:
 
 ## AC-8: all "always"-gated real cards pass trigger_condition -> filtering is
 ## a no-op (assuming no milestones are set, which this suite never does
-## against real card IDs -- see header note). Count is 16 as of Sprint 12
-## story 12-6 (2026-07-24): the 12 original MVP cards plus 4 wave-2 cards
-## (also trigger_condition=="always") -- the 4 Tier-5 signature cards
-## (tier-gated) and the Wypalenie card (trigger_condition=="never") are
-## correctly excluded from this pool.
+## against real card IDs -- see header note). Count is 24 as of wave 3
+## (2026-07-28): 12 MVP + 4 wave-2 + 8 wave-3 "always" cards -- the 4
+## Tier-5 signature cards (tier-gated) and the Wypalenie card
+## (trigger_condition=="never") are correctly excluded from this pool.
 func test_all_always_gated_real_cards_pass_trigger_condition() -> void:
 	var dcs: Node = _new_decision_card_system()
 
 	var pool: Array[Dictionary] = dcs._build_eligible_pool()
 
-	assert_int(pool.size()).is_equal(16)
+	assert_int(pool.size()).is_equal(24)

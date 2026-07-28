@@ -41,7 +41,7 @@ func test_unlocked_tiers_show_numbers_and_teaser() -> void:
 	assert_bool(label.visible).is_true()
 	assert_str(label.text).contains("T1: Make Drama Reach ×1.3")
 	assert_str(label.text).contains("T2: Make Drama Reach ×1.6")
-	assert_str(label.text).contains("Next T3: Make Drama also +3 Sponsors")
+	assert_str(label.text).contains("Next T3: Make Drama also +1 Sponsors")
 
 
 ## AC: a Tier-0 path still teases T1 (ladder visible before first threshold).

@@ -91,11 +91,18 @@ Active investment in a path is only possible once the player has made **at least
 |---|---|---|---|---|
 | T1 | Drama Reach ×1.3 | Interview Reach ×1.2 | Offline Morale drain ×0.8 | Collab Reach ×1.2 |
 | T2 | Drama Reach ×1.6 | Interview Reach ×1.4 | Vlog Reach ×1.2 | Collab Reach ×1.4 |
-| T3 | Drama also +3 Sponsors | Interview also +2 Sponsors | Vlog also +5 Morale | Sponsor income ×1.5 |
+| T3 | Drama also +1 Sponsor | Interview also +1 Sponsor | Vlog also +2 Morale | Sponsor income ×1.5 |
 | T4 | Drama duration ×2/3 (9s→6s) | Interview duration ×2/3 (15s→10s) | Vlog duration ×2/3 (6s→4s) | All action durations ×0.75 |
 | T5 | All actions Reach ×2, Cringe gain ×1.5 + "Viral Moment" | Sponsor income ×2 + "Brand Deal of the Century" | Haters growth ×0.5, offline Morale floor 40 + "Kult Niszowy" | Action Morale costs ×0 + "IPO Influencera" |
 
-Notes: ekspert T5's Morale floor is an **ambient-drain shield only** (offline sim)
+Notes: T3 interlock yields were cut from the draft's +3/+2/+5 in the same-day
+balance sanity pass (2026-07-28): at action-completion cadence (6-15s) the draft
+values out-produced every Sponsor sink (shield 5 per 300s, invest 5/tap, cards
++3 per multiple minutes) by an order of magnitude and out-healed all Morale
+costs combined — sink-scale values (+1/+1/+2) keep the interlock meaningful
+without flooding either meter. Full economy-designer income-curve pass still
+owed (same Open Question as F2's rates). ekspert T5's Morale floor is an
+**ambient-drain shield only** (offline sim)
 — never a live `apply_delta` clamp, which would make Morale spends (ekspert's own
 invest resource) free at the floor. Sponsor-income multipliers apply to positive
 Sponsors deltas at both card resolution and T3 interlock yields. Ambient effects

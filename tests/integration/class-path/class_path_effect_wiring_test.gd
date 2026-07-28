@@ -59,7 +59,7 @@ func test_duration_cut_applied_at_start() -> void:
 	ActionSystem._on_action_timeout()
 
 
-## AC: T3 interlock — drama completion at pato T3 also yields +3 Sponsors,
+## AC: T3 interlock — drama completion at pato T3 also yields +1 Sponsor,
 ## carried in both apply_delta and the action_completed payload.
 func test_secondary_yield_merged_into_completion() -> void:
 	_set_path_state(&"pato_streamer", 3)
@@ -71,9 +71,9 @@ func test_secondary_yield_merged_into_completion() -> void:
 	ActionSystem._timer.stop()
 	ActionSystem._on_action_timeout()
 	ActionSystem.action_completed.disconnect(handler)
-	assert_float(ResourceManager.get_resource(&"Sponsors") - sponsors_before).is_equal_approx(3.0, 0.0001)
+	assert_float(ResourceManager.get_resource(&"Sponsors") - sponsors_before).is_equal_approx(1.0, 0.0001)
 	assert_int(captured.size()).is_equal(1)
-	assert_float(captured[0].get(&"Sponsors", 0.0)).is_equal_approx(3.0, 0.0001)
+	assert_float(captured[0].get(&"Sponsors", 0.0)).is_equal_approx(1.0, 0.0001)
 
 
 ## AC: biznesmen T5 — negative action Morale costs zeroed (drama's -3 becomes

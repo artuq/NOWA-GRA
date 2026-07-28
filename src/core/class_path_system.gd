@@ -150,19 +150,26 @@ const _MULTIPLIER_TABLE: Dictionary[StringName, Dictionary] = {
 ##   takes Morale below this ("cult immune to hate") — see get_morale_floor()
 ##   for why this is drain-only, never a live apply_delta clamp.
 const _TIER_EFFECT_TABLE: Dictionary[StringName, Dictionary] = {
+	# Interlock yield magnitudes (balance sanity pass, 2026-07-28): the draft's
+	# original +3/+2/+5 per completion flooded both meters — at drama's 9s
+	# (6s at T4) cadence, +3 Sponsors/completion is ~20-30/min against sinks
+	# priced in single digits per MINUTES (shield 5 per 300s, guru invest
+	# 5/tap, cards +3 once per multiple minutes), and +5 Morale per 6s vlog
+	# out-heals every Morale cost in the game combined. Cut to sink-scale:
+	# +1 Sponsor (drama/interview), +2 Morale (vlog). Still provisional.
 	&"pato_streamer": {
-		3: {&"secondary_yield": {&"zrob_drame": {&"Sponsors": 3.0}}},
+		3: {&"secondary_yield": {&"zrob_drame": {&"Sponsors": 1.0}}},
 		4: {&"duration_mult": {&"zrob_drame": 2.0 / 3.0}},
 		5: {&"reach_all_mult": 2.0, &"cringe_gain_mult": 1.5},
 	},
 	&"guru_celebryta": {
-		3: {&"secondary_yield": {&"udziel_wywiadu": {&"Sponsors": 2.0}}},
+		3: {&"secondary_yield": {&"udziel_wywiadu": {&"Sponsors": 1.0}}},
 		4: {&"duration_mult": {&"udziel_wywiadu": 2.0 / 3.0}},
 		5: {&"sponsor_income_mult": 2.0},
 	},
 	&"ekspert_niszowy": {
 		1: {&"morale_drain_mult": 0.8},
-		3: {&"secondary_yield": {&"nagraj_vloga": {&"Morale": 5.0}}},
+		3: {&"secondary_yield": {&"nagraj_vloga": {&"Morale": 2.0}}},
 		4: {&"duration_mult": {&"nagraj_vloga": 2.0 / 3.0}},
 		5: {&"haters_growth_mult": 0.5, &"morale_floor": 40.0},
 	},
