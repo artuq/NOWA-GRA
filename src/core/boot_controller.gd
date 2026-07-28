@@ -21,10 +21,43 @@ signal route_requested(scene_path: String)
 
 const OFFLINE_REPORT_SCENE: String = "res://scenes/offline_report/offline_report.tscn"
 const MAIN_SCENE: String = "res://scenes/main/main.tscn"
+const START_SCREEN_SCENE: String = "res://scenes/start_screen/start_screen.tscn"
+
+## Session-scoped guard (static: survives the start_screen -> boot.tscn scene
+## round-trip, resets on a fresh process): the start screen is offered at most
+## once per app launch. Both start-screen exits (Continue, New Game) route back
+## through boot.tscn so ADR-0003's boot sequence stays the single boot path;
+## this flag is what lets that second pass fall through to the normal sequence.
+static var _start_screen_shown: bool = false
 
 func _ready() -> void:
 	var data: Dictionary = SaveSystem.load_save()
+	if should_show_start_screen(data, _start_screen_shown):
+		_start_screen_shown = true
+		route_requested.emit(START_SCREEN_SCENE)
+		# Deferred for the same Main-Scene-_ready() race documented on the
+		# boot_with routing call below.
+		get_tree().change_scene_to_file.call_deferred(START_SCREEN_SCENE)
+		return
 	boot_with(data, compute_elapsed_seconds(data, Time.get_unix_time_from_system()))
+
+
+## True when [param data] is a save with actual game progress -- every real
+## SaveSystem.save_now() snapshot carries a "resources" block, while both a
+## first session ({}) and the minimal post-New-Game save (settings only, see
+## SaveSystem.reset_save()) lack it. Gate for the start screen: a player with
+## nothing to continue boots straight into the game, preserving the first-card
+## hook's instant time-to-gameplay (quick-spec 2026-07-06).
+static func has_progress(data: Dictionary) -> bool:
+	return data.has("resources")
+
+
+## Routing predicate for the start screen (BUG-005): show it only when there is
+## real progress to continue AND it hasn't already been offered this session.
+## Static + argument-driven so tests can exercise the truth table without a
+## real save file or scene swap.
+static func should_show_start_screen(data: Dictionary, already_shown: bool) -> bool:
+	return has_progress(data) and not already_shown
 
 
 ## Computes offline elapsed seconds from the save Dictionary's "last_saved_at"

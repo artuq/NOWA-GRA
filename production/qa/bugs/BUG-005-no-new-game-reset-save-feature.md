@@ -1,6 +1,12 @@
 # BUG-005: No "New Game" / "Reset Save" feature — game always resumes the existing save, cannot start fresh in-game
 
-**Severity**: S3 — Missing feature, no data loss/crash, but blocks a normal player expectation | **Status**: Open | **Found**: 2026-07-27 (Sprint 12 story 12-3, live playtest) | **Existed since**: project inception (never designed)
+**Severity**: S3 — Missing feature, no data loss/crash, but blocks a normal player expectation | **Status**: FIXED (2026-07-28) | **Found**: 2026-07-27 (Sprint 12 story 12-3, live playtest) | **Existed since**: project inception (never designed)
+
+## Fix (2026-07-28, ADR-0019)
+
+User decision: a **start screen** (Continue / New Game), not a Settings-buried reset. Shown at cold boot only when a save with real progress exists (`BootController.has_progress()` — fresh players skip it entirely, preserving the first-card hook); offered at most once per app launch. New Game = inline confirm → `SaveSystem.reset_save()`: previous save backed up to `user://save.backup.json` (rolling slot — the 2026-07-27 manual workaround, now automatic), fresh save keeps ONLY the settings block (reduce-motion is accessibility, not progression). Backup-copy failure aborts the reset and leaves the save untouched.
+
+Files: `src/ui/start_screen.gd` + `scenes/start_screen/start_screen.tscn` (NEW), `src/core/boot_controller.gd`, `src/core/save_system.gd`. Tests: `tests/integration/start_screen/start_screen_flow_test.gd` (5), `tests/integration/save_persistence_system/reset_save_test.gd` (5). Full suite 671/671. See `docs/architecture/adr-0019-start-screen-gate-save-reset.md`.
 
 ## Repro
 1. Play far enough to unlock action slots 4-6 (Collab/Interview/Course) — i.e. make ≥6 risky-or-safe card choices and hit the two slot-6 milestone cards.

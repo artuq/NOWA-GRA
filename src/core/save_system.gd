@@ -43,6 +43,10 @@ extends Node
 ## the CLI arg and still use the real save — the CLI/CI run is the gate.
 static var SAVE_PATH: String = "user://save.json"
 static var TEMP_PATH: String = "user://save.tmp"
+## Where reset_save() (New Game, BUG-005) parks the previous save. A single
+## rolling slot -- each reset overwrites the prior backup. Static (not const)
+## for the same test-isolation repointing as SAVE_PATH/TEMP_PATH.
+static var BACKUP_PATH: String = "user://save.backup.json"
 const SCHEMA_VERSION: int = 1
 
 ## Once per PROCESS, not per instance: test suites instantiate fresh
@@ -59,10 +63,13 @@ func _init() -> void:
 		if arg.contains("GdUnit"):
 			SAVE_PATH = "user://save.test.json"
 			TEMP_PATH = "user://save.test.tmp"
+			BACKUP_PATH = "user://save.test.backup.json"
 			if FileAccess.file_exists(SAVE_PATH):
 				DirAccess.remove_absolute(SAVE_PATH)
 			if FileAccess.file_exists(TEMP_PATH):
 				DirAccess.remove_absolute(TEMP_PATH)
+			if FileAccess.file_exists(BACKUP_PATH):
+				DirAccess.remove_absolute(BACKUP_PATH)
 			break
 
 ## Trailing-edge debounce interval (Tuning Knob: `save_debounce_interval_sec`,
@@ -197,17 +204,56 @@ func save_now() -> void:
 		"settings": SettingsSystem.serialize_state(),
 		"prestige": PrestigeSystem.serialize_state(),
 	}
+	_write_atomic(data)
+	state = State.READY
+
+
+## The shared atomic-write tail of [method save_now] and [method reset_save]:
+## JSON to [constant TEMP_PATH], then rename onto [constant SAVE_PATH]. Failure
+## modes and logging unchanged from the original save_now() body -- a failed
+## rename retains the `.tmp` for retry, never silently discards.
+func _write_atomic(data: Dictionary) -> void:
 	var file: FileAccess = FileAccess.open(TEMP_PATH, FileAccess.WRITE)
 	if file == null:
 		push_error("Save write failed: could not open %s (%s)" % [TEMP_PATH, FileAccess.get_open_error()])
-		state = State.READY
 		return
 	file.store_string(JSON.stringify(data))
 	file.close()
 	var err: Error = DirAccess.rename_absolute(TEMP_PATH, SAVE_PATH)
 	if err != OK:
 		push_error("Save rename failed: %s — .tmp file retained for retry" % err)
-	state = State.READY
+
+
+## New Game (BUG-005): backs up the current save to [constant BACKUP_PATH]
+## (a single rolling slot -- the previous backup is replaced), then writes a
+## minimal fresh save preserving ONLY the settings block. reduce_motion is an
+## accessibility preference, not progression, so it survives the wipe; the
+## fresh save deliberately has no "resources" key, which is exactly what
+## BootController.has_progress() keys on -- the next cold boot after a reset
+## goes straight into the fresh game, no start screen.
+##
+## Returns false AND leaves the existing save untouched if the backup copy
+## fails -- never deletes the only copy of a player's progression. Also stops
+## any pending debounced autosave so pre-reset in-memory state can't be
+## re-persisted after the wipe.
+##
+## Example:
+##   if SaveSystem.reset_save():
+##       get_tree().change_scene_to_file("res://scenes/boot/boot.tscn")
+func reset_save() -> bool:
+	if _debounce_timer != null:
+		_debounce_timer.stop()
+	if FileAccess.file_exists(SAVE_PATH):
+		var err: Error = DirAccess.copy_absolute(SAVE_PATH, BACKUP_PATH)
+		if err != OK:
+			push_error("New Game aborted: backup copy to %s failed (%s) — save left untouched" % [BACKUP_PATH, err])
+			return false
+	_write_atomic({
+		"schema_version": SCHEMA_VERSION,
+		"last_saved_at": Time.get_unix_time_from_system(),
+		"settings": SettingsSystem.serialize_state(),
+	})
+	return true
 
 
 ## Reads and parses [constant SAVE_PATH]. Returns `{}` (triggering
