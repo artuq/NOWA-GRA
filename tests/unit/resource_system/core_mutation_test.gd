@@ -39,11 +39,12 @@ func test_atomic_multi_key_delta_updates_all_keys_and_emits_signal() -> void:
 
 	assert_float(_rm.get_resource(&"Reach")).is_equal_approx(25.0, 0.0001)
 	assert_float(_rm.get_resource(&"Cringe")).is_equal_approx(0.0, 0.0001)
-	assert_float(_rm.get_resource(&"Morale")).is_equal_approx(5.0, 0.0001)
+	# Morale default is 100.0 (2026-07-28 fix); +5 clamps at the ceiling.
+	assert_float(_rm.get_resource(&"Morale")).is_equal_approx(100.0, 0.0001)
 
 	await assert_signal(_rm).is_emitted("resource_changed", [&"Reach", 25.0, 0.0])
 	await assert_signal(_rm).is_emitted("resource_changed", [&"Cringe", 0.0, 0.0])
-	await assert_signal(_rm).is_emitted("resource_changed", [&"Morale", 5.0, 0.0])
+	await assert_signal(_rm).is_emitted("resource_changed", [&"Morale", 100.0, 100.0])
 
 
 ## Edge case: zero delta is a no-op on value, but the signal still fires.
@@ -71,10 +72,11 @@ func test_cringe_floor_clamps_to_zero_never_negative() -> void:
 
 
 ## AC: Morale=0, drain due (negative delta) → Morale stays exactly 0, never
-## negative.
+## negative. Morale now starts at 100.0 (2026-07-28 default fix), so the
+## zero baseline this AC is about is established explicitly first.
 func test_morale_floor_clamps_to_zero_never_negative() -> void:
-	var delta_a: Dictionary[StringName, float] = {&"Morale": 0.0}
-	_rm.apply_delta(delta_a)
+	var to_zero: Dictionary[StringName, float] = {&"Morale": -_rm.get_resource(&"Morale")}
+	_rm.apply_delta(to_zero)
 	assert_float(_rm.get_resource(&"Morale")).is_equal_approx(0.0, 0.0001)
 
 	var delta_b: Dictionary[StringName, float] = {&"Morale": -42.0}

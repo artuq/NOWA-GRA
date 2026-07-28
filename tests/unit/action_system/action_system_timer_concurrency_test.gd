@@ -116,8 +116,8 @@ func test_start_action_while_running_enqueues_and_does_not_interrupt_running_tim
 ## AC-3: Timer elapsing -> _on_action_timeout() resets current_action_id to
 ## idle and emits action_completed exactly once with the completed action_id.
 ## Story 002 note: action_completed now also carries the resolved rewards
-## dict; at default Morale (0.0, Critical band, 0.5x), przeprosiny's base
-## Reach 6 scales to 3.0, so the expected payload reflects that.
+## dict; at default Morale (100.0 since the 2026-07-28 fix -- Full band,
+## 1.0x), przeprosiny's base Reach 6 stays 6.0.
 func test_action_timeout_resets_state_and_emits_completed_signal_exactly_once() -> void:
 	monitor_signals(_action_system)
 	_action_system.start_action(&"przeprosiny")
@@ -126,7 +126,7 @@ func test_action_timeout_resets_state_and_emits_completed_signal_exactly_once() 
 
 	assert_that(_action_system.current_action_id).is_equal(&"")
 	var expected_rewards: Dictionary[StringName, float] = {
-		&"Reach": 3.0,
+		&"Reach": 6.0,
 		&"Cringe": -15.0,
 		&"Morale": 5.0,
 	}

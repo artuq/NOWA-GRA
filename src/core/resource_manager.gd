@@ -25,11 +25,18 @@ extends Node
 ## English keys are the binding decision for production code — design/gdd and
 ## design/registry/entities.yaml still show stale Polish-key examples
 ## (Zasięgi, Hatersi, Sponsorzy) pending a separate doc-sync task.
+## Morale starts FULL (2026-07-28 fix): it is an effectiveness modifier, and
+## 0.0 put a brand-new player in the Critical band from the first frame —
+## 0.5x rewards plus a queue suspended by ActionSystem's Morale guard, on a
+## save with nothing to recover from. resource-system.md calls the zero-Haters
+## opening "the game's fully fair starting state"; a half-effectiveness start
+## is the opposite. Every other resource legitimately starts at zero.
+## Existing saves are unaffected — restore_state() overwrites this default.
 var _resources: Dictionary[StringName, float] = {
 	&"Reach": 0.0,
 	&"Cringe": 0.0,
 	&"Haters": 0.0,
-	&"Morale": 0.0,
+	&"Morale": 100.0,
 	&"Sponsors": 0.0,
 }
 

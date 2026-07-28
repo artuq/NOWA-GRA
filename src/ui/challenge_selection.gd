@@ -237,11 +237,26 @@ func _notification(what: int) -> void:
 ## Fixed: JavaScriptBridge.get_interface("window") returns a proxy object
 ## whose method calls correctly marshal a JavaScriptObject callback as a real
 ## argument -- no eval()/string-interpolation trick needed.
+## REVISED 2026-07-28 (era-transition crash hunt): pure JS, no GDScript
+## callback. The previous version held the `create_callback()` result in a
+## LOCAL variable — released the instant this function returned, leaving the
+## `window` popstate listener pointing at a freed Callable (use-after-free on
+## the next Back). This scene is also reached exclusively via a scene swap
+## that frees the previous scene, so a scene-owned callback is the wrong
+## lifetime for a `window`-level listener either way.
+##
+## Same one-shot idempotent trap `action_screen.gd` installs (guarded by the
+## same `window.__kocBackTrap` flag — whichever scene loads first arms it,
+## and it correctly outlives every scene swap). Confirm stays the only exit
+## from this screen; the trap simply keeps the browser Back button from
+## navigating away from the game.
 func _web_suppress_back_gesture() -> void:
-	JavaScriptBridge.eval("history.pushState(null, '', location.href);", true)
-	var callback: JavaScriptObject = JavaScriptBridge.create_callback(_on_web_popstate)
-	JavaScriptBridge.get_interface("window").addEventListener("popstate", callback)
-
-
-func _on_web_popstate(_args: Array) -> void:
-	JavaScriptBridge.eval("history.pushState(null, '', location.href);", true)
+	JavaScriptBridge.eval("""
+if (!window.__kocBackTrap) {
+	window.__kocBackTrap = true;
+	history.pushState({koc_trap: 1}, '');
+	window.addEventListener('popstate', function () {
+		history.pushState({koc_trap: 1}, '');
+	});
+}
+""", true)

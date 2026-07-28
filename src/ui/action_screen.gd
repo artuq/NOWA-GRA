@@ -25,8 +25,9 @@
 ## panel open -> close it (consumed); card presented -> ignored (consumed —
 ## the card is never bypassable); nothing visible -> platform default
 ## (Android: quit — the engine's own fallback is disabled via
-## quit_on_go_back=false so this handler is the sole authority; Web: one
-## real history.back(), see _WEB_BACK below).
+## quit_on_go_back=false so this handler is the sole authority). On Web the
+## gesture only prevents leaving the game — see _WEB_BACK_TRAP_JS for why
+## that branch is deliberately implemented without a GDScript callback.
 ##
 ## ADR-0018 (2026-07-24): listens for PrestigeSystem.era_transitioned and
 ## drives the scene swap to Challenge Selection Screen.
@@ -163,32 +164,42 @@ func _notification(what: int) -> void:
 
 ## Web: no true back interception exists — the standard workaround is a
 ## sacrificial history entry (pushState) consumed by the first Back, with a
-## popstate listener reacting after the fact (GDD Rule 6 Engine Notes,
-## godot-specialist-verified mechanism). Consumed branches re-arm the trap
-## (inside _apply_state_change / here); the unconsumed branch issues one
-## real history.back() to continue past our own entry — the GDD's
-## PROVISIONAL no-confirm default.
-var _web_popstate_callback: JavaScriptObject = null
+## popstate listener that immediately re-pushes it (GDD Rule 6 Engine Notes).
+##
+## DELIBERATELY PURE JS (revised 2026-07-28, era-transition crash hunt): the
+## listener is installed ONCE, idempotently, and lives entirely in the page —
+## it never holds a GDScript Callable. The earlier version registered a
+## `JavaScriptBridge.create_callback(...)` on `window`, which is a
+## use-after-free waiting to happen: this scene is FREED on every era
+## transition (change_scene_to_file -> Challenge Selection), while the JS
+## listener it registered stays on `window` pointing at the now-dead callback.
+## `challenge_selection.gd` had the same pattern in an even worse form (the
+## callback was a local var, released the moment `_ready()` returned).
+##
+## Trade-off, accepted and documented: on Web the back gesture now only
+## PREVENTS leaving the game (which is the portal-critical behavior — an
+## accidental Back on CrazyGames must not navigate out of an iframe game); it
+## no longer closes an open panel. Panels close via their Close button; the
+## panel-closing branch of Rule 6 remains fully live on Android, where the
+## native NOTIFICATION_WM_GO_BACK_REQUEST hook needs no JS bridge at all.
+## The GDD itself marks the Web branch of Rule 6 PROVISIONAL.
+const _WEB_BACK_TRAP_JS: String = """
+if (!window.__kocBackTrap) {
+	window.__kocBackTrap = true;
+	history.pushState({koc_trap: 1}, '');
+	window.addEventListener('popstate', function () {
+		history.pushState({koc_trap: 1}, '');
+	});
+}
+"""
 
 
 func _web_arm_back_trap() -> void:
-	_web_push_history_state()
-	_web_popstate_callback = JavaScriptBridge.create_callback(_on_web_popstate)
-	JavaScriptBridge.get_interface("window").addEventListener("popstate", _web_popstate_callback)
+	JavaScriptBridge.eval(_WEB_BACK_TRAP_JS, true)
 
 
 func _web_push_history_state() -> void:
 	JavaScriptBridge.eval("history.pushState({koc_trap: 1}, '');", true)
-
-
-func _on_web_popstate(_args: Array) -> void:
-	if _on_back_gesture():
-		# Consumed (card branch — the panel branch already re-pushed inside
-		# the resolver; pushing twice would stack trap entries).
-		if coordination_state == CoordinationState.CARD_PRESENTED:
-			_web_push_history_state()
-	else:
-		JavaScriptBridge.eval("history.back();", true)
 
 
 # --- ADR-0018 -------------------------------------------------------------
