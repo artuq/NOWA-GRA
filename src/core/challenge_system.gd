@@ -79,7 +79,7 @@ const CHALLENGE_MODIFIER_FLOOR: float = 0.05
 const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 	&"brak_duszy": {
 		"id": &"brak_duszy",
-		"name": "Influencer bez duszy",
+		"name": "Soulless Influencer",
 		"modifier_type": &"reach_multiplier",
 		"modifier_value": 0.3,
 		"applies_to": [&"nagraj_vloga"],
@@ -87,7 +87,7 @@ const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 	},
 	&"drama_bez_granic": {
 		"id": &"drama_bez_granic",
-		"name": "Drama queen bez granic",
+		"name": "Drama Queen, No Limits",
 		"modifier_type": &"cringe_multiplier",
 		"modifier_value": 2.0,
 		"applies_to": [&"zrob_drame"],
@@ -95,7 +95,7 @@ const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 	},
 	&"przepros_na_niby": {
 		"id": &"przepros_na_niby",
-		"name": "Przeproś, ale nie za bardzo",
+		"name": "Apologize, But Barely",
 		"modifier_type": &"cringe_multiplier",
 		"modifier_value": 0.3,
 		"applies_to": [&"przeprosiny"],
@@ -103,7 +103,7 @@ const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 	},
 	&"bez_tlumu": {
 		"id": &"bez_tlumu",
-		"name": "Bez tłumu nie ma show",
+		"name": "No Crowd, No Show",
 		"modifier_type": &"reach_multiplier",
 		"modifier_value": 0.5,
 		"applies_to": "all",
@@ -111,7 +111,7 @@ const _CHALLENGE_CATALOGUE: Dictionary[StringName, Dictionary] = {
 	},
 	&"wypalony_ale_core": {
 		"id": &"wypalony_ale_core",
-		"name": "Wypalony, ale core",
+		"name": "Burned Out But Core",
 		"modifier_type": &"morale_multiplier",
 		"modifier_value": 0.6,
 		"applies_to": [&"przeprosiny"],

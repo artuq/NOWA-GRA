@@ -349,6 +349,16 @@ func resolve(option_index: int) -> void:
 	_option_a_label.visible = false
 	_option_b_label.visible = false
 	await get_tree().create_timer(_resolution_beat_duration(reaction, has_milestone)).timeout
+	# The resolve_choice() above can END THIS SCENE: accepting the Wypalenie
+	# card runs PrestigeSystem.on_burnout_accepted() -> era_transitioned ->
+	# ActionScreen's change_scene_to_file() (ADR-0018), which frees this node
+	# (and its whole scene) at the end of that frame — while this coroutine is
+	# still parked on the beat timer above. Resuming then would touch a freed
+	# instance ("previously freed instance" errors, and in the editor a hard
+	# stop). Nothing below needs to run in that case: the scene is gone.
+	# Found 2026-07-28 chasing the reported era-transition failure.
+	if not is_inside_tree():
+		return
 	_card = {}
 	visible = false
 	state = State.HIDDEN
