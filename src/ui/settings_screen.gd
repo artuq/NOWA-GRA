@@ -23,6 +23,10 @@
 class_name SettingsScreen
 extends Control
 
+## ADR-0014: emitted when the Close button is tapped — the MainNavCoordinator
+## (action_screen.gd) consumes this and owns the actual visible flip.
+signal close_requested
+
 @onready var _reduce_motion_toggle: CheckButton = %ReduceMotionToggle
 @onready var _close_button: Button = %CloseButton
 
@@ -45,4 +49,6 @@ func _on_visibility_changed() -> void:
 
 
 func _on_close_pressed() -> void:
-	visible = false
+	# ADR-0014: the coordinator owns visibility — this panel only REQUESTS
+	# closing (was `visible = false`, the documented bypass bug).
+	close_requested.emit()

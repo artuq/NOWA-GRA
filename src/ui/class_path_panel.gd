@@ -54,6 +54,10 @@
 class_name ClassPathPanel
 extends Control
 
+## ADR-0014: emitted when the Close button is tapped — the MainNavCoordinator
+## (action_screen.gd) consumes this and owns the actual visible flip.
+signal close_requested
+
 ## The 4 registered paths, in fixed display order (Row1..Row4). Matches the
 ## order used everywhere else in this codebase (ClassPathSystem's
 ## _MULTIPLIER_TABLE / _INVESTMENT_RATE_TABLE / _SIGNATURE_CARD_TABLE).
@@ -140,7 +144,9 @@ func _on_visibility_changed() -> void:
 
 
 func _on_close_pressed() -> void:
-	visible = false
+	# ADR-0014: the coordinator owns visibility — this panel only REQUESTS
+	# closing (was `visible = false`, the documented bypass bug).
+	close_requested.emit()
 
 
 func _on_class_path_state_changed(_path_id: StringName, _tier: int) -> void:
