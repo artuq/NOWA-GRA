@@ -114,6 +114,7 @@ const _INVEST_PREVIEW_GAIN: float = 1.0
 	%Row3AffiliationValueLabel, %Row4AffiliationValueLabel,
 ]
 @onready var _status_labels: Array[Label] = [%Row1StatusLabel, %Row2StatusLabel, %Row3StatusLabel, %Row4StatusLabel]
+@onready var _bonus_labels: Array[Label] = [%Row1BonusLabel, %Row2BonusLabel, %Row3BonusLabel, %Row4BonusLabel]
 @onready var _invest_buttons: Array[Button] = [%Row1InvestButton, %Row2InvestButton, %Row3InvestButton, %Row4InvestButton]
 @onready var _invest_explanation_labels: Array[Label] = [
 	%Row1InvestExplanationLabel, %Row2InvestExplanationLabel,
@@ -188,6 +189,7 @@ func _refresh_all() -> void:
 		_tier_labels[i].text = "T%d" % tier
 
 		_status_labels[i].text = _status_text(path_id, tier, active_path, ambiguous_pair)
+		_refresh_bonus_label(i, path_id, tier)
 		_refresh_invest_control(i, path_id, affiliation, full_affiliation)
 
 
@@ -232,6 +234,83 @@ func _refresh_invest_control(i: int, path_id: StringName, affiliation: float, fu
 		var resource_id: StringName = _RESOURCE_TABLE[path_id]
 		button.text = "Invest %d %s (+%.1f affiliation)" % [int(amount), String(resource_id), _INVEST_PREVIEW_GAIN]
 		explanation.visible = false
+
+
+## Fills row [param i]'s bonus label: one line per unlocked tier (1..tier)
+## with CONCRETE numbers, plus a next-tier teaser line — the Pillar 1
+## legibility fix from playtest 12-3 ("Tier N active" with no values
+## answered "what do I get?" with nothing). Tier lines render for every
+## path regardless of active state (the status line above already says
+## whether they're in effect); hidden entirely at Tier 0 with no teaser
+## suppression — a Tier-0 path still teases T1 so the ladder is visible
+## before the first threshold.
+func _refresh_bonus_label(i: int, path_id: StringName, tier: int) -> void:
+	var lines: Array[String] = []
+	for t: int in range(1, tier + 1):
+		var desc: String = _describe_tier(path_id, t)
+		if desc != "":
+			lines.append("T%d: %s" % [t, desc])
+	if tier < 5:
+		var teaser: String = _describe_tier(path_id, tier + 1)
+		if teaser != "":
+			lines.append("Next T%d: %s" % [tier + 1, teaser])
+	_bonus_labels[i].text = "\n".join(lines)
+	_bonus_labels[i].visible = not lines.is_empty()
+
+
+## One human-readable line for [param path_id]'s tier [param tier] from
+## ClassPathSystem.get_tier_effect_data() — raw per-tier data formatted with
+## action display names (UI-side lookup; ClassPathSystem never references
+## ActionSystem, ADR-0010). Deadpan number-first phrasing per art-bible §1.
+func _describe_tier(path_id: StringName, tier: int) -> String:
+	var data: Dictionary = ClassPathSystem.get_tier_effect_data(path_id, tier)
+	var parts: Array[String] = []
+	var reach_mults: Dictionary = data["reach_mults"]
+	for action_id: StringName in reach_mults:
+		parts.append("%s Reach ×%s" % [_action_name(action_id), _fmt(reach_mults[action_id])])
+	var effects: Dictionary = data["effects"]
+	for effect_key: StringName in effects:
+		var value: Variant = effects[effect_key]
+		match effect_key:
+			&"secondary_yield":
+				for action_id: StringName in value:
+					for resource_id: StringName in value[action_id]:
+						parts.append("%s also +%d %s" % [
+							_action_name(action_id), int(value[action_id][resource_id]), String(resource_id),
+						])
+			&"duration_mult":
+				for action_id: StringName in value:
+					var label: String = "All actions" if action_id == &"*" else _action_name(action_id)
+					parts.append("%s duration ×%s" % [label, _fmt(value[action_id])])
+			&"reach_all_mult":
+				parts.append("All actions Reach ×%s" % _fmt(value))
+			&"cringe_gain_mult":
+				parts.append("Cringe gain ×%s" % _fmt(value))
+			&"sponsor_income_mult":
+				parts.append("Sponsor income ×%s" % _fmt(value))
+			&"morale_cost_mult":
+				parts.append("Action Morale costs ×%s" % _fmt(value))
+			&"morale_drain_mult":
+				parts.append("Offline Morale drain ×%s" % _fmt(value))
+			&"haters_growth_mult":
+				parts.append("Haters growth ×%s" % _fmt(value))
+			&"morale_floor":
+				parts.append("Offline Morale floor %d" % int(value))
+	if tier == 5:
+		parts.append("signature card")
+	return ", ".join(parts)
+
+
+func _action_name(action_id: StringName) -> String:
+	return ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+
+
+## Compact multiplier formatting: 1.6 -> "1.6", 2.0 -> "2", 0.6667 -> "0.67".
+func _fmt(value: float) -> String:
+	if is_equal_approx(value, roundf(value)):
+		return str(int(roundf(value)))
+	var two_places: float = snappedf(value, 0.01)
+	return ("%.2f" % two_places).rstrip("0").rstrip(".")
 
 
 ## Re-derives the top-two Tier-1+ paths by affiliation from the public

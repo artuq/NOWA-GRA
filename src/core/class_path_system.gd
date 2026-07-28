@@ -83,13 +83,14 @@ const PATH_AFFILIATION_TIE_BREAK_MARGIN: float = 5.0
 ## deliberate `{}`, never an accidental omission.
 ## Source: pato T1 "Zrób dramę" +30% / T2 continuation to +60% (shipped MVP,
 ## unchanged); guru T1 "Zrób wywiad" +20% / T2 continuation to +40% (shipped
-## MVP, unchanged — GDD's revised guru bonus text (Sponsor income) does not
-## have a resolution hook yet, tracked as a pre-existing gap, not touched by
-## this story); ekspert T2 "Nagraj vloga" +20% (only expressible ekspert
-## entry — T1's "passive Reach floor" is a floor mechanic, not an
-## action-keyed multiplier); biznesmen has no Reach-action-keyed bonus at
-## any tier (its bonuses are Sponsor income, cooldown, and Morale cost —
-## all {} ).
+## MVP, unchanged); ekspert T2 "Nagraj vloga" +20%; biznesmen T1/T2 Collab
+## ×1.2/×1.4 (tier-bonus table draft 2026-07-28 — its first Reach-keyed
+## entries; its other bonuses live in _TIER_EFFECT_TABLE below).
+## LOOKUP IS CUMULATIVE (tier-fill revision, 2026-07-28): an action's
+## multiplier comes from the HIGHEST tier <= the path's current tier that
+## defines that action — previously the lookup read ONLY the current tier's
+## dict, so reaching a hollow T3 silently DROPPED the shipped T2 bonus
+## (latent bug, unreachable while tiers stopped at 2 in practice).
 const _MULTIPLIER_TABLE: Dictionary[StringName, Dictionary] = {
 	&"pato_streamer": {
 		1: {&"zrob_drame": 1.3},
@@ -113,11 +114,62 @@ const _MULTIPLIER_TABLE: Dictionary[StringName, Dictionary] = {
 		5: {},
 	},
 	&"biznesmen_contentu": {
-		1: {},
-		2: {},
+		1: {&"nagraj_kolaba": 1.2},
+		2: {&"nagraj_kolaba": 1.4},
 		3: {},
 		4: {},
 		5: {},
+	},
+}
+
+## Non-Reach tier effects: path_id -> tier (int) -> effect dict (tier-bonus
+## table draft, design/reference/class-path-tier-bonus-table-draft.md — the
+## 10 `[hook]` cells; T1/T2 `[mult]` cells stay in _MULTIPLIER_TABLE above).
+## ALL VALUES PROVISIONAL pending the economy-designer balance pass the draft
+## itself mandates.
+##
+## Effect keys (each resolved cumulatively — the highest tier <= the path's
+## current tier that defines a key wins; see _resolve_effect()):
+## - secondary_yield: {action_id: {resource: amount}} — T3 interlocks: the
+##   path's signature action also yields a second resource on completion
+##   (Melvor web-of-dependencies model).
+## - duration_mult: {action_id: float} or {&"*": float} — T4 power spikes:
+##   action duration cuts (draft: 9s->6s etc == 2/3; biznesmen: all -25%).
+## - reach_all_mult: float — pato T5: all-action Reach multiplier, stacks
+##   multiplicatively ON TOP of the action-keyed _MULTIPLIER_TABLE entry.
+## - cringe_gain_mult: float — pato T5 "bait burns hot": positive action
+##   Cringe deltas scaled up.
+## - sponsor_income_mult: float — guru T5 / biznesmen T3: positive Sponsors
+##   deltas (cards + interlock yields) scaled.
+## - morale_cost_mult: float — biznesmen T5: negative action Morale deltas
+##   scaled (0.0 == full immunity, "content without emotional cost").
+## - morale_drain_mult: float — ekspert T1: ambient Morale drain (offline
+##   sim) scaled.
+## - haters_growth_mult: float — ekspert T5: Haters growth rate scaled.
+## - morale_floor: float — ekspert T5: AMBIENT drain (offline sim) never
+##   takes Morale below this ("cult immune to hate") — see get_morale_floor()
+##   for why this is drain-only, never a live apply_delta clamp.
+const _TIER_EFFECT_TABLE: Dictionary[StringName, Dictionary] = {
+	&"pato_streamer": {
+		3: {&"secondary_yield": {&"zrob_drame": {&"Sponsors": 3.0}}},
+		4: {&"duration_mult": {&"zrob_drame": 2.0 / 3.0}},
+		5: {&"reach_all_mult": 2.0, &"cringe_gain_mult": 1.5},
+	},
+	&"guru_celebryta": {
+		3: {&"secondary_yield": {&"udziel_wywiadu": {&"Sponsors": 2.0}}},
+		4: {&"duration_mult": {&"udziel_wywiadu": 2.0 / 3.0}},
+		5: {&"sponsor_income_mult": 2.0},
+	},
+	&"ekspert_niszowy": {
+		1: {&"morale_drain_mult": 0.8},
+		3: {&"secondary_yield": {&"nagraj_vloga": {&"Morale": 5.0}}},
+		4: {&"duration_mult": {&"nagraj_vloga": 2.0 / 3.0}},
+		5: {&"haters_growth_mult": 0.5, &"morale_floor": 40.0},
+	},
+	&"biznesmen_contentu": {
+		3: {&"sponsor_income_mult": 1.5},
+		4: {&"duration_mult": {&"*": 0.75}},
+		5: {&"morale_cost_mult": 0.0},
 	},
 }
 
@@ -370,13 +422,138 @@ func can_invest(path_id: StringName) -> bool:
 ## at its current tier, or 1.0 when there is no active path or no registered
 ## bonus. Called by ActionSystem._on_action_timeout() at reward resolution
 ## (ADR-0010 pull model — this module never calls into ActionSystem).
+## Cumulative lookup (2026-07-28 tier-fill revision): the action-keyed entry
+## from the highest defining tier <= current tier, multiplied by the
+## reach_all_mult effect (pato T5 "all actions ×2") when present.
 func get_active_multiplier(action_id: StringName) -> float:
 	if _active_path.is_empty():
 		return 1.0
 	var tier: int = _current_tier.get(_active_path, 0)
-	var path_entry: Dictionary = _MULTIPLIER_TABLE.get(_active_path, {})
-	var tier_entry: Dictionary = path_entry.get(tier, {})
-	return float(tier_entry.get(action_id, 1.0))
+	var specific: float = _resolve_action_keyed(_MULTIPLIER_TABLE, _active_path, tier, action_id, 1.0)
+	var all_mult: float = float(_resolve_effect(_active_path, tier, &"reach_all_mult", 1.0))
+	return specific * all_mult
+
+
+## Cumulative lookup shared by get_active_multiplier() and
+## get_action_duration_multiplier(): scans [param table]'s tiers from [param
+## tier] down to 1 and returns the first (= highest-tier) entry defining
+## [param action_id] — an exact action key wins over an `&"*"` wildcard at
+## the same tier; a wildcard at a higher tier wins over an exact key at a
+## lower one (highest-defining-tier-first is the rule, key specificity only
+## breaks ties within one tier). Returns [param fallback] when nothing
+## defines the action. For _MULTIPLIER_TABLE the values are floats; for
+## _TIER_EFFECT_TABLE's duration_mult sub-dicts the same shape applies.
+func _resolve_action_keyed(
+	table: Dictionary, path_id: StringName, tier: int, action_id: StringName, fallback: float
+) -> float:
+	var path_entry: Dictionary = table.get(path_id, {})
+	for t: int in range(tier, 0, -1):
+		var tier_entry: Dictionary = path_entry.get(t, {})
+		if tier_entry.has(action_id):
+			return float(tier_entry[action_id])
+		if tier_entry.has(&"*"):
+			return float(tier_entry[&"*"])
+	return fallback
+
+
+## Cumulative scalar-effect lookup against _TIER_EFFECT_TABLE: the value of
+## [param effect_key] from the highest tier <= [param tier] that defines it,
+## or [param fallback]. Pure read — shared by every effect getter below and
+## (via get_tier_effect_data) the Class Path Panel's legibility rendering.
+func _resolve_effect(path_id: StringName, tier: int, effect_key: StringName, fallback: Variant) -> Variant:
+	var path_entry: Dictionary = _TIER_EFFECT_TABLE.get(path_id, {})
+	for t: int in range(tier, 0, -1):
+		var tier_entry: Dictionary = path_entry.get(t, {})
+		if tier_entry.has(effect_key):
+			return tier_entry[effect_key]
+	return fallback
+
+
+## Returns the active path's T3-interlock secondary yield for [param
+## action_id] on completion — e.g. pato T3+: drama also yields {Sponsors: 3}
+## — or {} when there is no active path / no yield for this action. The
+## caller (ActionSystem) merges these into the completion deltas; Sponsors
+## amounts are further scaled there by get_sponsor_income_multiplier().
+func get_secondary_yield(action_id: StringName) -> Dictionary:
+	if _active_path.is_empty():
+		return {}
+	var tier: int = _current_tier.get(_active_path, 0)
+	var yields: Dictionary = _resolve_effect(_active_path, tier, &"secondary_yield", {})
+	return yields.get(action_id, {})
+
+
+## Returns the active path's duration multiplier for [param action_id]
+## (T4 power spikes — e.g. pato T4 drama 9s -> 6s == 2/3; biznesmen T4 all
+## actions ×0.75), or 1.0 when there is no active path / no registered cut.
+## Called by ActionSystem.start_action() when arming the timer.
+func get_action_duration_multiplier(action_id: StringName) -> float:
+	if _active_path.is_empty():
+		return 1.0
+	var tier: int = _current_tier.get(_active_path, 0)
+	var path_entry: Dictionary = _TIER_EFFECT_TABLE.get(_active_path, {})
+	for t: int in range(tier, 0, -1):
+		var durations: Dictionary = path_entry.get(t, {}).get(&"duration_mult", {})
+		if durations.has(action_id):
+			return float(durations[action_id])
+		if durations.has(&"*"):
+			return float(durations[&"*"])
+	return 1.0
+
+
+## Scalar effect getters — all follow the same contract: the active path's
+## cumulative effect value, or the neutral default when there is no active
+## path / the effect is not defined at any tier <= current. Pure reads,
+## pull-model consumers only (ADR-0010): ActionSystem (cringe/morale-cost),
+## DecisionCardSystem (sponsor income), OfflineProgressSystem (drain/haters/
+## floor).
+func get_cringe_gain_multiplier() -> float:
+	return _active_scalar(&"cringe_gain_mult", 1.0)
+
+
+func get_sponsor_income_multiplier() -> float:
+	return _active_scalar(&"sponsor_income_mult", 1.0)
+
+
+func get_morale_cost_multiplier() -> float:
+	return _active_scalar(&"morale_cost_mult", 1.0)
+
+
+func get_morale_drain_multiplier() -> float:
+	return _active_scalar(&"morale_drain_mult", 1.0)
+
+
+func get_haters_growth_multiplier() -> float:
+	return _active_scalar(&"haters_growth_mult", 1.0)
+
+
+## Morale floor (ekspert T5): AMBIENT drain never takes Morale below this
+## while the path is active — consumed only by OfflineProgressSystem's drain
+## loop (the game's sole ambient-drain site). Deliberately NOT wired into
+## ResourceManager.apply_delta(): a live clamp there would make Morale spends
+## (including ekspert's own Morale-priced invest()) free at the floor.
+## 0.0 (no-op) by default.
+func get_morale_floor() -> float:
+	return _active_scalar(&"morale_floor", 0.0)
+
+
+func _active_scalar(effect_key: StringName, fallback: float) -> float:
+	if _active_path.is_empty():
+		return fallback
+	var tier: int = _current_tier.get(_active_path, 0)
+	return float(_resolve_effect(_active_path, tier, effect_key, fallback))
+
+
+## Raw per-tier effect data for [param path_id] at exactly [param tier] —
+## NOT cumulative, NOT gated on the active path: {reach_mults: {action: mult},
+## effects: {effect_key: value}}. Presentation-layer feed for the Class Path
+## Panel's legibility rendering (Pillar 1 fix, playtest 12-3): the panel
+## formats these into human-readable per-tier bonus lines (display names live
+## UI-side — this module never references ActionSystem, ADR-0010).
+func get_tier_effect_data(path_id: StringName, tier: int) -> Dictionary:
+	return {
+		"reach_mults": _MULTIPLIER_TABLE.get(path_id, {}).get(tier, {}),
+		"effects": _TIER_EFFECT_TABLE.get(path_id, {}).get(tier, {}),
+	}
 
 
 ## Spends [param amount] of [param resource_id] to buy [param path_id]

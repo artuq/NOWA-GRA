@@ -125,6 +125,12 @@ func get_resource(name: StringName) -> float:
 ##
 ## For each key in [param deltas]: new_value = old_value + deltas[key].
 ## Cringe and Morale are clamped to [0, 100]; all other keys are unbounded.
+## NOTE (tier-fill 2026-07-28): ekspert T5's Morale floor deliberately does
+## NOT hook this clamp — a live-path floor here would make any Morale spend
+## (ekspert's own invest() resource!) free once at the floor: deduct, clamp
+## back up, affiliation still gained. The floor is an AMBIENT-drain shield
+## ("cult immune to hate") and lives only in OfflineProgressSystem's drain
+## loop, the sole ambient Morale-drain site in the game.
 ## Emits resource_changed once per key, after that key's value is committed.
 ##
 ## Example:

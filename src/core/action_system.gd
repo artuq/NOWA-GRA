@@ -198,7 +198,9 @@ func start_action(action_id: StringName) -> bool:
 	# Idle: start immediately.
 	current_action_id = action_id
 	action_started.emit(action_id)
-	_timer.wait_time = ACTION_DURATIONS[action_id]
+	# Class path T4 power spike (ADR-0010 pull model, tier-fill 2026-07-28):
+	# duration cut for the active path's spiked action(s); 1.0 when none.
+	_timer.wait_time = ACTION_DURATIONS[action_id] * ClassPathSystem.get_action_duration_multiplier(action_id)
 	_timer.start()
 	return true
 
@@ -271,15 +273,36 @@ func _on_action_timeout() -> void:
 	# Class Path -- see this method's own doc comment for the ordering choice.
 	var reach_challenge_mod: float = ChallengeSystem.get_modifier(completed_id, &"reach_multiplier")
 	scaled_reach = roundf(scaled_reach * reach_challenge_mod)
+	# Class path tier effects (tier-fill 2026-07-28, ADR-0010 pull model —
+	# all default to neutral when no active path): pato T5 scales positive
+	# Cringe gains; biznesmen T5 scales (to zero) negative Morale costs.
+	# Applied to the base delta BEFORE the challenge modifier, mirroring
+	# Reach's existing morale->path->challenge pass order.
+	var base_cringe: float = base_rewards[&"Cringe"]
+	if base_cringe > 0.0:
+		base_cringe *= ClassPathSystem.get_cringe_gain_multiplier()
+	var base_morale: float = base_rewards[&"Morale"]
+	if base_morale < 0.0:
+		base_morale *= ClassPathSystem.get_morale_cost_multiplier()
 	var cringe_challenge_mod: float = ChallengeSystem.get_modifier(completed_id, &"cringe_multiplier")
-	var scaled_cringe: float = roundf(base_rewards[&"Cringe"] * cringe_challenge_mod)
+	var scaled_cringe: float = roundf(base_cringe * cringe_challenge_mod)
 	var morale_challenge_mod: float = ChallengeSystem.get_modifier(completed_id, &"morale_multiplier")
-	var scaled_morale: float = roundf(base_rewards[&"Morale"] * morale_challenge_mod)
+	var scaled_morale: float = roundf(base_morale * morale_challenge_mod)
 	var deltas: Dictionary[StringName, float] = {
 		&"Reach": scaled_reach,
 		&"Cringe": scaled_cringe,
 		&"Morale": scaled_morale,
 	}
+	# Class path T3 interlock (tier-fill 2026-07-28): the active path's
+	# signature action also yields a second resource on completion — merged
+	# into the same atomic apply_delta call. Positive Sponsors yields are
+	# further scaled by the sponsor-income effect (guru T5 / biznesmen T3).
+	var secondary: Dictionary = ClassPathSystem.get_secondary_yield(completed_id)
+	for resource_id: StringName in secondary:
+		var amount: float = float(secondary[resource_id])
+		if resource_id == &"Sponsors" and amount > 0.0:
+			amount *= ClassPathSystem.get_sponsor_income_multiplier()
+		deltas[resource_id] = deltas.get(resource_id, 0.0) + roundf(amount)
 	ResourceManager.apply_delta(deltas)
 	action_completed.emit(completed_id, deltas)
 	_resolving = false

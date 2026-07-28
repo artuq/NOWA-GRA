@@ -174,6 +174,17 @@ theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 text = ""
 
+[node name="Row1BonusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row1/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+visible = false
+text = ""
+
 [node name="Row1InvestButton" type="Button" parent="MainLayout/ScrollContainer/PathList/Row1/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
@@ -253,6 +264,17 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
+text = ""
+
+[node name="Row2BonusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row2/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+visible = false
 text = ""
 
 [node name="Row2InvestButton" type="Button" parent="MainLayout/ScrollContainer/PathList/Row2/VBox"]
@@ -336,6 +358,17 @@ theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
 text = ""
 
+[node name="Row3BonusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row3/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+visible = false
+text = ""
+
 [node name="Row3InvestButton" type="Button" parent="MainLayout/ScrollContainer/PathList/Row3/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
@@ -415,6 +448,17 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 3
+text = ""
+
+[node name="Row4BonusLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row4/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+visible = false
 text = ""
 
 [node name="Row4InvestButton" type="Button" parent="MainLayout/ScrollContainer/PathList/Row4/VBox"]

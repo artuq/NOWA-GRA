@@ -2,11 +2,21 @@
 
 > **Status**: Designed (revised post-review — see Revision Log below)
 > **Author**: user + agents
-> **Last Updated**: 2026-07-12
+> **Last Updated**: 2026-07-28
 > **Implements Pillar**: Pillar 2 (decyzje mają pamięć), Pillar 3 (satyra przez mechanikę)
 > **Creative Director Review (CD-GDD-ALIGN)**: skipped at authoring — full adversarial `/design-review` completed 2026-07-12 (verdict: MAJOR REVISION NEEDED → revised in-session, see log)
 
 ## Revision Log
+
+**2026-07-28 — tier-bonus fill (playtest 12-3 "hollow ladder" finding).** The Tier
+Bonuses by Path table replaced with the SHIPPED, differentiated ladder per
+`design/reference/class-path-tier-bonus-table-draft.md` (T1/T2 mult → T3 interlock →
+T4 duration spike → T5 signature; all values provisional pending economy-designer).
+Cumulative-lookup bug fixed in `get_active_multiplier()` (a hollow T3 used to drop
+the shipped T2 bonus). New `_TIER_EFFECT_TABLE` + pull-model getters; consumers:
+ActionSystem (durations, cringe/morale scaling, secondary yields),
+DecisionCardSystem (sponsor income), OfflineProgressSystem (drain/haters/floor).
+ClassPathPanel legibility fix shipped in the same pass (per-tier numbers + teaser).
 
 **2026-07-12 — post `/design-review` (full mode, 5 specialists + creative-director synthesis).** Verdict was MAJOR REVISION NEEDED. Two blocking findings drove structural change:
 
@@ -64,15 +74,33 @@ Active investment in a path is only possible once the player has made **at least
 
 #### Tier Bonuses by Path (T1–T5, thresholds 20/40/60/80/100)
 
-| Tier | Pato-Streamer | Guru-Celebryta | Ekspert Niszowy | Biznesmen Contentu |
-|---|---|---|---|---|
-| T1 | +30% Reach from "Zrób dramę" | +20% Sponsor income | +15% passive Reach floor | +25% Sponsor income, -10% acquisition cooldown |
-| T2 | +25% Haters→Reach conversion | Morale floor raised to 20 | +20% Reach per "Nagraj vloga" | Card-choice Morale costs -25% |
-| T3 | "Hazardowi" sponsor tier unlocked | "Przeproś" recovers +50% more Morale | Haters gain rate -30% | Haters→Sponsor conversion enabled |
-| T4 | "Zrób dramę" duration -20% | Passive Reach floor 15% of peak | +1 Action Slot | Action unlock cost -20% |
-| T5 | Signature card "Viral Moment" | Signature card "Brand Deal of the Century" | Signature card "Kult Niszowy" | Signature card "IPO Influencera" |
+> **REVISED 2026-07-28 (tier-bonus fill, playtest 12-3)**: the table below is the
+> SHIPPED table, superseding this section's earlier aspirational draft (which was
+> never wired to anything — the "hollow ladder" finding,
+> `design/reference/progression-mechanics-analysis-2026-07.md`). Structure per
+> `design/reference/class-path-tier-bonus-table-draft.md`: T1/T2 action multiplier →
+> T3 interlock (second resource) → T4 power spike (duration) → T5 signature.
+> **All values provisional pending the economy-designer balance pass.** Tiers are
+> cumulative (T4 = T1+T2+T3+T4 all active); the same-action Reach entry at a higher
+> tier REPLACES the lower one (1.3 → 1.6), while pato T5's all-action ×2 stacks
+> multiplicatively on top of its action-keyed entry (deliberate signature spike —
+> drama at T5 = 1.6 × 2.0). Source of truth: `class_path_system.gd`
+> `_MULTIPLIER_TABLE` + `_TIER_EFFECT_TABLE`.
 
-Multipliers are **additive within the same resource**, never multiplicative (a future +10% event stacks onto T1 Pato's +30% as +40% total, not ×1.1×1.3).
+| Tier | Trash Streamer (pato) | Guru Celeb (guru) | Niche Expert (ekspert) | Content Mogul (biznesmen) |
+|---|---|---|---|---|
+| T1 | Drama Reach ×1.3 | Interview Reach ×1.2 | Offline Morale drain ×0.8 | Collab Reach ×1.2 |
+| T2 | Drama Reach ×1.6 | Interview Reach ×1.4 | Vlog Reach ×1.2 | Collab Reach ×1.4 |
+| T3 | Drama also +3 Sponsors | Interview also +2 Sponsors | Vlog also +5 Morale | Sponsor income ×1.5 |
+| T4 | Drama duration ×2/3 (9s→6s) | Interview duration ×2/3 (15s→10s) | Vlog duration ×2/3 (6s→4s) | All action durations ×0.75 |
+| T5 | All actions Reach ×2, Cringe gain ×1.5 + "Viral Moment" | Sponsor income ×2 + "Brand Deal of the Century" | Haters growth ×0.5, offline Morale floor 40 + "Kult Niszowy" | Action Morale costs ×0 + "IPO Influencera" |
+
+Notes: ekspert T5's Morale floor is an **ambient-drain shield only** (offline sim)
+— never a live `apply_delta` clamp, which would make Morale spends (ekspert's own
+invest resource) free at the floor. Sponsor-income multipliers apply to positive
+Sponsors deltas at both card resolution and T3 interlock yields. Ambient effects
+(drain/haters/floor) apply offline too — same online+offline precedent as
+`META_HATERS_RESIST`.
 
 ### States and Transitions
 
@@ -377,4 +405,4 @@ The large majority are **Logic** — pure formula/state, unit-testable in isolat
 - **`PATH_MULTIPLIER_OFFLINE` evaluation** — off by default per Pillar 4; the quick-spec defers enabling it until profiling confirms it won't confuse offline-report readability. No target date; revisit once Offline Report Screen has path-aware content to show. *Owner: unassigned, Alpha-tier.*
 - ~~**Cosmetic Persona Customization** (systems-index #18, Full Vision, undesigned) is listed as depending on this system, but no contract exists yet for what "active path" means to that system.~~ — **RESOLVED 2026-07-23**: `design/gdd/cosmetic-persona-customization.md` designed — contract is `HistoryFlagManager` milestones, not "active path" at all. See Dependencies above.
 - **Signature card copy is placeholder** (per quick-spec) — final Polish text for the 4 Tier-5 cards is a narrative-director/writer task deferred to Alpha, not blocking this GDD.
-- **ClassPathPanel shows "Tier N bonus in effect" with no numbers — Pillar 1 violation, found 2026-07-22 (user screenshot review)** — Section D's Tier Bonuses table (T1-T5 per path, all cumulative — reaching T4 means T1+T2+T3+T4 all active simultaneously) is never surfaced in the shipped UI. The panel states a tier is active but not what it does, contradicting Pillar 1's own "uczciwa matematyka rdzenia" (WYSIWYG — chaos lives in the systems, never in whether the player can read their own state, per `art-bible.md` §1's "legibility is the fairness" test). This is the game's primary progression mechanic and currently the least legible screen in the shipped UI. *Owner: `/ux-design` retrofit of `class_path_panel.tscn` (shipped, not yet spec'd) — list each active tier's bonus text inline per row, not just the tier number. Target: before Alpha, same urgency class as the already-BLOCKING meta-bonus visibility gap this GDD's own dependency (`prestige-checkpoint-system.md`) flagged.*
+- ~~**ClassPathPanel shows "Tier N bonus in effect" with no numbers — Pillar 1 violation, found 2026-07-22 (user screenshot review)**~~ **RESOLVED 2026-07-28 (tier-bonus fill)**: `class_path_panel.gd` now renders one line per unlocked tier with concrete values (from `ClassPathSystem.get_tier_effect_data()`) plus a next-tier teaser on every row, Tier-0 rows included (the ladder is visible before the first threshold). Evidence: `tests/integration/class-path/class_path_panel_legibility_test.gd`.

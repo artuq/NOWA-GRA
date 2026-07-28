@@ -317,6 +317,15 @@ func resolve_choice(option_index: int) -> void:
 	# Dictionary[StringName, float], so an explicit conversion is required —
 	# same class of fix as Story 001/002's Array(...) typed-conversion calls.
 	var resource_deltas: Dictionary[StringName, float] = Dictionary(option["resource_deltas"], TYPE_STRING_NAME, "", null, TYPE_FLOAT, "", null)
+	# Class path sponsor-income effect (tier-fill 2026-07-28, ADR-0010 pull
+	# model — same direction as the existing class_path_tier trigger_condition
+	# read): positive Sponsors card rewards scale under guru T5 (×2) /
+	# biznesmen T3 (×1.5); 1.0 (no-op) otherwise. Negative deltas (costs)
+	# are never scaled — income multiplier, not a cost discount.
+	if resource_deltas.get(&"Sponsors", 0.0) > 0.0:
+		resource_deltas[&"Sponsors"] = roundf(
+			resource_deltas[&"Sponsors"] * ClassPathSystem.get_sponsor_income_multiplier()
+		)
 	if not resource_deltas.is_empty():
 		ResourceManager.apply_delta(resource_deltas)
 

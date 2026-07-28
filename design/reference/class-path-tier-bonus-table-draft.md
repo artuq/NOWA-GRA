@@ -1,6 +1,6 @@
 # Class Path Tier-Bonus Table — Draft (fills the hollow ladder)
 
-> **Status**: DRAFT design input for a later `/design-system retrofit design/gdd/class-path-system.md`. Values are provisional — need an economy-designer balance pass. NOT locked, NOT in code yet.
+> **Status**: IMPLEMENTED 2026-07-28 (all 20 cells shipped: `class_path_system.gd` `_MULTIPLIER_TABLE` + `_TIER_EFFECT_TABLE`, ADR-0010 §12; GDD table updated in place). Values remain provisional — economy-designer balance pass still owed. Legibility (step 1) and telegraph (step 3) shipped same day.
 > **Date**: 2026-07-28
 > **Author**: user + agent
 > **Trigger**: playtest 12-3 — "Content Mogul T5 gives nothing." Root cause: `class_path_system.gd` `_MULTIPLIER_TABLE` has `{}` at tiers 3-5 for all paths and every tier for biznesmen. See `progression-mechanics-analysis-2026-07.md` for the why and the proven-pattern mapping.

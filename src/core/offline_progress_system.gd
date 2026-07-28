@@ -107,6 +107,20 @@ func simulate_offline(elapsed_seconds: int) -> Dictionary:
 		{"seconds": remaining - shield_seconds, "buffer": ResourceFormulas.M_BUFFER},
 	]
 
+	# Class path tier effects (tier-fill 2026-07-28, ADR-0010 pull model),
+	# snapshotted ONCE at sim start like the shield above — Pillar 4: the
+	# active path's ambient bonuses (ekspert T1 drain ×0.8, ekspert T5
+	# haters ×0.5 + Morale floor 40) apply offline exactly as they do live,
+	# same online+offline precedent as META_HATERS_RESIST (prestige GDD,
+	# locked 2026-07-12). All three default to neutral with no active path,
+	# leaving the sim byte-identical to its pre-tier-fill behavior.
+	var haters_mult: float = ClassPathSystem.get_haters_growth_multiplier()
+	var drain_mult: float = ClassPathSystem.get_morale_drain_multiplier()
+	# min(floor, starting m): the floor blocks drain from crossing it but
+	# never lifts a Morale that already sits below it (no free Morale from
+	# going offline) — same semantics as ResourceManager.apply_delta's clamp.
+	var morale_floor: float = maxf(0.0, minf(ClassPathSystem.get_morale_floor(), m))
+
 	for seg: Dictionary in segments:
 		var seg_remaining: int = seg["seconds"]
 		var effective_buffer: int = seg["buffer"]
@@ -114,11 +128,11 @@ func simulate_offline(elapsed_seconds: int) -> Dictionary:
 			var dt: int = min(OFFLINE_STEP_SECONDS, seg_remaining)
 			var dt_minutes: float = dt / 60.0
 
-			var h_rate: float = ResourceFormulas.haters_growth_rate(cringe_fixed)
+			var h_rate: float = ResourceFormulas.haters_growth_rate(cringe_fixed) * haters_mult
 			h += h_rate * dt_minutes
 
-			var m_drain: float = ResourceFormulas.morale_drain_rate(int(h), effective_buffer)
-			m = max(0.0, m - m_drain * dt_minutes)
+			var m_drain: float = ResourceFormulas.morale_drain_rate(int(h), effective_buffer) * drain_mult
+			m = max(morale_floor, m - m_drain * dt_minutes)
 
 			var mult: float = ResourceFormulas.action_effectiveness_multiplier(m)
 			z_gained += ResourceFormulas.passive_zasiegi_income(h, mult, float(dt))

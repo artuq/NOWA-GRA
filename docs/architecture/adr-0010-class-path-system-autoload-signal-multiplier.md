@@ -258,6 +258,34 @@ func reset_era_state() -> void  # MVP: debug-only; Alpha: wired to BurnoutSystem
 # _trigger_condition_met() gains: "class_path_tier:{path_id}:{min_tier}"
 ```
 
+### §12 — Tier Effect Table + pull-model effect getters (2026-07-28, tier-bonus fill)
+
+Extends §5/§11 for the non-Reach tier bonuses (the playtest-12-3 "hollow ladder"
+fix, `design/reference/class-path-tier-bonus-table-draft.md`). Same architecture,
+more getters — no new Autoload, no new signal, no push:
+
+- `_TIER_EFFECT_TABLE` (const, same in-file sourcing as `_MULTIPLIER_TABLE`):
+  path → tier → {secondary_yield, duration_mult, reach_all_mult,
+  cringe_gain_mult, sponsor_income_mult, morale_cost_mult, morale_drain_mult,
+  haters_growth_mult, morale_floor}. **Resolution is cumulative**: highest
+  defining tier ≤ current wins per key — and `get_active_multiplier()` itself
+  now resolves cumulatively too (fixing the latent hollow-tier-drops-T2 bug).
+- New pure-read getters, all active-path-gated with neutral defaults:
+  `get_secondary_yield(action_id)`, `get_action_duration_multiplier(action_id)`,
+  `get_cringe_gain_multiplier()`, `get_sponsor_income_multiplier()`,
+  `get_morale_cost_multiplier()`, `get_morale_drain_multiplier()`,
+  `get_haters_growth_multiplier()`, `get_morale_floor()`, plus the
+  presentation feed `get_tier_effect_data(path_id, tier)` (raw, per-tier,
+  not active-gated — ClassPathPanel legibility).
+- Consumers (pull model, §5's direction): ActionSystem (timer arming ×
+  duration mult; resolution: cringe/morale scaling + secondary-yield merge),
+  DecisionCardSystem (positive Sponsors card deltas × sponsor income),
+  OfflineProgressSystem (drain/haters mults + Morale floor, snapshotted once
+  at sim start like the shield). **ResourceManager deliberately NOT a
+  consumer**: a live Morale-floor clamp in `apply_delta()` would make Morale
+  spends (ekspert's own invest resource) free at the floor — the floor is an
+  ambient-drain shield only (documented on both sides).
+
 ## Alternatives Considered
 
 ### Alternative A: Lazy evaluation — no `card_resolved` signal

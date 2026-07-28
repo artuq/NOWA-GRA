@@ -256,6 +256,13 @@ func _notification(what: int) -> void:
 func _populate(card: Dictionary) -> void:
 	var text: String = card.get("text", "")
 	_situation_label.text = text if not text.is_empty() else String(card.get("id", "???"))
+	# Meta-loop telegraph (playtest 12-3 fix, ADR-0017's preview API): the
+	# Wypalenie card itself states what accepting banks, computed from the
+	# live projected grant — the same number get_last_grant() will later
+	# report on the Challenge Selection recap. Data lives in game systems,
+	# not card copy — the static text stays untouched for every other card.
+	if StringName(String(card.get("id", ""))) == BurnoutSystem.BURNOUT_CARD_ID:
+		_situation_label.text += "\n\n%s" % _burnout_stake_line()
 
 	var options: Array = card.get("options", [])
 	# Doubled guillemets «« »» (U+00AB/BB, Latin-1) instead of arrows ← →
@@ -273,6 +280,32 @@ func _option_label(options: Array, index: int, fallback: String) -> String:
 		return fallback
 	var label: String = options[index].get("label", "")
 	return label if not label.is_empty() else fallback
+
+
+## The Wypalenie card's stake line — mirrors BurnoutWarningIndicator's
+## telegraph phrasing (same nouns, same percent formatting; kept as a small
+## deliberate duplication rather than a shared static — both are simple
+## presentation formatters over the same compute_next_grant() source).
+func _burnout_stake_line() -> String:
+	var path_id: StringName = ClassPathSystem.get_active_path()
+	if path_id == &"":
+		return "Accepting banks nothing — no active path this era."
+	var tier: int = ClassPathSystem.get_tier(path_id)
+	var grant: Dictionary = PrestigeSystem.compute_next_grant(path_id, tier)
+	if not grant["granted"] or grant["amount"] <= 0.0:
+		return "Accepting banks nothing new — bonus cap reached."
+	var nouns: Dictionary[StringName, String] = {
+		&"META_REACH_MULT": "Reach",
+		&"META_SPONSOR_MULT": "Sponsor income",
+		&"META_HATERS_RESIST": "Haters resistance",
+		&"META_SPONSOR_FLOOR": "era-start Sponsors",
+	}
+	var noun: String = nouns.get(grant["type"], String(grant["type"]))
+	if grant["type"] == &"META_SPONSOR_FLOOR":
+		return "Accepting banks +%d %s — permanent." % [int(roundf(grant["amount"])), noun]
+	var pct: float = snappedf(grant["amount"] * 100.0, 0.1)
+	var pct_text: String = str(int(roundf(pct))) if is_equal_approx(pct, roundf(pct)) else ("%.1f" % pct)
+	return "Accepting banks +%s%% %s — permanent." % [pct_text, noun]
 
 
 ## Resolves the player's choice ([param option_index]: 0 = option_A/left,
