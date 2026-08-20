@@ -5,11 +5,25 @@
 ##
 ## ResourceManager/OfflineProgressSystem are Autoloads; their mutable state is
 ## snapshotted and restored around each test so boot_with's writes don't leak.
+## Story type: Integration. Evidence: this file. Gate: BLOCKING.
 extends GdUnitTestSuite
 
 var _reach_before: float
 var _haters_before: float
 var _morale_before: float
+var _shield_before: float
+
+
+func _stop_save_timers() -> void:
+	for child: Node in SaveSystem.get_children():
+		if child is Timer:
+			(child as Timer).stop()
+
+
+func _saved_resources_with_shield(remaining_seconds: float) -> Dictionary:
+	var resources: Dictionary = ResourceManager.serialize_state()
+	resources["shield_remaining_seconds"] = remaining_seconds
+	return resources
 
 func before_test() -> void:
 	# boot_with() calls the real ResourceManager.apply_delta(), which (since the
@@ -18,19 +32,21 @@ func before_test() -> void:
 	# writing a real user://save.json with test data -- a real, observed bug:
 	# an unstopped timer here polluted card_resolution_test.gd's milestone
 	# assertions in a later, unrelated test file via a stale on-disk save.
-	SaveSystem._debounce_timer.stop()
+	_stop_save_timers()
 	_reach_before = ResourceManager.get_resource(&"Reach")
 	_haters_before = ResourceManager.get_resource(&"Haters")
 	_morale_before = ResourceManager.get_resource(&"Morale")
+	_shield_before = ResourceManager.get_shield_remaining_seconds()
 
 func after_test() -> void:
-	SaveSystem._debounce_timer.stop()
+	_stop_save_timers()
 	ResourceManager.apply_delta({
 		&"Reach": _reach_before - ResourceManager.get_resource(&"Reach"),
 		&"Haters": _haters_before - ResourceManager.get_resource(&"Haters"),
 		&"Morale": _morale_before - ResourceManager.get_resource(&"Morale"),
 	})
-	SaveSystem._debounce_timer.stop()  # the restore above re-triggers mark_dirty
+	ResourceManager._shield_remaining_seconds = _shield_before
+	_stop_save_timers()  # the restore above re-triggers mark_dirty
 	OfflineProgressSystem.last_simulation_result = {}
 
 ## AC: elapsed=300 (threshold, inclusive) routes to the Offline Report Screen.
@@ -143,3 +159,38 @@ func test_main_scene_hosts_action_screen() -> void:
 	assert_object(action_screen).is_not_null()
 	assert_object(action_screen.find_child("ResourceHud", true, false)).is_not_null()
 	assert_object(action_screen.find_child("ActionGrid", true, false)).is_not_null()
+
+
+## Package 2 AC: boot consumes shield time by the real elapsed duration, not
+## merely by the resource simulation step. A short offline gap therefore
+## preserves only the unelapsed portion.
+func test_boot_consumes_partial_shield_by_actual_elapsed_time() -> void:
+	var bc: BootController = BootController.new()
+	add_child(bc)
+	var data: Dictionary = {
+		"resources": _saved_resources_with_shield(300.0),
+	}
+
+	bc.boot_with(data, 120)
+
+	assert_float(ResourceManager.get_shield_remaining_seconds()).is_equal_approx(180.0, 0.0001)
+	bc.queue_free()
+
+
+## Package 2 AC: the 24-hour cap limits economy simulation only. Shield is a
+## wall-clock duration and must consume the full actual elapsed time even
+## when elapsed_seconds exceeds OfflineProgressSystem's cap.
+func test_boot_consumes_shield_beyond_offline_simulation_cap_using_actual_elapsed() -> void:
+	var bc: BootController = BootController.new()
+	add_child(bc)
+	var initial_shield: float = float(OfflineProgressSystem.MAX_OFFLINE_CAP_SECONDS + 7200)
+	var actual_elapsed: int = OfflineProgressSystem.MAX_OFFLINE_CAP_SECONDS + 3600
+	var data: Dictionary = {
+		"resources": _saved_resources_with_shield(initial_shield),
+	}
+
+	bc.boot_with(data, actual_elapsed)
+
+	assert_bool(OfflineProgressSystem.last_simulation_result["capped"]).is_true()
+	assert_float(ResourceManager.get_shield_remaining_seconds()).is_equal_approx(3600.0, 0.0001)
+	bc.queue_free()

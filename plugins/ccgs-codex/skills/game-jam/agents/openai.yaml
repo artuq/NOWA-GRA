@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Jam"
+  short_description: "Imported game-development capability: Game Jam."
+  default_prompt: "Use $game-jam for this game-development task."

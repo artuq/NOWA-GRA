@@ -1,0 +1,4 @@
+interface:
+  display_name: "Playtest Report"
+  short_description: "Run the CCGS Playtest Report workflow in Codex."
+  default_prompt: "Use $playtest-report to handle this game-development task."

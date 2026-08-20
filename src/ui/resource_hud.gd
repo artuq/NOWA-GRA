@@ -16,8 +16,8 @@
 ## drift between the formula's bands and this HUD's displayed band.
 ##
 ## Performance: signal-driven, O(1) work per resource_changed emission (one
-## label update + one Tween) -- no per-frame cost, unlike RunningActionOverlay
-## (the only zone using _process(), per ADR-0007).
+## label update + one Tween) -- the five resource labels have no polling cost.
+## SponsorShieldControl alone refreshes its active countdown per frame.
 ##
 ## Usage: instanced as a child of ActionScreen (res://scenes/action_screen/action_screen.tscn).
 class_name ResourceHud
@@ -63,8 +63,16 @@ var _displayed_countup_values: Dictionary[StringName, float] = {}
 var _last_old_values: Dictionary[StringName, float] = {}
 
 func _ready() -> void:
+	# These labels are rendered from formatted tr() results. Disable Control's
+	# automatic locale pass so a runtime switch cannot translate substrings a
+	# second time (for example "Reach" inside "Reach: 28.4K").
+	for label: Label in [
+		_reach_label, _cringe_label, _haters_label, _morale_label, _sponsors_label,
+	]:
+		label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	ResourceManager.resource_changed.connect(_on_resource_changed)
 	ActionSystem.action_completed.connect(_on_action_completed)
+	SettingsSystem.language_changed.connect(_on_language_changed)
 	# Populate initial state -- resource_changed only fires on subsequent
 	# changes, not on this HUD's own _ready(). No pop animation on initial load.
 	_update_label(&"Reach", ResourceManager.get_resource(&"Reach"))
@@ -82,7 +90,11 @@ func _on_resource_changed(name: StringName, new_value: float, old_value: float) 
 	if _countup_tweens.has(name) and _countup_tweens[name].is_running():
 		return  # count-up owns this label until it settles (ADR-0011 §2)
 	_update_label(name, new_value)
-	_pop(_pill_for(name))
+	# One-second ambient progression must remain legible, not become a permanent
+	# stream of punch animations. The context is synchronous and false for every
+	# ordinary action/card mutation, whose existing feedback stays unchanged.
+	if not ResourceManager.is_applying_ambient_delta():
+		_pop(_pill_for(name))
 
 
 ## Juice Action channel entry point: count-up + flash for every rewarded
@@ -121,6 +133,13 @@ func _start_countup(resource_name: StringName, start_value: float, end_value: fl
 			_update_label(resource_name, value),
 		from_value, end_value, COUNTUP_DURATION_SEC
 	)
+	# An ambient tick may land while the count-up owns this label. Re-read the
+	# authoritative value after the tween so its older action endpoint cannot
+	# leave the HUD stale.
+	tween.tween_callback(func() -> void:
+		if _countup_tweens.get(resource_name) == tween:
+			_update_label(resource_name, ResourceManager.get_resource(resource_name))
+	)
 	_countup_tweens[resource_name] = tween
 
 
@@ -143,15 +162,23 @@ func _start_flash(resource_name: StringName) -> void:
 func _update_label(name: StringName, value: float) -> void:
 	match name:
 		&"Reach":
-			_reach_label.text = "Reach: %s" % ActionUIFormatting.format_number(value)
+			_reach_label.text = tr("RESOURCE_REACH_FORMAT") % ActionUIFormatting.format_number(value)
 		&"Cringe":
-			_cringe_label.text = "Cringe: %s" % ActionUIFormatting.format_number(value)
+			_cringe_label.text = tr("RESOURCE_CRINGE_FORMAT") % ActionUIFormatting.format_number(value)
 		&"Haters":
-			_haters_label.text = "Haters: %s" % ActionUIFormatting.format_number(value)
+			_haters_label.text = tr("RESOURCE_HATERS_FORMAT") % ActionUIFormatting.format_number(value)
 		&"Morale":
-			_morale_label.text = "Morale: %s" % _morale_band_label(value)
+			_morale_label.text = tr("RESOURCE_MORALE_FORMAT") % _morale_band_label(value)
 		&"Sponsors":
-			_sponsors_label.text = "Sponsors: %s" % ActionUIFormatting.format_number(value)
+			_sponsors_label.text = tr("RESOURCE_SPONSORS_FORMAT") % ActionUIFormatting.format_number(value)
+
+
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
+	_update_label(&"Reach", ResourceManager.get_resource(&"Reach"))
+	_update_label(&"Cringe", ResourceManager.get_resource(&"Cringe"))
+	_update_label(&"Haters", ResourceManager.get_resource(&"Haters"))
+	_update_label(&"Morale", ResourceManager.get_resource(&"Morale"))
+	_update_label(&"Sponsors", ResourceManager.get_resource(&"Sponsors"))
 
 
 func _pill_for(name: StringName) -> Control:
@@ -188,4 +215,5 @@ func _pop(pill: Control) -> void:
 ## ResourceFormulas.morale_band_label (single source of truth, also used by the
 ## Offline Report Screen) so the band boundaries are never duplicated.
 func _morale_band_label(morale: float) -> String:
-	return ResourceFormulas.morale_band_label(morale)
+	var band: String = ResourceFormulas.morale_band_label(morale)
+	return tr("MORALE_%s" % band.to_upper())

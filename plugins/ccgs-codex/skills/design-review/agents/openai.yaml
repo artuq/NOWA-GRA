@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Review"
+  short_description: "Run the CCGS Design Review workflow in Codex."
+  default_prompt: "Use $design-review to handle this game-development task."

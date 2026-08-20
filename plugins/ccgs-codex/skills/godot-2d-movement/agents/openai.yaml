@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot 2D Movement"
+  short_description: "Imported game-development capability: Godot 2D Movement."
+  default_prompt: "Use $godot-2d-movement for this game-development task."

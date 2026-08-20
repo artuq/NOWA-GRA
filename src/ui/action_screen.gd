@@ -31,6 +31,10 @@
 ##
 ## ADR-0018 (2026-07-24): listens for PrestigeSystem.era_transitioned and
 ## drives the scene swap to Challenge Selection Screen.
+##
+## Burnout live-play boundary: this scene is the sole lifecycle owner that
+## enables BurnoutSystem's sustained-Cringe detector. Boot, Start, Offline
+## Report and Challenge Selection never opt in.
 class_name ActionScreen
 extends Control
 
@@ -54,6 +58,8 @@ var _open_panel: Control = null
 @onready var _bonuses_panel: Control = %BonusesPanel
 @onready var _staff_button: Button = %StaffButton
 @onready var _staff_panel: Control = %StaffPanel
+@onready var _creator_empire_strip: Control = %CreatorEmpireStrip
+@onready var _away_plan_panel: Control = %AwayPlanPanel
 @onready var _card_screen: Control = $CardScreen
 
 
@@ -62,15 +68,27 @@ func _ready() -> void:
 	_path_button.pressed.connect(_on_path_button_pressed)
 	_bonuses_button.pressed.connect(_on_bonuses_button_pressed)
 	_staff_button.pressed.connect(_on_staff_button_pressed)
+	_creator_empire_strip.away_plan_requested.connect(_on_away_plan_requested)
 	_class_path_panel.close_requested.connect(_on_panel_close_requested)
 	_settings_screen.close_requested.connect(_on_panel_close_requested)
 	_bonuses_panel.close_requested.connect(_on_panel_close_requested)
 	_staff_panel.close_requested.connect(_on_panel_close_requested)
+	_away_plan_panel.close_requested.connect(_on_panel_close_requested)
 	DecisionCardSystem.card_presented.connect(_on_card_presented)
 	_card_screen.visibility_changed.connect(_on_card_screen_visibility_changed)
 	PrestigeSystem.era_transitioned.connect(_on_era_transitioned)
 	if OS.has_feature("web"):
 		_web_arm_back_trap()
+	# Enable only after all child presentation nodes (including CardScreen)
+	# have completed their own _ready() lifecycle.
+	BurnoutSystem.set_live_play_active(true)
+	if AlgorithmContractSystem.open_away_plan_on_main:
+		AlgorithmContractSystem.open_away_plan_on_main = false
+		_request_panel.call_deferred(_away_plan_panel)
+
+
+func _exit_tree() -> void:
+	BurnoutSystem.set_live_play_active(false)
 
 
 # --- Entry points (each a thin wrapper over the one resolver) -------------
@@ -90,6 +108,10 @@ func _on_bonuses_button_pressed() -> void:
 
 func _on_staff_button_pressed() -> void:
 	_request_panel(_staff_panel)
+
+
+func _on_away_plan_requested() -> void:
+	_request_panel(_away_plan_panel)
 
 
 func _on_panel_close_requested() -> void:
@@ -151,6 +173,7 @@ func _apply_state_change(new_state: CoordinationState, panel: Control) -> void:
 	_settings_screen.visible = _open_panel == _settings_screen
 	_bonuses_panel.visible = _open_panel == _bonuses_panel
 	_staff_panel.visible = _open_panel == _staff_panel
+	_away_plan_panel.visible = _open_panel == _away_plan_panel
 	# Web: keep the history trap primed while anything consumable is up —
 	# synchronously, inside the resolver (ADR-0014 Risks: the pushState trap
 	# must be armed before the next possible back gesture).

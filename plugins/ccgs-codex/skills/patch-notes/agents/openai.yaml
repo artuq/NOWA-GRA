@@ -1,0 +1,4 @@
+interface:
+  display_name: "Patch Notes"
+  short_description: "Run the CCGS Patch Notes workflow in Codex."
+  default_prompt: "Use $patch-notes to handle this game-development task."

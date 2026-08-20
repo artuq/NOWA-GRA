@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Navmesh"
+  short_description: "Imported game-development capability: Unity Navmesh."
+  default_prompt: "Use $unity-navmesh for this game-development task."

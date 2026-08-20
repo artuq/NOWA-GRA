@@ -45,6 +45,7 @@ var _warning_events: Array
 func before_test() -> void:
 	_snap_cringe = ResourceManager.get_resource(&"Cringe")
 	_bs = BurnoutSystemScript.new()
+	_bs.set_live_play_active(true)
 	_warning_events = []
 	_bs.burnout_warning_changed.connect(
 		func(active: bool, seconds_remaining: float) -> void:
@@ -60,6 +61,35 @@ func after_test() -> void:
 
 func _set_cringe(value: float) -> void:
 	ResourceManager.apply_delta({&"Cringe": value - ResourceManager.get_resource(&"Cringe")})
+
+
+# --- Live-play lifecycle gate ---
+
+func test_inactive_screen_does_not_advance_or_emit_warning() -> void:
+	_set_cringe(100.0)
+	_bs._cringe_sustained_seconds = _bs.BURNOUT_WARNING_THRESHOLD
+	_bs.set_live_play_active(false)
+
+	_bs._process(10.0)
+
+	assert_float(_bs._cringe_sustained_seconds).is_equal_approx(
+		_bs.BURNOUT_WARNING_THRESHOLD, 0.0001
+	)
+	assert_array(_warning_events).is_empty()
+	assert_bool(_bs.is_processing()).is_false()
+
+
+func test_deactivation_pauses_and_reactivation_resumes_sustained_timer() -> void:
+	_set_cringe(100.0)
+	_bs._process(2.0)
+	_bs.set_live_play_active(false)
+	_bs._process(5.0)
+	assert_float(_bs._cringe_sustained_seconds).is_equal_approx(2.0, 0.0001)
+
+	_bs.set_live_play_active(true)
+	_bs._process(0.5)
+
+	assert_float(_bs._cringe_sustained_seconds).is_equal_approx(2.5, 0.0001)
 
 
 # --- AC-1: timer increments at Cringe=100 ---

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Tilemap"
+  short_description: "Imported game-development capability: Godot Tilemap."
+  default_prompt: "Use $godot-tilemap for this game-development task."

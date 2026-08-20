@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gamedev Skill Router"
+  short_description: "Imported game-development capability: Gamedev Skill Router."
+  default_prompt: "Use $gamedev-skill-router for this game-development task."

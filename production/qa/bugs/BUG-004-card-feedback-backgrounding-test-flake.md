@@ -1,6 +1,6 @@
-# BUG-004: `test_backgrounding_during_resolving_leaves_clean_state` is flaky — test-timing race, not a production bug
+# BUG-004: `test_backgrounding_during_resolving_leaves_clean_state` was flaky — fixed deterministic lifecycle seam
 
-**Severity**: S4 — Test flakiness only, no player-facing impact confirmed | **Status**: Found, not fixed | **Found**: 2026-07-24 (Sprint 12 story 12-1, first real headless test-suite execution in this environment) | **Existed since**: unknown — Sprint 9 (Juice/Feedback epic) most likely, never caught before because this is the first time the suite has actually been run headlessly against real Godot rather than reviewed by file presence.
+**Severity**: S4 — Test flakiness only, no player-facing impact confirmed | **Status**: Fixed 2026-08-05 | **Found**: 2026-07-24 (Sprint 12 story 12-1, first real headless test-suite execution in this environment) | **Existed since**: unknown — Sprint 9 (Juice/Feedback epic) most likely, never caught before because this is the first time the suite has actually been run headlessly against real Godot rather than reviewed by file presence.
 
 ## Repro
 Run `tests/integration/card_ui/card_feedback_test.gd` repeatedly (observed 1 failure in 3 runs — roughly 33% flake rate in this environment):
@@ -23,10 +23,12 @@ screen.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
 assert_bool(screen._juice_pulse_tween.is_running()).is_false()
 ...
 ```
-`card_screen.gd`'s `_notification()` handler (lines 228-236) is logically correct: `if state == State.RESOLVING: _kill_juice_tweens(); _card_node.scale = Vector2.ONE; ...`. The bug is in the TEST's timing assumption, not the production code: the pulse/shake Tweens run on real wall-clock durations (0.08s/0.12s), not frame counts. A single `await get_tree().process_frame` does not reliably land inside the `RESOLVING` window — under light system load (fast frame processing), the resolution beat can complete and transition `state` away from `RESOLVING` before the notification fires, so `_notification()` takes its early-return path instead of the reset branch, leaving the tween running and scale un-reset. This matches the observed symptom exactly.
+`card_screen.gd`'s `_notification()` handler is logically correct: `if state == State.RESOLVING: _kill_juice_tweens(); _card_node.scale = Vector2.ONE; ...`. The bug was in the TEST's timing assumption, not the production code. The helper shortened the resolution beat to `0.05 s`, while the pulse lasts `0.20 s` and shake can last `0.40 s`. A single `await get_tree().process_frame` did not reliably land inside `RESOLVING`: when a headless frame exceeded `0.05 s`, the beat changed the screen to `HIDDEN` while both tweens were still running. `_notification()` then correctly skipped its `RESOLVING` branch, producing all three failures.
 
-## Fix (not yet done — out of Sprint 12 scope, filed for later)
-The test needs to deterministically land in `RESOLVING` before asserting, not rely on a single frame's timing. Candidate approaches: (a) assert `screen.state == CardScreen.State.RESOLVING` immediately after the `await` and fail fast with a clear message if the precondition wasn't met (converts a silent flake into a loud, diagnosable one), or (b) stub/lengthen the resolution beat duration for this specific test so the timing window is wide enough to be reliable regardless of system load, matching the pattern other tests in this suite already use for lowered test-only tuning knobs (see `test_payoff_beat_clamps_to_gdd_bounds_at_default_knobs`'s own comment about "lowered test values").
+## Fix
+The test now calls `notification()` immediately after `resolve()`. That seam is deterministic because `resolve()` synchronously enters `RESOLVING` and creates both tweens before its first `await`. Explicit precondition assertions prove the expected state and live tween handles. The card scale is then set to a non-default mid-pulse value without advancing wall time, so the final `Vector2.ONE` assertion proves the reset branch actually ran rather than passing vacuously.
+
+Verification on 2026-08-05: isolated `card_feedback_test.gd` 11/11 green, then full GdUnit4 736/736 green (85/85 suites; 153 pre-existing orphan nodes remain a separate harness baseline).
 
 ## Prevention
-This is the first time `tests/` has been executed against real headless Godot in this environment (all prior Sprint 10-11 QA sign-offs were desk reviews of file presence only, per the Sprint 10-11 retro). Flag: any future desk-review-only QA sign-off should explicitly note it cannot catch timing-dependent flakiness like this — only a real run can.
+Do not use one rendered frame as a clock for sub-frame test tuning. When the production seam is synchronous before its first `await`, assert and exercise that seam directly; simulate the intermediate visual value explicitly when needed to prove cleanup. Any future desk-review-only QA sign-off should still state that it cannot catch timing-dependent flakiness — only a real run can.

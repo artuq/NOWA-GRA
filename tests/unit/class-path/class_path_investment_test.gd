@@ -141,14 +141,27 @@ func test_invest_zero_amount_is_noop_not_error() -> void:
 	assert_float(ResourceManager.get_resource(&"Cringe")).is_equal_approx(before, 0.001)
 
 
+func test_invest_rejects_negative_nan_and_wrong_resource_without_side_effects() -> void:
+	var cps: Node = _make_cps()
+	_seed_card_contribution(cps, &"pato_streamer", 20.0)
+	_seed_resource(&"Cringe", 100.0)
+	_seed_resource(&"Reach", 100.0)
+	assert_bool(cps.invest(&"pato_streamer", &"Cringe", -10.0)).is_false()
+	assert_bool(cps.invest(&"pato_streamer", &"Cringe", NAN)).is_false()
+	assert_bool(cps.invest(&"pato_streamer", &"Reach", 10.0)).is_false()
+	assert_float(cps.get_affiliation(&"pato_streamer")).is_equal_approx(20.0, 0.001)
+	assert_float(ResourceManager.get_resource(&"Cringe")).is_equal_approx(100.0, 0.001)
+	assert_float(ResourceManager.get_resource(&"Reach")).is_equal_approx(100.0, 0.001)
+
+
 # --- AC-3: 4-path rate independence ---
 
-func test_four_paths_independent_rates_for_identical_200_unit_spend() -> void:
+func test_four_paths_independent_rates_for_identical_100_unit_spend() -> void:
 	var expected: Dictionary = {
-		&"pato_streamer": {"resource": &"Cringe", "gain": 20.0},
-		&"guru_celebryta": {"resource": &"Sponsors", "gain": 40.0},
-		&"ekspert_niszowy": {"resource": &"Morale", "gain": 25.0},
-		&"biznesmen_contentu": {"resource": &"Reach", "gain": 4.0},
+		&"pato_streamer": {"resource": &"Cringe", "gain": 10.0},
+		&"guru_celebryta": {"resource": &"Sponsors", "gain": 20.0},
+		&"ekspert_niszowy": {"resource": &"Morale", "gain": 12.5},
+		&"biznesmen_contentu": {"resource": &"Reach", "gain": 2.0},
 	}
 	for path_id: StringName in expected:
 		var cps: Node = _make_cps()
@@ -156,7 +169,7 @@ func test_four_paths_independent_rates_for_identical_200_unit_spend() -> void:
 		var gain: float = expected[path_id]["gain"]
 		_seed_card_contribution(cps, path_id, 10.0)  # gate satisfied, well under 100
 		_seed_resource(resource_id, 500.0)
-		var ok: bool = cps.invest(path_id, resource_id, 200.0)
+		var ok: bool = cps.invest(path_id, resource_id, 100.0)
 		assert_bool(ok).override_failure_message(
 			"invest() should succeed for %s" % path_id
 		).is_true()
@@ -174,7 +187,7 @@ func test_ekspert_niszowy_rate_0_125_independently() -> void:
 	assert_float(cps.get_affiliation(&"ekspert_niszowy")).is_equal_approx(30.0, 0.001)
 
 
-# --- AC-4: F3 clamp at 100.0 ---
+# --- AC-4: decision-backed investment ceiling (F6) ---
 
 ## Cringe is reseeded via restore_state() before the second invest() call —
 ## the first invest()'s apply_delta() clamps the stored Cringe balance to
@@ -182,31 +195,42 @@ func test_ekspert_niszowy_rate_0_125_independently() -> void:
 ## otherwise starve the second call of spendable balance. Re-seeding keeps
 ## the test isolated to F3's affiliation-clamp behavior, not ResourceManager's
 ## unrelated currency clamp.
-func test_investment_beyond_100_still_deducts_resource_but_clamps_affiliation() -> void:
+func test_oversized_investment_is_rejected_without_deducting_resource() -> void:
 	var cps: Node = _make_cps()
-	_seed_card_contribution(cps, &"pato_streamer", 60.0)  # CARD_CONTRIBUTION_MAX, gate satisfied
-	_seed_resource(&"Cringe", 5000.0)
-	cps.invest(&"pato_streamer", &"Cringe", 1000.0)  # 1000 * 0.1 = 100.0 investment
-	assert_float(cps.get_affiliation(&"pato_streamer")).is_equal_approx(100.0, 0.001)
-	_seed_resource(&"Cringe", 5000.0)  # reseed past ResourceManager's own clamp — see doc comment
-	var ok: bool = cps.invest(&"pato_streamer", &"Cringe", 200.0)  # further spend
-	assert_bool(ok).is_true()
-	assert_float(cps.get_affiliation(&"pato_streamer")).is_equal_approx(100.0, 0.001)
-	# Deduction still occurred: 5000 - 200 = 4800, clamped to ResourceManager's
-	# Cringe ceiling of 100.0 — demonstrates apply_delta() ran (not skipped),
-	# per the Edge Case's "at-100 is defensive, not blocked" pattern.
-	assert_float(ResourceManager.get_resource(&"Cringe")).is_equal_approx(100.0, 0.001)
+	_seed_card_contribution(cps, &"pato_streamer", 4.0)
+	_seed_resource(&"Cringe", 500.0)
+	var ok: bool = cps.invest(&"pato_streamer", &"Cringe", 250.0) # +25 exceeds cap 24
+	assert_bool(ok).is_false()
+	assert_float(cps.get_affiliation(&"pato_streamer")).is_equal_approx(4.0, 0.001)
+	assert_float(ResourceManager.get_resource(&"Cringe")).is_equal_approx(500.0, 0.001)
 
 
 ## Exact worked example from the story's AC list: card_contribution = 60.0,
 ## investment pushes +50.0 more raw investment_contribution -> F3 clamps the
 ## 110.0 raw sum to exactly 100.0, not 110.0.
-func test_f3_clamp_60_card_plus_50_investment_equals_100_not_110() -> void:
+func test_f6_one_card_caps_total_affiliation_at_28() -> void:
 	var cps: Node = _make_cps()
-	_seed_card_contribution(cps, &"pato_streamer", 60.0)
+	_seed_card_contribution(cps, &"pato_streamer", 4.0)
 	_seed_resource(&"Cringe", 5000.0)
-	cps.invest(&"pato_streamer", &"Cringe", 500.0)  # 500 * 0.1 = 50.0 investment
-	assert_float(cps.get_affiliation(&"pato_streamer")).is_equal_approx(100.0, 0.001)
+	assert_bool(cps.invest(&"pato_streamer", &"Cringe", 240.0)).is_true()
+	assert_float(cps.get_affiliation(&"pato_streamer")).is_equal_approx(28.0, 0.001)
+	assert_float(cps.get_investment_headroom(&"pato_streamer")).is_equal_approx(0.0, 0.001)
+
+
+func test_f6_five_cards_cap_total_affiliation_at_60() -> void:
+	var cps: Node = _make_cps()
+	_seed_card_contribution(cps, &"guru_celebryta", 20.0)
+	_seed_resource(&"Sponsors", 200.0)
+	assert_bool(cps.invest(&"guru_celebryta", &"Sponsors", 200.0)).is_true()
+	assert_float(cps.get_affiliation(&"guru_celebryta")).is_equal_approx(60.0, 0.001)
+
+
+func test_f6_ten_cards_can_reach_100() -> void:
+	var cps: Node = _make_cps()
+	_seed_card_contribution(cps, &"biznesmen_contentu", 40.0)
+	_seed_resource(&"Reach", 3000.0)
+	assert_bool(cps.invest(&"biznesmen_contentu", &"Reach", 3000.0)).is_true()
+	assert_float(cps.get_affiliation(&"biznesmen_contentu")).is_equal_approx(100.0, 0.001)
 
 
 # --- AC-5: insufficient resource rejection ---
@@ -299,6 +323,19 @@ func test_investment_contribution_survives_save_load_round_trip() -> void:
 	assert_float(restored.get_affiliation(&"pato_streamer")).override_failure_message(
 		"investment_contribution must survive a post-restore recalculation, not silently reset to 0"
 	).is_equal_approx(40.0, 0.001)
+
+
+func test_restore_migrates_legacy_overinvestment_and_tier_to_f6_cap() -> void:
+	var cps: Node = _make_cps()
+	cps.restore_state({
+		"affiliation": {"pato_streamer": 100.0},
+		"card_contribution": {"pato_streamer": 4.0},
+		"investment_contribution": {"pato_streamer": 96.0},
+		"current_tier": {"pato_streamer": 5},
+		"active_path": "pato_streamer",
+	})
+	assert_float(cps.get_affiliation(&"pato_streamer")).is_equal_approx(28.0, 0.001)
+	assert_int(cps.get_tier(&"pato_streamer")).is_equal(1)
 
 
 func test_card_contribution_survives_save_load_for_invest_gate() -> void:

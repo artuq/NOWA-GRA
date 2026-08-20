@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Test"
+  short_description: "Run the CCGS Skill Test workflow in Codex."
+  default_prompt: "Use $skill-test to handle this game-development task."

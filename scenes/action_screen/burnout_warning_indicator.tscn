@@ -26,7 +26,7 @@ theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 24
-text = "Burnout"
+text = "META_BURNOUT_IDENTITY"
 
 [node name="CountdownBar" type="ProgressBar" parent="WarningRow"]
 unique_name_in_owner = true

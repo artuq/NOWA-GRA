@@ -1,0 +1,4 @@
+interface:
+  display_name: "Balance Check"
+  short_description: "Run the CCGS Balance Check workflow in Codex."
+  default_prompt: "Use $balance-check to handle this game-development task."

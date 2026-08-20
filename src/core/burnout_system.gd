@@ -27,17 +27,15 @@
 ## soft-locks on a failed injection (see that method's own doc comment). The
 ## Wypalenie card's minimal real CardContentDatabase entry (id "final_burnout")
 ## was also added in this story (card_content_database.gd) -- see
-## BURNOUT_CARD_ID's doc comment for the two option label strings Story 003
+## BURNOUT_CARD_ID's doc comment for the two stable option ids Story 003
 ## matches.
 ##
 ## Story 003 (this revision) adds _ready()'s DecisionCardSystem.card_resolved.
 ## connect() wiring and _on_card_resolved(): routes the player's Choice A/B
 ## into PrestigeSystem.on_burnout_accepted()/on_burnout_deferred(), matching
-## option_chosen against the two literal label strings authored on the
-## Wypalenie card (_OPTION_LABEL_ACCEPT/_OPTION_LABEL_DEFER below) -- not a
-## semantic id, since DecisionCardSystem.resolve_choice() derives
-## option_chosen from option["label"] (decision_card_system.gd:311). An
-## unrecognized third value push_error()s rather than silently falling
+## option_id against the two semantic ids authored on the Wypalenie card
+## (_OPTION_ID_ACCEPT/_OPTION_ID_DEFER below). An unrecognized third value
+## push_error()s rather than silently falling
 ## through to either branch (ADR-0013's story-readiness-time correction --
 ## see _on_card_resolved()'s own doc comment).
 ##
@@ -90,6 +88,12 @@ var _cringe_sustained_seconds: float = 0.0
 ## Persisted via serialize_state()/restore_state() -- Story 004.
 var _card_pending: bool = false
 
+## True only while the main ActionScreen owns live gameplay. The Autoload is
+## present on boot/start/offline/challenge scenes too, so scene lifecycle must
+## opt in explicitly; otherwise sustained Cringe could trigger a card where no
+## CardScreen exists. This flag is ephemeral and intentionally not persisted.
+var _live_play_active: bool = false
+
 ## Sustained-Cringe seconds required before the Wypalenie card force-injects
 ## (Story 002). ADR-0013/quick-spec default; see this file's header comment
 ## for why this is a plain const rather than a balance.json load.
@@ -107,19 +111,9 @@ const BURNOUT_WARNING_THRESHOLD: float = 180.0
 ## specifically to exclude it from _build_eligible_pool()'s normal
 ## selection -- see that entry's own comment in card_content_database.gd).
 ##
-## _on_card_resolved() (Story 003, below) matches DecisionCardSystem.
-## card_resolved's option_chosen against this card's authored option "label"
-## fields -- NOT semantic identifiers -- since resolve_choice() derives
-## option_chosen from option["label"] (decision_card_system.gd:311), not a
-## separate id. The two exact label strings authored on this card
-## (card_content_database.gd) are:
-##   "Accept the Burnout" -> Choice A (PrestigeSystem.on_burnout_accepted())
-##   "Defer the Burnout"  -> Choice B (PrestigeSystem.on_burnout_deferred())
-## A future edit to either label string in CardContentDatabase MUST be
-## mirrored in _on_card_resolved()'s _OPTION_LABEL_ACCEPT/_OPTION_LABEL_DEFER
-## consts below, or that routing silently no-ops both branches -- guarded by
-## that function's own push_error() on drift, plus this file's test suite's
-## AC-5 regression test comparing the consts against the real card entry.
+## _on_card_resolved() (Story 003, below) routes on the card's stable option
+## ids, never its player-facing labels. This keeps localized or edited copy
+## independent from gameplay routing.
 const BURNOUT_CARD_ID: StringName = &"final_burnout"
 
 ## Morale cost applied to PrestigeSystem.on_burnout_deferred() when the
@@ -129,6 +123,21 @@ const BURNOUT_CARD_ID: StringName = &"final_burnout"
 ## PrestigeSystem itself, so PrestigeSystem stays ignorant of BurnoutSystem's
 ## own tuning (one-directional dependency discipline, ADR-0012 §1).
 const BURNOUT_DEFER_MORALE_COST: float = 50.0
+
+
+## Enables or pauses the live-play detector. ActionScreen is the sole runtime
+## owner of this lifecycle: it enables in `_ready()` and disables in
+## `_exit_tree()`. Pausing preserves the accumulated active-play duration and
+## emits no cancellation event because the owning HUD leaves with the scene.
+func set_live_play_active(active: bool) -> void:
+	_live_play_active = active
+	set_process(active)
+
+
+## Returns whether the sustained-Cringe detector is currently allowed to
+## advance. Exposed for lifecycle diagnostics and deterministic tests.
+func is_live_play_active() -> bool:
+	return _live_play_active
 
 
 ## O(1) per live-play frame (control-manifest.md Core layer guardrail): one
@@ -145,6 +154,10 @@ const BURNOUT_DEFER_MORALE_COST: float = 50.0
 ##         "> 0.0" check below -- once _cringe_sustained_seconds is already
 ##         0.0, the next below-100 frame does not re-emit)
 func _process(delta: float) -> void:
+	# Defense in depth for direct calls/tests; set_process(false) already keeps
+	# the engine from dispatching this method outside ActionScreen.
+	if not _live_play_active:
+		return
 	var cringe: float = ResourceManager.get_resource(&"Cringe")
 	if cringe >= 100.0:
 		_cringe_sustained_seconds += delta
@@ -193,20 +206,13 @@ func _try_inject_burnout_card() -> void:
 ## BurnoutSystem after DecisionCardSystem, ADR-0013's Ordering Note).
 func _ready() -> void:
 	DecisionCardSystem.card_resolved.connect(_on_card_resolved)
+	set_process(false)
 
 
-## The two literal strings below MUST exactly match card_content_database.gd's
-## final_burnout entry's option "label" fields -- card_resolved's option_chosen
-## is derived from that label (decision_card_system.gd:311), not a semantic
-## id (see BURNOUT_CARD_ID's own doc comment). A future copy/localization
-## pass touching either label breaks this silently unless the guard in
-## _on_card_resolved() below (explicit push_error on an unrecognized third
-## value) catches it. tests/integration/burnout/burnout_choice_routing_test.gd's
-## AC-5 regression test compares these two consts against
-## CardContentDatabase's real entry directly, so a future content edit fails
-## loudly there too.
-const _OPTION_LABEL_ACCEPT: StringName = &"Accept the Burnout"
-const _OPTION_LABEL_DEFER: StringName = &"Defer the Burnout"
+## Stable semantic ids authored on final_burnout's two options. Labels are
+## presentation-only and may change independently (including localization).
+const _OPTION_ID_ACCEPT: StringName = &"accept"
+const _OPTION_ID_DEFER: StringName = &"defer"
 
 
 ## Routes the player's Choice A/B into PrestigeSystem's two locked entry
@@ -227,20 +233,17 @@ const _OPTION_LABEL_DEFER: StringName = &"Defer the Burnout"
 ## contract (AC-1/AC-2), not incidental.
 ##
 ## Uses an explicit if/elif/else with a push_error() on an unrecognized third
-## value (story-readiness-time correction, 2026-07-19) rather than ADR-0013's
-## original simplified if/else -- an else-catches-everything branch would
-## silently treat any label drift as a Defer, which is worse than a loud
-## error.
-func _on_card_resolved(card_id: StringName, _path_tag: StringName, option_chosen: StringName) -> void:
+## value rather than treating every unknown id as Defer.
+func _on_card_resolved(card_id: StringName, _path_tag: StringName, option_id: StringName) -> void:
 	if card_id != BURNOUT_CARD_ID:
 		return
 	_card_pending = false
-	if option_chosen == _OPTION_LABEL_ACCEPT:
+	if option_id == _OPTION_ID_ACCEPT:
 		PrestigeSystem.on_burnout_accepted()
-	elif option_chosen == _OPTION_LABEL_DEFER:
+	elif option_id == _OPTION_ID_DEFER:
 		PrestigeSystem.on_burnout_deferred(BURNOUT_DEFER_MORALE_COST)
 	else:
-		push_error("BurnoutSystem: unrecognized Wypalenie option_chosen '%s' -- " % option_chosen +
+		push_error("BurnoutSystem: unrecognized Wypalenie option_id '%s' -- " % option_id +
 			"neither Accept nor Defer branch taken, card content may have drifted from routing logic")
 
 
@@ -272,6 +275,14 @@ func restore_state(data: Dictionary) -> void:
 	_card_pending = bool(data.get("_card_pending", false))
 	# _cringe_sustained_seconds intentionally NOT restored -- resets to 0.0,
 	# per the quick-spec's own Pillar 4 "no surprise burnout on app open" rule.
+
+
+## Clears transient and persisted burnout state for a full New Game wipe.
+func reset_for_new_game() -> void:
+	_cringe_sustained_seconds = 0.0
+	_card_pending = false
+	_live_play_active = false
+	set_process(false)
 
 
 ## Story 004 (TR-pcs-007, ADR-0013/ADR-0003): serializes persisted state for

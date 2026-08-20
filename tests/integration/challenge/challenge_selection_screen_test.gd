@@ -17,15 +17,19 @@ const _SCENE_PATH: String = "res://scenes/challenge_selection/challenge_selectio
 
 var _challenge_snapshot: Array[StringName]
 var _last_grant_snapshot: Dictionary
+var _locale_snapshot: String = ""
 
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_challenge_snapshot = ChallengeSystem.get_active_challenge_ids()
 	_last_grant_snapshot = PrestigeSystem.get_last_grant().duplicate()
 	ChallengeSystem.clear_active_challenges()
 
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	ChallengeSystem.select_challenges(_challenge_snapshot)
 	PrestigeSystem.restore_state({
 		"era_count": PrestigeSystem.era_count,
@@ -143,6 +147,28 @@ func test_no_bonus_granted_shows_explicit_no_bonus_state() -> void:
 		"no-active-path burnout must show an explicit no-bonus message, never blank or '0%'"
 	).is_equal("No bonus this era.")
 	assert_str(label.text).not_contains("0%")
+
+
+func test_open_screen_refreshes_dynamic_copy_after_polish_language_change() -> void:
+	var runner: GdUnitSceneRunner = scene_runner(_SCENE_PATH)
+	_toggle_on(runner, 0)
+	TranslationServer.set_locale("pl_PL")
+	SettingsSystem.language_changed.emit(&"pl", &"pl_PL")
+	await get_tree().process_frame
+
+	var screen: Control = runner.scene()
+	assert_str((screen.find_child("EraSummaryLabel") as Label).text).contains("Era")
+	assert_str((screen.find_child("MetaBonusGrantedLabel") as Label).text).contains("bez nowego bonusu")
+	assert_str(_card(runner, 0).text).contains("Influencer bez duszy")
+	assert_str((screen.find_child("CombinedMultiplierLabel") as Label).text).contains("Łączny mnożnik")
+	assert_bool(_card(runner, 0).button_pressed).is_true()
+
+	TranslationServer.set_locale("en")
+	SettingsSystem.language_changed.emit(&"en", &"en")
+	await get_tree().process_frame
+	assert_str(_card(runner, 0).text).contains("Soulless Influencer")
+	assert_str((screen.find_child("CombinedMultiplierLabel") as Label).text).contains("Combined multiplier")
+	assert_bool(_card(runner, 0).button_pressed).is_true()
 
 
 # --- Selection is written via ChallengeSystem.select_challenges() on Confirm ---

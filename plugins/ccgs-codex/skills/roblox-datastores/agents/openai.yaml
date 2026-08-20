@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox Datastores"
+  short_description: "Imported game-development capability: Roblox Datastores."
+  default_prompt: "Use $roblox-datastores for this game-development task."

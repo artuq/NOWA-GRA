@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Epics"
+  short_description: "Run the CCGS Create Epics workflow in Codex."
+  default_prompt: "Use $create-epics to handle this game-development task."

@@ -15,10 +15,13 @@ var _haters_before: float
 var _morale_before: float
 var _cringe_before: float
 var _sponsors_before: float
+var _prestige_totals_snapshot: Dictionary[StringName, float] = {}
 
 
 func before_test() -> void:
 	SaveSystem._debounce_timer.stop()
+	_prestige_totals_snapshot = PrestigeSystem.meta_bonus_totals.duplicate()
+	PrestigeSystem.meta_bonus_totals.clear()
 	_reach_before = ResourceManager.get_resource(&"Reach")
 	_haters_before = ResourceManager.get_resource(&"Haters")
 	_morale_before = ResourceManager.get_resource(&"Morale")
@@ -28,6 +31,9 @@ func before_test() -> void:
 
 func after_test() -> void:
 	_clear_path_state()
+	PrestigeSystem.meta_bonus_totals.clear()
+	for bonus_type: StringName in _prestige_totals_snapshot:
+		PrestigeSystem.meta_bonus_totals[bonus_type] = _prestige_totals_snapshot[bonus_type]
 	ResourceManager.apply_delta({
 		&"Reach": _reach_before - ResourceManager.get_resource(&"Reach"),
 		&"Haters": _haters_before - ResourceManager.get_resource(&"Haters"),
@@ -53,7 +59,7 @@ func _clear_path_state() -> void:
 func test_duration_cut_applied_at_start() -> void:
 	_set_path_state(&"pato_streamer", 4)
 	assert_bool(ActionSystem.start_action(&"zrob_drame")).is_true()
-	assert_float(ActionSystem._timer.wait_time).is_equal_approx(9.0 * (2.0 / 3.0), 0.001)
+	assert_float(ActionSystem.get_current_duration()).is_equal_approx(9.0 * (2.0 / 3.0), 0.001)
 	# Cleanup: resolve immediately so no action is left running.
 	ActionSystem._timer.stop()
 	ActionSystem._on_action_timeout()

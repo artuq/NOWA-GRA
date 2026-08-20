@@ -29,6 +29,7 @@ const _RISKY_SAFE_IDS: Array[String] = [
 ]
 const _NEUTRAL_IDS: Array[String] = [
 	"fan_in_trouble", "brand_deal_choice", "algorithm_hack", "burnout_warning",
+	"polish_export_disaster",
 ]
 const _MILESTONE_CARDS: Dictionary = {
 	"staged_drama": {"option_index": 0, "milestone": &"card.staged_drama.chosen_risky"},
@@ -73,14 +74,92 @@ func after_test() -> void:
 ## BurnoutSystem's forced injection, never the normal pool -- plus 4 more
 ## risky/safe cards (2x ekspert_niszowy, 2x biznesmen_contentu) closing the
 ## zero-reachable-cards gap those two paths had below Tier 5.
-## Count is 29 as of wave 3 (2026-07-28): +2 guru, +2 ekspert, +2 biznesmen,
-## +2 neutral — pool distribution pato 6 / guru 4 / ekspert 4 / biznesmen 4 /
-## neutral 6 among the 24 "always" cards.
+## Count is 37 after the two standalone skill challenges, cultural-humour
+## showcase, and five controlled Sponsor Career Contract cards.
 func test_all_cards_have_exactly_two_options() -> void:
 	var cards: Array[Dictionary] = _db.get_all_cards()
-	assert_int(cards.size()).is_equal(29)
+	assert_int(cards.size()).is_equal(37)
 	for card: Dictionary in cards:
 		assert_int(card["options"].size()).is_equal(2)
+
+
+## Every option exposes a non-empty id that is unique within its card. These
+## ids are gameplay contracts; labels are free to change or be localized.
+func test_all_card_options_have_stable_unique_ids() -> void:
+	for card: Dictionary in _db.get_all_cards():
+		var option_ids: Dictionary = {}
+		for option: Dictionary in card["options"]:
+			assert_bool(option.has("id")).is_true()
+			assert_str(option["id"]).is_not_empty()
+			option_ids[option["id"]] = true
+		assert_int(option_ids.size()).is_equal(card["options"].size())
+		if card["id"] not in [
+			"final_burnout",
+			"sponsor_contract_mega_fallout",
+			"sponsor_contract_indie_fallout",
+			"sponsor_contract_finale",
+			"sponsor_contract_callback_honest",
+			"sponsor_contract_callback_legend",
+		]:
+			assert_bool(option_ids.has("a")).is_true()
+			assert_bool(option_ids.has("b")).is_true()
+	var burnout: Dictionary = _db.get_card("final_burnout")
+	assert_str(burnout["options"][0]["id"]).is_equal("accept")
+	assert_str(burnout["options"][1]["id"]).is_equal("defer")
+
+
+## Presentation copy is addressed only through stable locale-independent keys.
+## Both locale catalogues must cover the complete card surface, while the
+## embedded English copy remains an exact migration fallback.
+func test_all_card_localization_keys_are_complete_in_en_and_pl() -> void:
+	var all_keys: Dictionary = {}
+	var cards_english: Dictionary = _read_single_line_po_messages("res://assets/localization/cards_en.po")
+	var cards_polish: Dictionary = _read_single_line_po_messages("res://assets/localization/cards_pl.po")
+	for card: Dictionary in _db.get_all_cards():
+		var expected_text_key: String = "cards.%s.body" % card["id"]
+		assert_str(card["text_key"]).is_equal(expected_text_key)
+		assert_str(cards_english.get(card["text_key"], "")).is_equal(card["text"])
+		assert_str(cards_polish.get(card["text_key"], "")).is_not_empty()
+		all_keys[card["text_key"]] = true
+
+		for option: Dictionary in card["options"]:
+			var key_root: String = "cards.%s.options.%s" % [card["id"], option["id"]]
+			assert_str(option["label_key"]).is_equal("%s.label" % key_root)
+			assert_str(option["reaction_key"]).is_equal("%s.reaction" % key_root)
+			assert_str(cards_english.get(option["label_key"], "")).is_equal(option["label"])
+			assert_str(cards_english.get(option["reaction_key"], "")).is_equal(option["resolution_reaction"])
+			assert_str(cards_polish.get(option["label_key"], "")).is_not_empty()
+			assert_str(cards_polish.get(option["reaction_key"], "")).is_not_empty()
+			all_keys[option["label_key"]] = true
+			all_keys[option["reaction_key"]] = true
+
+	assert_int(all_keys.size()).is_equal(185)
+
+
+func test_all_reactions_have_locale_independent_editorial_pacing() -> void:
+	var valid_values: Array[StringName] = CardContentDatabaseScript.VALID_REACTION_PACING
+	for card: Dictionary in _db.get_all_cards():
+		for option: Dictionary in card["options"]:
+			assert_bool(option.has("reaction_pacing")).is_true()
+			assert_array(valid_values).contains([option["reaction_pacing"]])
+
+
+## Card PO entries intentionally keep every msgid/msgstr on one line so this
+## small test parser can validate source equality without importing resources
+## during test discovery. JSON parsing handles PO's quoted-string escapes.
+func _read_single_line_po_messages(path: String) -> Dictionary:
+	var result: Dictionary = {}
+	var current_id: String = ""
+	for raw_line: String in FileAccess.get_file_as_string(path).split("\n"):
+		if raw_line.begins_with("msgid "):
+			var decoded_id: Variant = JSON.parse_string(raw_line.trim_prefix("msgid "))
+			current_id = decoded_id if decoded_id is String else ""
+		elif raw_line.begins_with("msgstr ") and not current_id.is_empty():
+			var decoded_value: Variant = JSON.parse_string(raw_line.trim_prefix("msgstr "))
+			if decoded_value is String:
+				result[current_id] = decoded_value
+			current_id = ""
+	return result
 
 
 ## AC-2: required top-level fields present and non-empty on every card.
@@ -143,6 +222,22 @@ func test_neutral_cards_have_no_counter_increments() -> void:
 		assert_bool(any_resource_deltas_nonempty).is_true()
 
 
+func test_skill_challenge_cards_have_no_narrative_progression_writes() -> void:
+	var expected_games: Dictionary = {
+		"feed_sprint_challenge": "feed_sprint",
+		"comment_moderation_challenge": "comment_moderation",
+	}
+	for card_id: String in expected_games:
+		var card: Dictionary = _db.get_card(card_id)
+		assert_str(card.get("card_category", "")).is_equal("skill_challenge")
+		assert_str(card.get("spotlight_minigame", "")).is_equal(expected_games[card_id])
+		assert_bool(card["options"][0].get("starts_spotlight", false)).is_true()
+		for option: Dictionary in card["options"]:
+			assert_int(option["resource_deltas"].size()).is_equal(0)
+			assert_int(option["counter_increments"].size()).is_equal(0)
+			assert_bool(option.has("milestone_to_set")).is_false()
+
+
 ## AC-7 (amended): the real measured Reach risky/safe ratio for each of the
 ## 8 pairs matches the GDD's actual authored numbers -- not a blanket
 ## 1.4-1.8 bound, since 3 of 8 pairs exceed it in the source GDD itself. See
@@ -190,7 +285,11 @@ func test_non_milestone_cards_have_no_milestone_to_set() -> void:
 ## brand_deal_choice, or fan_in_trouble (a flat cost, never a qualifying
 ## reward) -- absent on all other cards. See suite header note.
 func test_sponsors_key_restricted_to_qualifying_cards_plus_fan_in_trouble_cost() -> void:
-	var allowed_ids: Array[String] = ["sponsor_offer_shady", "brand_deal_choice", "fan_in_trouble"]
+	var allowed_ids: Array[String] = [
+		"sponsor_offer_shady", "brand_deal_choice", "fan_in_trouble",
+		"sponsor_contract_mega_fallout", "sponsor_contract_indie_fallout",
+		"sponsor_contract_finale", "sponsor_contract_callback_honest",
+	]
 	for card: Dictionary in _db.get_all_cards():
 		for option: Dictionary in card["options"]:
 			if option["resource_deltas"].has(&"Sponsors"):
@@ -199,7 +298,11 @@ func test_sponsors_key_restricted_to_qualifying_cards_plus_fan_in_trouble_cost()
 
 ## AC-14: each qualifying card has at least one option with Sponsors > 0.
 func test_qualifying_cards_have_at_least_one_positive_sponsors_option() -> void:
-	for card_id: String in ["sponsor_offer_shady", "brand_deal_choice"]:
+	for card_id: String in [
+		"sponsor_offer_shady", "brand_deal_choice",
+		"sponsor_contract_mega_fallout", "sponsor_contract_indie_fallout",
+		"sponsor_contract_finale", "sponsor_contract_callback_honest",
+	]:
 		var card: Dictionary = _db.get_card(card_id)
 		var any_positive: bool = false
 		for option: Dictionary in card["options"]:
@@ -234,9 +337,7 @@ func test_algorithm_hack_milestone_has_no_current_consumer() -> void:
 ## AC-17: the non-milestone-bearing cards' options (plus the non-milestone
 ## option on each of the 3 milestone cards) structurally lack the
 ## milestone_to_set key -- confirming absence is correct, not missing data.
-## Count is 55 as of wave 3 (2026-07-28): 29 cards * 2 options = 58, minus
-## the 3 milestone-bearing options -- none of the Tier-5 signature cards,
-## the Wypalenie card, nor the wave-2/wave-3 cards carries a milestone_to_set.
+## 37 cards * 2 options = 74, minus the 3 milestone-bearing options = 71.
 func test_absence_of_milestone_to_set_is_structural_not_missing() -> void:
 	var non_milestone_option_count: int = 0
 	for card: Dictionary in _db.get_all_cards():
@@ -249,7 +350,39 @@ func test_absence_of_milestone_to_set_is_structural_not_missing() -> void:
 			if not is_the_milestone_option:
 				assert_bool(option.has("milestone_to_set")).is_false()
 				non_milestone_option_count += 1
-	assert_int(non_milestone_option_count).is_equal(55)
+	assert_int(non_milestone_option_count).is_equal(71)
+
+
+func test_polish_humour_showcase_card_is_locale_only_and_mechanically_stable() -> void:
+	var card: Dictionary = _db.get_card("polish_export_disaster")
+	assert_str(card.get("card_category", "")).is_equal("cultural_humor")
+	assert_str(card["trigger_condition"]).is_equal("always")
+	assert_int(card["options"].size()).is_equal(2)
+	assert_float(card["options"][0]["resource_deltas"][&"Reach"]).is_equal_approx(140.0, 0.0001)
+	assert_float(card["options"][1]["resource_deltas"][&"Morale"]).is_equal_approx(6.0, 0.0001)
+
+
+func test_literal_quotes_are_explicitly_polish_only_and_never_english_fallbacks() -> void:
+	var cards_english: Dictionary = _read_single_line_po_messages("res://assets/localization/cards_en.po")
+	var cards_polish: Dictionary = _read_single_line_po_messages("res://assets/localization/cards_pl.po")
+	var seen_quote_ids: Dictionary = {}
+	for card_id: String in CardContentDatabaseScript.POLISH_LITERAL_QUOTE_OPTIONS:
+		var card: Dictionary = _db.get_card(card_id)
+		var quote_options: Dictionary = CardContentDatabaseScript.POLISH_LITERAL_QUOTE_OPTIONS[card_id]
+		for option: Dictionary in card["options"]:
+			var option_id: String = option["id"]
+			if not quote_options.has(option_id):
+				continue
+			assert_str(String(option.get("cultural_reference_locale", ""))).is_equal("pl_PL")
+			assert_str(String(option.get("literal_quote_id", ""))).is_equal(String(quote_options[option_id]))
+			assert_bool(seen_quote_ids.has(option["literal_quote_id"])).is_false()
+			seen_quote_ids[option["literal_quote_id"]] = true
+			var key: String = String(option["reaction_key"])
+			assert_str(cards_polish.get(key, "")).is_not_empty()
+			assert_str(cards_english.get(key, "")).is_equal(option["resolution_reaction"])
+			assert_str(cards_english.get(key, "")).is_not_equal(cards_polish.get(key, ""))
+
+	assert_int(seen_quote_ids.size()).is_equal(7)
 
 
 ## get_card() returns an empty Dictionary for an unknown id -- not tested by

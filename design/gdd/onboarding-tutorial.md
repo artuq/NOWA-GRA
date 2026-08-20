@@ -36,6 +36,8 @@ This GDD resolves Action System's Open Question: "the first 3 actions without ca
 
 > **REVISION (2026-07-06, quick-spec `first-card-hook-onboarding-2026-07-06.md`, user decision)**: a FRESH session now skips `phase_pure_action` entirely — new games boot directly in `phase_first_card_pending` with the cooldown pre-zeroed, so the **first card lands right after action #1** (~6–10 s, inside web portals' 15–20 s judgment window; motivation: `design/reference/web-publishing-best-practices-2026-07-06.md`). The variety-gate machinery is RETAINED in code (corrupted-save fallback + future tutorial layer; `_completed_types` keeps recording) but no longer gates the first card. The Tuning Knobs' "Required action types before first card: All 3" design lock is superseded by this revision.
 
+> **REVISION (2026-08-13, quick-spec `early-sponsor-and-polish-humor-showcase-2026-08-13.md`, playtest finding)**: after the first weighted ordinary card, the first career guarantees `feed_sprint_challenge` → `brand_deal_choice` → `comment_moderation_challenge` → `polish_export_disaster`. This exposes both minigames, guarantees at least one Sponsor regardless of the brand-deal choice, and demonstrates the Polish cultural-humour layer. Each showcase card is persisted as seen and appears only once; after the sequence, normal cooldown and weighted selection resume.
+
 | State | Description | Transition |
 |---|---|---|
 | `phase_pure_action` | Decision Card System suppressed, not all 3 action types tried yet | → `phase_first_card_pending` when all 3 action types have each completed ≥1 time. **Fresh sessions skip this phase (2026-07-06 revision)** — reachable only via legacy/corrupted-save fallback |

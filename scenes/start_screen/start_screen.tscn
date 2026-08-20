@@ -66,6 +66,34 @@ theme_override_font_sizes/font_size = 48
 text = "King of Cringe"
 horizontal_alignment = 1
 
+[node name="LanguagePromptLabel" type="Label" parent="CenterBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 24
+text = "Choose language / Wybierz język"
+horizontal_alignment = 1
+
+[node name="LanguageButtons" type="HBoxContainer" parent="CenterBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EnglishButton" type="Button" parent="CenterBox/LanguageButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(174, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "English"
+
+[node name="PolishButton" type="Button" parent="CenterBox/LanguageButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(174, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Polski"
+
 [node name="ButtonSpacer" type="Control" parent="CenterBox"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
@@ -75,14 +103,14 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(360, 64)
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "Continue"
+text = "UI_START_CONTINUE"
 
 [node name="NewGameButton" type="Button" parent="CenterBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(360, 52)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "New Game"
+text = "UI_START_NEW_GAME"
 
 [node name="ConfirmPanel" type="Control" parent="."]
 unique_name_in_owner = true
@@ -128,7 +156,7 @@ theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 30
-text = "Delete career?"
+text = "UI_START_DELETE_TITLE"
 horizontal_alignment = 1
 
 [node name="ConfirmBodyLabel" type="Label" parent="ConfirmPanel/Panel/VBox"]
@@ -137,7 +165,7 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 22
-text = "This wipes the whole save — meta-progression included. The previous backup gets replaced."
+text = "UI_START_DELETE_BODY"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -146,10 +174,10 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Delete career"
+text = "UI_START_DELETE_CONFIRM"
 
 [node name="ConfirmCancelButton" type="Button" parent="ConfirmPanel/Panel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "Cancel"
+text = "UI_COMMON_CANCEL"

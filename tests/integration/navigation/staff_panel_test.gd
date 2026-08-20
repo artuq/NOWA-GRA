@@ -7,15 +7,19 @@ extends GdUnitTestSuite
 const PANEL_SCENE: String = "res://scenes/action_screen/staff_panel.tscn"
 
 var _sponsors_before: float
+var _locale_snapshot: String = ""
 
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	SaveSystem._debounce_timer.stop()
 	_sponsors_before = ResourceManager.get_resource(&"Sponsors")
 	StaffSystem.reset_era_state()
 
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	StaffSystem.reset_era_state()
 	ResourceManager.apply_delta({&"Sponsors": _sponsors_before - ResourceManager.get_resource(&"Sponsors")})
 	SaveSystem._debounce_timer.stop()
@@ -77,6 +81,27 @@ func test_hire_updates_count_effect_and_next_cost() -> void:
 	assert_str(stat.text).contains("Hired: 1")
 	assert_str(stat.text).contains("1.3")  # F1 troll n=1
 	assert_str((s.find_child("Row1HireButton", true, false) as Button).text).contains("7 Sponsors")
+
+
+func test_open_panel_refreshes_after_polish_language_change() -> void:
+	_set_sponsors(0.0)
+	var runner: GdUnitSceneRunner = scene_runner(PANEL_SCENE)
+	var s: Control = _open(runner)
+	TranslationServer.set_locale("pl_PL")
+	SettingsSystem.language_changed.emit(&"pl", &"pl_PL")
+	await get_tree().process_frame
+
+	assert_str((s.find_child("Row1NameLabel", true, false) as Label).text).is_equal("Trolle")
+	assert_str((s.find_child("Row1StatLabel", true, false) as Label).text).contains("Zatrudnieni: 0")
+	assert_str((s.find_child("Row1HireButton", true, false) as Button).text).contains("Zatrudnij")
+	assert_str((s.find_child("Row1ExplanationLabel", true, false) as Label).text).contains("Brakuje")
+
+	TranslationServer.set_locale("en")
+	SettingsSystem.language_changed.emit(&"en", &"en")
+	await get_tree().process_frame
+	assert_str((s.find_child("Row1NameLabel", true, false) as Label).text).is_equal("Trolls")
+	assert_str((s.find_child("Row1EffectLabel", true, false) as Label).text).contains("Haters grow")
+	assert_str((s.find_child("Row1HireButton", true, false) as Button).text).contains("Hire")
 
 
 ## AC: the panel requests closing rather than hiding itself (ADR-0014's

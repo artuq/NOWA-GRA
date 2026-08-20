@@ -1,0 +1,75 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/ui/sponsor_contract_indicator.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="ContractPanel"]
+bg_color = Color(0.105882, 0.12549, 0.121569, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.360784, 0.560784, 0.407843, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="ContractProgressFill"]
+bg_color = Color(0.360784, 0.760784, 0.478431, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="SponsorContractIndicator" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 68)
+mouse_filter = 2
+theme_override_styles/panel = SubResource("ContractPanel")
+script = ExtResource("1")
+
+[node name="Content" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="ContractTitleStageLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.552941, 0.878431, 0.631373, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 21
+text = "SPONSOR_CONTRACT_TITLE_STAGE"
+
+[node name="StatusRow" type="HBoxContainer" parent="Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="ContractStatusLabel" type="Label" parent="Content/StatusRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.92, 0.94, 0.93, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 19
+text = "SPONSOR_CONTRACT_CAMPAIGN_PROGRESS"
+text_overrun_behavior = 3
+
+[node name="ContractProgressBar" type="ProgressBar" parent="Content/StatusRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(172, 12)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/fill = SubResource("ContractProgressFill")
+max_value = 3.0
+value = 0.0
+show_percentage = false

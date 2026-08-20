@@ -36,6 +36,8 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 | 17 | Prestige/Checkpoint System | Progression | Alpha | Designed | design/gdd/prestige-checkpoint-system.md | Class Path System, Offline Progress System, Save/Persistence System |
 | 18 | Cosmetic Persona Customization | UI | Full Vision | Designed (revised post-review) | design/gdd/cosmetic-persona-customization.md | Class Path System, History Flag Manager |
 | 19 | Settings System (inferred, no dedicated GDD) | Core | Vertical Slice | Designed (retrofit) | design/art/art-bible.md §7 + docs/architecture/adr-0015-settings-system-retrofit.md | — |
+| 20 | Algorithm Contract Return Loop | Meta / Progression | Alpha | In Design | design/gdd/algorithm-contract-return-loop.md | Offline Progress System, Offline Report Screen, Team/Staff Management, Prestige/Checkpoint System, Save/Persistence System |
+| 21 | Sponsor Career Contract | Narrative / Progression | Vertical Slice | Implemented (2026-08-13) | design/gdd/sponsor-career-contract.md | Decision Card System, Action System, Save/Persistence System |
 
 ---
 
@@ -149,8 +151,8 @@ Król Cringe'u jest idle/incremental tycoonem na mobile, gdzie gracz wybiera akc
 
 | Metric | Count |
 |--------|-------|
-| Total systems identified | 19 |
-| Design docs started | 16 |
+| Total systems identified | 20 |
+| Design docs started | 17 |
 | Design docs reviewed | 4 |
 | Design docs approved | 0 |
 | MVP systems designed | 11/11 |

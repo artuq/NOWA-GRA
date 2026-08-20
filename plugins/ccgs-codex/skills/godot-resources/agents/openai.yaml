@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Resources"
+  short_description: "Imported game-development capability: Godot Resources."
+  default_prompt: "Use $godot-resources for this game-development task."

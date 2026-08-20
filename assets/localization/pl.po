@@ -1,0 +1,302 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: King of Cringe\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+
+# Settings
+msgid "UI_SETTINGS_TITLE"
+msgstr "Ustawienia"
+
+msgid "UI_SETTINGS_REDUCE_MOTION"
+msgstr "Ogranicz animacje"
+
+msgid "UI_SETTINGS_LANGUAGE"
+msgstr "Język"
+
+msgid "UI_SETTINGS_CLOSE"
+msgstr "Zamknij"
+
+msgid "LANGUAGE_SYSTEM"
+msgstr "Systemowy"
+
+msgid "LANGUAGE_ENGLISH"
+msgstr "English"
+
+msgid "LANGUAGE_POLISH"
+msgstr "Polski"
+
+msgid "UI_SETTINGS_LANGUAGE_SYSTEM"
+msgstr "Systemowy"
+
+msgid "UI_SETTINGS_LANGUAGE_ENGLISH"
+msgstr "English"
+
+msgid "UI_SETTINGS_LANGUAGE_POLISH"
+msgstr "Polski"
+
+msgid "UI_SETTINGS_LANGUAGE_HINT"
+msgstr "Wybierz język gry."
+
+# Start screen
+msgid "UI_START_LANGUAGE_PROMPT"
+msgstr "Choose language / Wybierz język"
+
+msgid "UI_START_PLAY"
+msgstr "Rozpocznij grę"
+
+msgid "UI_START_CONTINUE"
+msgstr "Kontynuuj"
+
+msgid "UI_START_NEW_GAME"
+msgstr "Nowa kariera"
+
+msgid "UI_START_DELETE_TITLE"
+msgstr "Usunąć karierę?"
+
+msgid "UI_START_DELETE_BODY"
+msgstr "To wyczyści cały zapis, łącznie z metaprogresem. Poprzednia kopia zapasowa zostanie zastąpiona."
+
+msgid "UI_START_DELETE_CONFIRM"
+msgstr "Usuń karierę"
+
+msgid "UI_COMMON_CANCEL"
+msgstr "Anuluj"
+
+# Main screen and resources
+msgid "UI_NAV_PATH"
+msgstr "Ścieżka"
+
+msgid "UI_NAV_BONUSES"
+msgstr "Bonusy"
+
+msgid "UI_NAV_TEAM"
+msgstr "Ekipa"
+
+msgid "RESOURCE_REACH_FORMAT"
+msgstr "Zasięg: %s"
+
+msgid "RESOURCE_CRINGE_FORMAT"
+msgstr "Cringe: %s"
+
+msgid "RESOURCE_HATERS_FORMAT"
+msgstr "Hejterzy: %s"
+
+msgid "RESOURCE_MORALE_FORMAT"
+msgstr "Morale: %s"
+
+msgid "RESOURCE_SPONSORS_FORMAT"
+msgstr "Sponsorzy: %s"
+
+msgid "MORALE_HIGH"
+msgstr "Wysokie"
+
+msgid "MORALE_NORMAL"
+msgstr "Normalne"
+
+msgid "MORALE_LOW"
+msgstr "Niskie"
+
+msgid "MORALE_CRITICAL"
+msgstr "Krytyczne"
+
+# Cards
+msgid "CARD_OPTION_A"
+msgstr "Opcja A"
+
+msgid "CARD_OPTION_B"
+msgstr "Opcja B"
+
+msgid "CARD_REACTION_FALLBACK"
+msgstr "Algorytm odnotowuje twój wybór i scrolluje dalej."
+
+msgid "CARD_SPOTLIGHT_COMPLETE"
+msgstr "Wyzwanie ukończone: %s."
+
+msgid "CARD_BURNOUT_NO_PATH"
+msgstr "Akceptacja niczego nie zapisze — w tej erze nie masz aktywnej ścieżki."
+
+msgid "CARD_BURNOUT_CAP_REACHED"
+msgstr "Akceptacja nie da nic nowego — osiągnięto limit bonusu."
+
+msgid "CARD_BURNOUT_BANK_FLAT"
+msgstr "Akceptacja zapisze +%d %s na stałe."
+
+msgid "CARD_BURNOUT_BANK_PERCENT"
+msgstr "Akceptacja zapisze +%s%% %s na stałe."
+
+msgid "RESOURCE_REACH"
+msgstr "zasięgu"
+
+msgid "RESOURCE_SPONSOR_INCOME"
+msgstr "przychodu od sponsorów"
+
+msgid "RESOURCE_HATERS_RESISTANCE"
+msgstr "odporności na hejterów"
+
+msgid "RESOURCE_ERA_START_SPONSORS"
+msgstr "sponsorów na start ery"
+
+msgid "RESOURCE_REACH_REWARD"
+msgstr "zasięgu"
+
+msgid "RESOURCE_CRINGE_REWARD"
+msgstr "cringe'u"
+
+msgid "RESOURCE_HATERS_REWARD"
+msgstr "hejterów"
+
+msgid "RESOURCE_MORALE_REWARD"
+msgstr "morale"
+
+msgid "RESOURCE_SPONSORS_REWARD"
+msgstr "sponsorów"
+
+# Feed Sprint
+msgid "MINIGAME_FEED_TITLE"
+msgstr "SPRINT FEEDU"
+
+msgid "MINIGAME_FEED_INSTRUCTION"
+msgstr "Łap TRENDY. Unikaj STRIKE'ÓW."
+
+msgid "MINIGAME_FEED_PROGRESS"
+msgstr "Zdarzenie %d / %d"
+
+msgid "MINIGAME_FEED_SCORE"
+msgstr "Trendy: %d / %d"
+
+msgid "MINIGAME_FEED_LEFT"
+msgstr "LEWO"
+
+msgid "MINIGAME_FEED_CENTER"
+msgstr "ŚRODEK"
+
+msgid "MINIGAME_FEED_RIGHT"
+msgstr "PRAWO"
+
+msgid "MINIGAME_FEED_TARGET_TREND"
+msgstr "CEL: TREND — ŁAP"
+
+msgid "MINIGAME_FEED_TARGET_STRIKE"
+msgstr "UWAGA: STRIKE — UNIKAJ"
+
+msgid "MINIGAME_FEED_TREND"
+msgstr "TREND"
+
+msgid "MINIGAME_FEED_STRIKE"
+msgstr "STRIKE"
+
+msgid "MINIGAME_FEED_TOOLTIP_TREND"
+msgstr "Złap ten trend"
+
+msgid "MINIGAME_FEED_TOOLTIP_STRIKE"
+msgstr "Uniknij strike'a"
+
+msgid "MINIGAME_FEED_YOU"
+msgstr "TY"
+
+msgid "MINIGAME_LEFT_BUTTON"
+msgstr "« LEWO"
+
+msgid "MINIGAME_RIGHT_BUTTON"
+msgstr "PRAWO »"
+
+msgid "MINIGAME_SKIP"
+msgstr "Pomiń — bez kary"
+
+msgid "MINIGAME_BRIEF_TITLE"
+msgstr "ROZPLĄCZ BRIEF"
+
+msgid "MINIGAME_BRIEF_INSTRUCTION"
+msgstr "Ułóż jedyną obronną kolejność: PRAWNY pierwszy, DOWÓD przed OBIETNICĄ, a CTA na końcu."
+
+msgid "MINIGAME_BRIEF_SELECTION"
+msgstr "Kolejność: %s"
+
+msgid "MINIGAME_BRIEF_EMPTY"
+msgstr "stuknij punkty poniżej"
+
+msgid "MINIGAME_BRIEF_UNDO"
+msgstr "Cofnij"
+
+msgid "MINIGAME_BRIEF_SUBMIT"
+msgstr "Wyślij brief"
+
+msgid "MINIGAME_BRIEF_WRONG"
+msgstr "Wykryto sprzeczność. Próba %d/%d."
+
+msgid "MINIGAME_BRIEF_CLAIM"
+msgstr "Obiecaj niemożliwe"
+
+msgid "MINIGAME_BRIEF_CTA"
+msgstr "Opublikuj wezwanie do działania"
+
+msgid "MINIGAME_BRIEF_LEGAL"
+msgstr "Przeczytaj ostrzeżenie prawne"
+
+msgid "MINIGAME_BRIEF_PROOF"
+msgstr "Sprawdź dowód kampanii"
+
+# Comment Moderation
+msgid "MINIGAME_MOD_TITLE"
+msgstr "MODERACJA KOMENTARZY"
+
+msgid "MINIGAME_MOD_INSTRUCTION"
+msgstr "Zostaw fanów i sensowny feedback. Usuwaj hejt, spam i scamy."
+
+msgid "MINIGAME_MOD_PROGRESS"
+msgstr "Komentarz %d / %d"
+
+msgid "MINIGAME_MOD_SCORE"
+msgstr "Poprawne: %d"
+
+msgid "MINIGAME_MOD_COMMENT_PLACEHOLDER"
+msgstr "Komentarz"
+
+msgid "MINIGAME_MOD_REMOVE"
+msgstr "« USUŃ"
+
+msgid "MINIGAME_MOD_KEEP"
+msgstr "ZOSTAW »"
+
+msgid "MINIGAME_MOD_CORRECT"
+msgstr "DOBRZE"
+
+msgid "MINIGAME_MOD_WRONG"
+msgstr "ŹLE"
+
+msgid "MINIGAME_MOD_MISSED"
+msgstr "ZA PÓŹNO"
+
+msgid "MINIGAME_COMMENT_TUTORIAL_HELPED"
+msgstr "Ten poradnik serio pomógł. Dzięki!"
+
+msgid "MINIGAME_COMMENT_FREE_FOLLOWERS"
+msgstr "DARMOWI FOLLOWERSI — kliknij link w profilu TERAZ"
+
+msgid "MINIGAME_COMMENT_AUDIO_FEEDBACK"
+msgstr "Dźwięk przesterowuje przy 01:42, ale temat jest dobry."
+
+msgid "MINIGAME_COMMENT_DELETE_CHANNEL"
+msgstr "Nikt nie pytał. Usuń kanał."
+
+msgid "MINIGAME_COMMENT_JACKET"
+msgstr "Skąd masz tę kurtkę?"
+
+msgid "MINIGAME_COMMENT_CRYPTO_SCAM"
+msgstr "Dziś zarobiłem 9000 zł! Napisz do mnie na CryptoGramie."
+
+msgid "MINIGAME_COMMENT_CAPTIONS"
+msgstr "Możesz następnym razem dodać napisy?"
+
+msgid "MINIGAME_COMMENT_DISGUSTING"
+msgstr "Wyglądasz obrzydliwie. Wszyscy tak myślą."
+
+msgid "MINIGAME_COMMENT_PART_TWO"
+msgstr "Poproszę część drugą — końcówka zrobiła się ciekawa."
+
+msgid "MINIGAME_COMMENT_INVESTMENT_SPAM"
+msgstr "NAJLEPSZE SYGNAŁY INWESTYCYJNE na totalnie-prawdziwe.example"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Setup Engine"
+  short_description: "Run the CCGS Setup Engine workflow in Codex."
+  default_prompt: "Use $setup-engine to handle this game-development task."

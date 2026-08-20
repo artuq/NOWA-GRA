@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Ai"
+  short_description: "Imported game-development capability: Game Ai."
+  default_prompt: "Use $game-ai for this game-development task."

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "contracts": [
+    {
+      "id": "drama",
+      "revision": 1,
+      "name_key": "ALGORITHM_CONTRACT_DRAMA_NAME",
+      "description_key": "ALGORITHM_CONTRACT_DRAMA_DESC",
+      "terms": {"haters_multiplier": 1.5}
+    },
+    {
+      "id": "business",
+      "revision": 1,
+      "name_key": "ALGORITHM_CONTRACT_BUSINESS_NAME",
+      "description_key": "ALGORITHM_CONTRACT_BUSINESS_DESC",
+      "terms": {"sponsors_per_hour": 1.5, "units_per_sponsor": 1000}
+    },
+    {
+      "id": "detox",
+      "revision": 1,
+      "name_key": "ALGORITHM_CONTRACT_DETOX_NAME",
+      "description_key": "ALGORITHM_CONTRACT_DETOX_DESC",
+      "terms": {"haters_per_hour": 10.0, "morale_per_hour": 12.0}
+    }
+  ],
+  "ladder": [
+    {"rung": 1, "title_key": "CREATOR_EMPIRE_RUNG_1", "eras": 0, "mastery": 0, "contracts": 0},
+    {"rung": 2, "title_key": "CREATOR_EMPIRE_RUNG_2", "eras": 1, "mastery": 1, "contracts": 2},
+    {"rung": 3, "title_key": "CREATOR_EMPIRE_RUNG_3", "eras": 2, "mastery": 3, "contracts": 5},
+    {"rung": 4, "title_key": "CREATOR_EMPIRE_RUNG_4", "eras": 4, "mastery": 6, "contracts": 10},
+    {"rung": 5, "title_key": "CREATOR_EMPIRE_RUNG_5", "eras": 6, "mastery": 10, "contracts": 18},
+    {"rung": 6, "title_key": "CREATOR_EMPIRE_RUNG_6", "eras": 9, "mastery": 14, "contracts": 30},
+    {"rung": 7, "title_key": "CREATOR_EMPIRE_RUNG_7", "eras": 12, "mastery": 18, "contracts": 45}
+  ]
+}

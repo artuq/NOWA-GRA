@@ -10,10 +10,13 @@ var _reach_before: float
 var _cringe_before: float
 var _haters_before: float
 var _morale_before: float
+var _prestige_totals_snapshot: Dictionary[StringName, float] = {}
 
 
 func before_test() -> void:
 	SaveSystem._debounce_timer.stop()
+	_prestige_totals_snapshot = PrestigeSystem.meta_bonus_totals.duplicate()
+	PrestigeSystem.meta_bonus_totals.clear()
 	_sponsors_before = ResourceManager.get_resource(&"Sponsors")
 	_reach_before = ResourceManager.get_resource(&"Reach")
 	_cringe_before = ResourceManager.get_resource(&"Cringe")
@@ -24,6 +27,9 @@ func before_test() -> void:
 
 func after_test() -> void:
 	StaffSystem.reset_era_state()
+	PrestigeSystem.meta_bonus_totals.clear()
+	for bonus_type: StringName in _prestige_totals_snapshot:
+		PrestigeSystem.meta_bonus_totals[bonus_type] = _prestige_totals_snapshot[bonus_type]
 	ResourceManager.apply_delta({
 		&"Sponsors": _sponsors_before - ResourceManager.get_resource(&"Sponsors"),
 		&"Reach": _reach_before - ResourceManager.get_resource(&"Reach"),

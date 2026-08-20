@@ -13,9 +13,12 @@ extends GdUnitTestSuite
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
 var _onboarding_phase_snapshot: int
+var _locale_snapshot: String
 
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_onboarding_phase_snapshot = OnboardingGate.phase
 	OnboardingGate.phase = OnboardingGate.Phase.NORMAL
 	DecisionCardSystem.state = DecisionCardSystem.State.COOLDOWN
@@ -25,6 +28,7 @@ func before_test() -> void:
 
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	OnboardingGate.phase = _onboarding_phase_snapshot
 	DecisionCardSystem.state = DecisionCardSystem.State.COOLDOWN
 	var restore: Dictionary[StringName, float] = {}
@@ -206,7 +210,17 @@ func test_backgrounding_during_resolving_leaves_clean_state() -> void:
 	var card_node: Control = screen.find_child("Card", true, false) as Control
 
 	screen.resolve(0)
-	await get_tree().process_frame  # mid-pulse/shake, state == RESOLVING
+	# resolve() creates both tweens synchronously before its first await. Notify
+	# immediately so the RESOLVING precondition is deterministic: waiting even
+	# one frame can outlive the deliberately shortened 0.05 s test beat on a
+	# slow headless frame (BUG-004).
+	assert_int(screen.state).is_equal(CardScreen.State.RESOLVING)
+	assert_bool(screen._juice_pulse_tween.is_running()).is_true()
+	assert_bool(screen._juice_shake_tween != null and screen._juice_shake_tween.is_running()).is_true()
+	# Represent a deterministic mid-pulse transform without advancing wall time,
+	# so the post-notification scale assertion proves the reset branch ran.
+	card_node.scale = Vector2(1.1, 1.1)
+	assert_that(card_node.scale).is_not_equal(Vector2.ONE)
 
 	screen.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
 
@@ -217,18 +231,18 @@ func test_backgrounding_during_resolving_leaves_clean_state() -> void:
 	await get_tree().create_timer(0.4).timeout
 
 
-# --- AC-8: payoff-beat clamp (TR-juice-005) ---
+# --- AC-8: locale-independent payoff pacing (TR-juice-005) ---
 
-func test_payoff_beat_clamps_to_gdd_bounds_at_default_knobs() -> void:
+func test_payoff_beat_uses_authored_pacing_class_at_default_knobs() -> void:
 	# Fresh screen, DEFAULT knobs (not the lowered test values).
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/card_screen/card_screen.tscn")
 	var screen: Node = runner.scene()
 
-	assert_float(screen._resolution_beat_duration("", false)).is_equal_approx(1.5, 0.001)          # floor
-	assert_float(screen._resolution_beat_duration("a".repeat(30), false)).is_equal_approx(2.0, 0.001)   # midpoint
-	assert_float(screen._resolution_beat_duration("a".repeat(60), false)).is_equal_approx(2.5, 0.001)   # ceiling
-	assert_float(screen._resolution_beat_duration("a".repeat(200), false)).is_equal_approx(2.5, 0.001)  # clamped
+	assert_float(screen._resolution_beat_duration("short", false)).is_equal_approx(1.5, 0.001)
+	assert_float(screen._resolution_beat_duration("medium", false)).is_equal_approx(2.0, 0.001)
+	assert_float(screen._resolution_beat_duration("long", false)).is_equal_approx(2.5, 0.001)
+	assert_float(screen._resolution_beat_duration("unknown", false)).is_equal_approx(2.0, 0.001)
 	# card-ui.md's milestone bonus rides ON TOP of the text clamp (documented
 	# GDD reconciliation — juice GDD clamps text scaling, card-ui GDD demands
 	# the heavier milestone beat).
-	assert_float(screen._resolution_beat_duration("a".repeat(200), true)).is_equal_approx(3.5, 0.001)
+	assert_float(screen._resolution_beat_duration("long", true)).is_equal_approx(3.5, 0.001)

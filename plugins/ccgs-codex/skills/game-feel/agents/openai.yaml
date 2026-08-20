@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Feel"
+  short_description: "Imported game-development capability: Game Feel."
+  default_prompt: "Use $game-feel for this game-development task."

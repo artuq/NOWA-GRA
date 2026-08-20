@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Ui Ux"
+  short_description: "Imported game-development capability: Game Ui Ux."
+  default_prompt: "Use $game-ui-ux for this game-development task."

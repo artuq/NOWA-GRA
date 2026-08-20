@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Qa"
+  short_description: "Run the CCGS Team Qa workflow in Codex."
+  default_prompt: "Use $team-qa to handle this game-development task."

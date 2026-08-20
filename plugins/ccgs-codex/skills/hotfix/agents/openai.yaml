@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hotfix"
+  short_description: "Run the CCGS Hotfix workflow in Codex."
+  default_prompt: "Use $hotfix to handle this game-development task."

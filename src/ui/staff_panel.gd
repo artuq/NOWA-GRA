@@ -23,23 +23,23 @@ extends Control
 
 signal close_requested
 
-## Display order + copy. Effect lines state the mechanic plainly, no value
-## judgment (art-bible §1 deadpan register).
+## Display order + localization keys. Effect lines state the mechanic plainly,
+## with no value judgment (art-bible §1 deadpan register).
 const _ROWS: Array[Dictionary] = [
 	{
 		"role": &"troll",
-		"name": "Trolls",
-		"effect": "Multiplies how fast Haters grow",
+		"name_key": &"META_STAFF_TROLL_NAME",
+		"effect_key": &"META_STAFF_TROLL_EFFECT",
 	},
 	{
 		"role": &"assistant",
-		"name": "Assistants",
-		"effect": "Multiplies offline progress (offline only)",
+		"name_key": &"META_STAFF_ASSISTANT_NAME",
+		"effect_key": &"META_STAFF_ASSISTANT_EFFECT",
 	},
 	{
 		"role": &"sponsor_manager",
-		"name": "Sponsor Managers",
-		"effect": "Multiplies Sponsors paid by sponsor cards",
+		"name_key": &"META_STAFF_SPONSOR_MANAGER_NAME",
+		"effect_key": &"META_STAFF_SPONSOR_MANAGER_EFFECT",
 	},
 ]
 
@@ -56,17 +56,21 @@ const _ROWS: Array[Dictionary] = [
 
 func _ready() -> void:
 	visible = false
+	_sponsors_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	for label: Label in _name_labels + _effect_labels + _stat_labels + _explanation_labels:
+		label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	for button: Button in _hire_buttons:
+		button.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	visibility_changed.connect(_on_visibility_changed)
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	for i in _ROWS.size():
-		_name_labels[i].text = _ROWS[i]["name"]
-		_effect_labels[i].text = _ROWS[i]["effect"]
 		_hire_buttons[i].pressed.connect(_on_hire_pressed.bind(i))
 	StaffSystem.staff_hired.connect(_on_staff_changed)
 	StaffSystem.staff_reset.connect(_on_staff_reset)
 	# Affordability can flip while the panel sits open (a card resolving
 	# underneath grants Sponsors), so track the resource too.
 	ResourceManager.resource_changed.connect(_on_resource_changed)
+	SettingsSystem.language_changed.connect(_on_language_changed)
 
 
 func _on_visibility_changed() -> void:
@@ -89,6 +93,11 @@ func _on_resource_changed(name: StringName, _new_value: float, _old: float) -> v
 		_refresh_all()
 
 
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
+	if visible:
+		_refresh_all()
+
+
 ## Hire handler for row [param i]. StaffSystem.hire() re-checks affordability
 ## itself and rejects cleanly, so a stale enabled button can never overspend;
 ## the unconditional refresh afterwards re-syncs either way.
@@ -99,23 +108,25 @@ func _on_hire_pressed(i: int) -> void:
 
 func _refresh_all() -> void:
 	var sponsors: int = int(ResourceManager.get_resource(&"Sponsors"))
-	_sponsors_label.text = "Sponsors: %d" % sponsors
+	_sponsors_label.text = tr("META_STAFF_SPONSORS") % sponsors
 	for i in _ROWS.size():
 		var role: StringName = _ROWS[i]["role"]
+		_name_labels[i].text = tr(_ROWS[i]["name_key"])
+		_effect_labels[i].text = tr(_ROWS[i]["effect_key"])
 		var count: int = StaffSystem.get_staff_count(role)
 		var multiplier: float = StaffSystem.staff_multiplier(role, count)
-		_stat_labels[i].text = "Hired: %d   Effect: ×%s" % [count, _fmt(multiplier)]
+		_stat_labels[i].text = tr("META_STAFF_STATS") % [count, _fmt(multiplier)]
 
 		var cost: int = StaffSystem.get_next_hire_cost(role)
 		var button: Button = _hire_buttons[i]
 		var explanation: Label = _explanation_labels[i]
-		button.text = "Hire — %d Sponsors" % cost
+		button.text = tr("META_STAFF_HIRE") % cost
 		if StaffSystem.can_hire(role):
 			button.disabled = false
 			explanation.visible = false
 		else:
 			button.disabled = true
-			explanation.text = "Need %d more Sponsors" % (cost - sponsors)
+			explanation.text = tr("META_STAFF_SHORTFALL") % (cost - sponsors)
 			explanation.visible = true
 
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Signals Groups"
+  short_description: "Imported game-development capability: Godot Signals Groups."
+  default_prompt: "Use $godot-signals-groups for this game-development task."

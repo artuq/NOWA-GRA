@@ -1,0 +1,4 @@
+interface:
+  display_name: "Threejs Gltf Loading"
+  short_description: "Imported game-development capability: Threejs Gltf Loading."
+  default_prompt: "Use $threejs-gltf-loading for this game-development task."

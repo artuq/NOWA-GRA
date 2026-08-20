@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review All Gdds"
+  short_description: "Run the CCGS Review All Gdds workflow in Codex."
+  default_prompt: "Use $review-all-gdds to handle this game-development task."

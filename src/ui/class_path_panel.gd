@@ -65,18 +65,21 @@ const PATH_IDS: Array[StringName] = [
 	&"pato_streamer", &"guru_celebryta", &"ekspert_niszowy", &"biznesmen_contentu",
 ]
 
-## English, non-judgmental display names (Core Rule 8 / Anti-Pillar -- no
-## moral framing). "Trash Streamer" / "Guru Celeb" are the existing
-## user-approved names from ClassPathHudIndicator's _DISPLAY_NAMES (Story
-## class-path/002, user decision 2026-07-05). "Niche Expert" / "Content
-## Mogul" are new names approved for this story (user decision, 2026-07-14)
-## -- ekspert_niszowy/biznesmen_contentu had no English UI name anywhere in
-## the codebase before this story.
-const _DISPLAY_NAMES: Dictionary[StringName, String] = {
-	&"pato_streamer": "Trash Streamer",
-	&"guru_celebryta": "Guru Celeb",
-	&"ekspert_niszowy": "Niche Expert",
-	&"biznesmen_contentu": "Content Mogul",
+## Stable localization keys for neutral path names. Internal ids remain the
+## gameplay contract; translated display text never drives mechanics.
+const _DISPLAY_NAME_KEYS: Dictionary[StringName, StringName] = {
+	&"pato_streamer": &"META_PATH_PATO_STREAMER",
+	&"guru_celebryta": &"META_PATH_GURU_CELEBRYTA",
+	&"ekspert_niszowy": &"META_PATH_EKSPERT_NISZOWY",
+	&"biznesmen_contentu": &"META_PATH_BIZNESMEN_CONTENTU",
+}
+
+const _RESOURCE_NAME_KEYS: Dictionary[StringName, StringName] = {
+	&"Cringe": &"META_RESOURCE_CRINGE",
+	&"Sponsors": &"META_RESOURCE_SPONSORS",
+	&"Morale": &"META_RESOURCE_MORALE",
+	&"Reach": &"META_RESOURCE_REACH",
+	&"Haters": &"META_RESOURCE_HATERS",
 }
 
 ## Per-path investment resource id (GDD `design/quick-specs/
@@ -128,14 +131,21 @@ const _INVEST_PREVIEW_GAIN: float = 1.0
 
 func _ready() -> void:
 	visible = false
+	for label: Label in (
+		_name_labels + _tier_labels + _affiliation_value_labels + _status_labels
+		+ _bonus_labels + _invest_explanation_labels
+	):
+		label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	for button: Button in _invest_buttons:
+		button.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	visibility_changed.connect(_on_visibility_changed)
 	_close_button.pressed.connect(_on_close_pressed)
 	for i in PATH_IDS.size():
-		_name_labels[i].text = _DISPLAY_NAMES[PATH_IDS[i]]
 		_invest_buttons[i].pressed.connect(_on_invest_pressed.bind(i))
 	ClassPathSystem.tier_unlocked.connect(_on_class_path_state_changed)
 	ClassPathSystem.active_path_changed.connect(_on_active_path_changed)
 	ClassPathSystem.signature_card_unlocked.connect(_on_signature_card_unlocked)
+	SettingsSystem.language_changed.connect(_on_language_changed)
 
 
 func _on_visibility_changed() -> void:
@@ -160,6 +170,11 @@ func _on_active_path_changed(_path_id: StringName) -> void:
 
 
 func _on_signature_card_unlocked(_card_id: StringName) -> void:
+	if visible:
+		_refresh_all()
+
+
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
 	if visible:
 		_refresh_all()
 
@@ -190,6 +205,7 @@ func _refresh_all() -> void:
 		var affiliation: float = ClassPathSystem.get_affiliation(path_id)
 		var tier: int = ClassPathSystem.get_tier(path_id)
 
+		_name_labels[i].text = _path_name(path_id)
 		_affiliation_bars[i].value = affiliation
 		_affiliation_value_labels[i].text = "%d / %d" % [int(affiliation), int(full_affiliation)]
 		_tier_labels[i].text = "T%d" % tier
@@ -207,12 +223,12 @@ func _status_text(
 ) -> String:
 	if ambiguous_pair.has(path_id):
 		var gap: float = ClassPathSystem.get_ambiguous_gap()
-		return "Ambiguous — keep investing to commit. (gap: %.1f)" % gap
+		return tr("META_PATH_STATUS_AMBIGUOUS") % gap
 	if tier == 0:
 		return ""
 	if path_id == active_path:
-		return "Active — Tier %d bonus in effect" % tier
-	return "Tier %d (secondary — bonus inactive while another path is active)" % tier
+		return tr("META_PATH_STATUS_ACTIVE") % tier
+	return tr("META_PATH_STATUS_SECONDARY") % tier
 
 
 ## Sets row [param i]'s Invest button text/disabled state and explanation
@@ -226,19 +242,25 @@ func _refresh_invest_control(i: int, path_id: StringName, affiliation: float, fu
 	var explanation: Label = _invest_explanation_labels[i]
 	if not ClassPathSystem.can_invest(path_id):
 		button.disabled = true
-		button.text = "Invest"
-		explanation.text = "Make a %s choice first" % _DISPLAY_NAMES[path_id]
+		button.text = tr("META_PATH_INVEST")
+		explanation.text = tr("META_PATH_INVEST_CHOICE_FIRST") % _path_name(path_id)
 		explanation.visible = true
-	elif affiliation >= full_affiliation:
+	elif ClassPathSystem.get_investment_headroom(path_id) < _INVEST_PREVIEW_GAIN:
 		button.disabled = true
-		button.text = "Invest"
-		explanation.text = "Fully invested this era"
+		button.text = tr("META_PATH_INVEST")
+		explanation.text = (
+			tr("META_PATH_INVEST_FULL")
+			if affiliation >= full_affiliation
+			else tr("META_PATH_INVEST_RAISE_LIMIT") % _path_name(path_id)
+		)
 		explanation.visible = true
 	else:
 		button.disabled = false
 		var amount: float = _INVEST_AMOUNT[path_id]
 		var resource_id: StringName = _RESOURCE_TABLE[path_id]
-		button.text = "Invest %d %s (+%.1f affiliation)" % [int(amount), String(resource_id), _INVEST_PREVIEW_GAIN]
+		button.text = tr("META_PATH_INVEST_FORMAT") % [
+			int(amount), _resource_name(resource_id), _INVEST_PREVIEW_GAIN,
+		]
 		explanation.visible = false
 
 
@@ -255,11 +277,11 @@ func _refresh_bonus_label(i: int, path_id: StringName, tier: int) -> void:
 	for t: int in range(1, tier + 1):
 		var desc: String = _describe_tier(path_id, t)
 		if desc != "":
-			lines.append("T%d: %s" % [t, desc])
+			lines.append(tr("META_PATH_TIER_BONUS") % [t, desc])
 	if tier < 5:
 		var teaser: String = _describe_tier(path_id, tier + 1)
 		if teaser != "":
-			lines.append("Next T%d: %s" % [tier + 1, teaser])
+			lines.append(tr("META_PATH_NEXT_TIER") % [tier + 1, teaser])
 	_bonus_labels[i].text = "\n".join(lines)
 	_bonus_labels[i].visible = not lines.is_empty()
 
@@ -273,7 +295,7 @@ func _describe_tier(path_id: StringName, tier: int) -> String:
 	var parts: Array[String] = []
 	var reach_mults: Dictionary = data["reach_mults"]
 	for action_id: StringName in reach_mults:
-		parts.append("%s Reach ×%s" % [_action_name(action_id), _fmt(reach_mults[action_id])])
+		parts.append(tr("META_PATH_EFFECT_ACTION_REACH") % [_action_name(action_id), _fmt(reach_mults[action_id])])
 	var effects: Dictionary = data["effects"]
 	for effect_key: StringName in effects:
 		var value: Variant = effects[effect_key]
@@ -281,34 +303,46 @@ func _describe_tier(path_id: StringName, tier: int) -> String:
 			&"secondary_yield":
 				for action_id: StringName in value:
 					for resource_id: StringName in value[action_id]:
-						parts.append("%s also +%d %s" % [
-							_action_name(action_id), int(value[action_id][resource_id]), String(resource_id),
+						parts.append(tr("META_PATH_EFFECT_SECONDARY_YIELD") % [
+							_action_name(action_id), int(value[action_id][resource_id]), _resource_name(resource_id),
 						])
 			&"duration_mult":
 				for action_id: StringName in value:
-					var label: String = "All actions" if action_id == &"*" else _action_name(action_id)
-					parts.append("%s duration ×%s" % [label, _fmt(value[action_id])])
+					var label: String = tr("META_PATH_ALL_ACTIONS") if action_id == &"*" else _action_name(action_id)
+					parts.append(tr("META_PATH_EFFECT_DURATION") % [label, _fmt(value[action_id])])
 			&"reach_all_mult":
-				parts.append("All actions Reach ×%s" % _fmt(value))
+				parts.append(tr("META_PATH_EFFECT_ALL_REACH") % _fmt(value))
 			&"cringe_gain_mult":
-				parts.append("Cringe gain ×%s" % _fmt(value))
+				parts.append(tr("META_PATH_EFFECT_CRINGE_GAIN") % _fmt(value))
 			&"sponsor_income_mult":
-				parts.append("Sponsor income ×%s" % _fmt(value))
+				parts.append(tr("META_PATH_EFFECT_SPONSOR_INCOME") % _fmt(value))
 			&"morale_cost_mult":
-				parts.append("Action Morale costs ×%s" % _fmt(value))
+				parts.append(tr("META_PATH_EFFECT_MORALE_COST") % _fmt(value))
 			&"morale_drain_mult":
-				parts.append("Offline Morale drain ×%s" % _fmt(value))
+				parts.append(tr("META_PATH_EFFECT_MORALE_DRAIN") % _fmt(value))
 			&"haters_growth_mult":
-				parts.append("Haters growth ×%s" % _fmt(value))
+				parts.append(tr("META_PATH_EFFECT_HATERS_GROWTH") % _fmt(value))
 			&"morale_floor":
-				parts.append("Offline Morale floor %d" % int(value))
+				parts.append(tr("META_PATH_EFFECT_MORALE_FLOOR") % int(value))
 	if tier == 5:
-		parts.append("signature card")
+		parts.append(tr("META_PATH_SIGNATURE_CARD"))
 	return ", ".join(parts)
 
 
 func _action_name(action_id: StringName) -> String:
-	return ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+	var localization_key: String = "ACTION_%s_LABEL" % String(action_id).to_upper()
+	var localized: String = tr(localization_key)
+	return localized if localized != localization_key else ActionSystem.ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+
+
+func _path_name(path_id: StringName) -> String:
+	var key: StringName = _DISPLAY_NAME_KEYS.get(path_id, &"")
+	return tr(key) if not key.is_empty() else String(path_id)
+
+
+func _resource_name(resource_id: StringName) -> String:
+	var key: StringName = _RESOURCE_NAME_KEYS.get(resource_id, &"")
+	return tr(key) if not key.is_empty() else String(resource_id)
 
 
 ## Compact multiplier formatting: 1.6 -> "1.6", 2.0 -> "2", 0.6667 -> "0.67".

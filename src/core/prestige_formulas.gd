@@ -318,7 +318,7 @@ static func final_reach(base: float, morale_mult: float, class_path_multiplier: 
 ## Sponsor roll, per GDD Formula F3b:
 ##
 ##   final_sponsors = round(base_sponsors_roll * class_path_sponsor_multiplier
-##       * (1 + META_SPONSOR_MULT_total))
+##       * staff_sponsor_multiplier * (1 + META_SPONSOR_MULT_total))
 ##
 ## Unlike final_reach(), there is no floor rule here — a Sponsor roll
 ## legitimately can and does round to 0 (GDD F3b has no "never zero"
@@ -328,12 +328,11 @@ static func final_reach(base: float, morale_mult: float, class_path_multiplier: 
 ## Sponsor amount (`DecisionCardSystem`'s `sponsorzy_per_qualifying_card`
 ## roll result).
 ## [param class_path_sponsor_multiplier] `ClassPathSystem.get_active_sponsor_multiplier()`
-## (ADR-0010 §5a) — 1.0 when no active path. Story 005 implements ONLY this
-## formula function; wiring the real call to `get_active_sponsor_multiplier()`
-## at card resolution is a separate Class Path System epic concern (this
-## story's Out of Scope) — callers of this function pass the multiplier as
-## an explicit argument (mocked in tests, per AC-4).
+## (ADR-0010 §5a) — 1.0 when no active path.
 ## [param meta_sponsor_mult_total] `PrestigeSystem.get_meta_bonus_total(&"META_SPONSOR_MULT")`.
+## [param staff_sponsor_multiplier] the era-local Sponsor Manager factor;
+## defaults to 1.0 so the original three-argument F3b contract remains source
+## compatible. Team/Staff Management composes at the same card-income point.
 ##
 ## Performance: O(1) pure float arithmetic — called once per qualifying
 ## card resolution, same negligible-cost precedent as this class's other
@@ -342,8 +341,11 @@ static func final_reach(base: float, morale_mult: float, class_path_multiplier: 
 ## Usage example:
 ##   PrestigeFormulas.final_sponsors(3.0, 1.20, 0.50)  # -> 5
 static func final_sponsors(base_sponsors_roll: float, class_path_sponsor_multiplier: float,
-		meta_sponsor_mult_total: float) -> int:
-	return roundi(base_sponsors_roll * class_path_sponsor_multiplier * (1.0 + meta_sponsor_mult_total))
+		meta_sponsor_mult_total: float, staff_sponsor_multiplier: float = 1.0) -> int:
+	return roundi(
+		base_sponsors_roll * class_path_sponsor_multiplier * staff_sponsor_multiplier
+		* (1.0 + meta_sponsor_mult_total)
+	)
 
 
 ## Returns the final Haters growth rate (per minute), per GDD Formula F3c:
@@ -352,20 +354,16 @@ static func final_sponsors(base_sponsors_roll: float, class_path_sponsor_multipl
 ##
 ## Deliberately the ONE F3 formula that applies identically online and
 ## offline (F3c locked scope, GDD's own explicit call-out) — contrast with
-## Class Path's/Challenge's multipliers, which are excluded from offline
-## simulation by default (TR-cps-007). Both `ActionSystem` (live play) and
-## `OfflineProgressSystem.simulate_offline()` must call this same function
+## Challenge action multipliers, which remain action-only. Both
+## `LiveResourceTicker` and `OfflineProgressSystem.simulate_offline()` must
+## apply this same resistance factor
 ## on top of `ResourceFormulas.haters_growth_rate(cringe)`'s result, so the
 ## two contexts can never silently diverge (same online/offline-consistency-
 ## by-construction precedent as ADR-0006's `ResourceFormulas`).
 ##
-## Story 005 scope note: this function's correctness is this story's
-## deliverable; wiring the real call sites in `ActionSystem` (which
-## currently has no live Haters-rate call site at all) and
-## `OfflineProgressSystem.simulate_offline()` (which would need a new
-## `OfflineProgressSystem` -> `PrestigeSystem` read dependency not yet
-## sanctioned by any ADR) is explicitly flagged as a follow-up decision, not
-## performed by this story.
+## The offline call site is wired in `OfflineProgressSystem`; live play uses
+## the same factor through `LiveResourceTicker`. Do not approximate this
+## time-based rate per action.
 ##
 ## [param base_rate] `ResourceFormulas.haters_growth_rate(cringe)` — `H_rate(C)`,
 ## already computed by the caller.

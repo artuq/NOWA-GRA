@@ -1,7 +1,7 @@
 # ADR-0013: BurnoutSystem / ChallengeSystem — Trigger Detection, Card Injection, and Challenge Selection
 
 ## Status
-Accepted (2026-07-17, following independent `/architecture-review` in a separate session — verdict CONCERNS overall, but no conflicts or blockers against this ADR specifically; all three dependencies ADR-0001/ADR-0010/ADR-0012 Accepted, engine-clean, every shipped-code claim independently reverified against `src/core/prestige_system.gd`/`decision_card_system.gd`/`resource_manager.gd`)
+Accepted (2026-07-17; live-play scene boundary clarified and synced 2026-08-05)
 
 ## Date
 2026-07-17
@@ -46,6 +46,7 @@ This ADR does not re-litigate ADR-0012. It ratifies the corrected division of ow
 ### Requirements
 
 - BurnoutSystem must detect the burnout trigger condition every live-play frame without per-frame allocation or signal spam beyond the warning countdown's own stated cadence.
+- “Live play” is owned explicitly by `ActionScreen`: the detector is disabled by default, enabled after that scene is ready, and paused on its teardown. Boot, Start, Offline Report, and Challenge Selection must never advance or inject Burnout.
 - BurnoutSystem must force-inject the Wypalenie card via the already-shipped `DecisionCardSystem.inject_priority_card()` (ADR-0012 §4, Story 002) — no new injection API.
 - Choice A/B resolution must reach `PrestigeSystem.on_burnout_accepted()`/`on_burnout_deferred()` synchronously, inside the same call stack as `DecisionCardSystem.resolve_choice()`, satisfying ADR-0012's ordering guarantee.
 - ChallengeSystem's combined meta-bonus multiplier must reach `PrestigeSystem`'s grant computation via a pull-model read, not a push/signal, matching ADR-0010's `get_active_sponsor_multiplier()` precedent.
@@ -80,6 +81,7 @@ signal burnout_warning_changed(active: bool, seconds_remaining: float)
 
 var _cringe_sustained_seconds: float = 0.0
 var _card_pending: bool = false
+var _live_play_active: bool = false
 
 const BURNOUT_THRESHOLD: float = 300.0          # balance.json, per quick-spec
 const BURNOUT_WARNING_THRESHOLD: float = 180.0  # balance.json
@@ -88,8 +90,15 @@ const BURNOUT_DEFER_MORALE_COST: float = 50.0   # balance.json
 
 func _ready() -> void:
 	DecisionCardSystem.card_resolved.connect(_on_card_resolved)
+	set_process(false)
+
+func set_live_play_active(active: bool) -> void:
+	_live_play_active = active
+	set_process(active)
 
 func _process(delta: float) -> void:
+	if not _live_play_active:
+		return
 	var cringe: float = ResourceManager.get_resource(&"Cringe")
 	if cringe >= 100.0:
 		_cringe_sustained_seconds += delta
@@ -146,6 +155,12 @@ func restore_state(data: Dictionary) -> void:
 func serialize_state() -> Dictionary:
 	return {"_card_pending": _card_pending}
 ```
+
+`ActionScreen._ready()` calls `BurnoutSystem.set_live_play_active(true)` only after
+its children (including `CardScreen`) are ready; `_exit_tree()` calls `false`.
+Deactivation pauses the accumulator without resetting it and emits no warning-cancel
+signal because the owning HUD is leaving with the same scene. This is an ephemeral
+lifecycle gate, not persisted state.
 
 `_card_pending` persisting across save/load (and re-presenting the card on boot if the app was killed mid-choice) is exactly the mechanism `story-008-transition-atomicity.md`'s Scope Note flagged as deferred pending this ADR — once BurnoutSystem ships with this field, that follow-up test can be written.
 

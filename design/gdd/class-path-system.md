@@ -28,7 +28,7 @@ Also folded in from the same review: formal signal signatures for `tier_unlocked
 
 ## Overview
 
-Class Path System daje graczowi widoczną warstwę tożsamości zbudowaną na dwóch strukturach danych: float afiliacji per ścieżka [0.0, 100.0] i drabinie tierów (0-5) wyprowadzonej z tego floata. Cztery satyryczne archetypy influencerów — Pato-Streamer Hazardowy, Guru-Celebryta, Ekspert Niszowy, Biznesmen Contentu — są pokazane graczowi od pierwszej minuty, matematycznie odległe, ale nigdy nie ukryte. Decyzje z kart (przez liczniki wzorców HistoryFlagManager) i opcjonalna aktywna inwestycja zasobów popychają afiliację w stronę jednej ścieżki; przekroczenie progów tierów (20/40/60/80/100) odblokowuje mnożniki akcji/zasobów specyficzne dla ścieżki, działające wyłącznie w aktywnej grze (nigdy offline, zgodnie z Pillar 4). Gracz odczuwa ten system jako "kim się staję" — widoczną, wybraną trajektorię, nie ukryty wynik. Wzorzec implementacji (Autoload/sygnał/mnożnik) jest ustalony przez ADR-0010; ten GDD definiuje CO system robi, nie JAK jest podpięty w Godocie.
+Class Path System daje graczowi widoczną warstwę tożsamości zbudowaną na dwóch strukturach danych: float afiliacji per ścieżka [0.0, 100.0] i drabinie tierów (0-5) wyprowadzonej z tego floata. Cztery satyryczne archetypy influencerów — Pato-Streamer Hazardowy, Guru-Celebryta, Ekspert Niszowy, Biznesmen Contentu — są pokazane graczowi od pierwszej minuty, matematycznie odległe, ale nigdy nie ukryte. Decyzje z kart (przez liczniki wzorców HistoryFlagManager) i opcjonalna aktywna inwestycja zasobów popychają afiliację w stronę jednej ścieżki; przekroczenie progów tierów (20/40/60/80/100) odblokowuje mnożniki akcji/zasobów specyficzne dla ścieżki. Mnożniki nagród/czasu akcji są active-only; jawne efekty ambientowe Haters/drain/floor działają online i offline. Gracz odczuwa ten system jako "kim się staję" — widoczną, wybraną trajektorię, nie ukryty wynik. Wzorzec implementacji (Autoload/sygnał/mnożnik) jest ustalony przez ADR-0010; ten GDD definiuje CO system robi, nie JAK jest podpięty w Godocie.
 
 **Post-review correction**: active investment (F2) is no longer an independent path to affiliation — it now only accelerates a direction the player's card choices have already established (Core Rule 4a). This closes the "buy a persona you never chose" gap identified in review.
 
@@ -44,11 +44,11 @@ Gracz czuje dwa splecione uczucia: (1) bezpośrednie — otwierając panel ście
 
 1. **All four paths are always visible** in the Class Path panel — no path is hidden or locked. The player always knows where they could go before they can get there (Beggar's Life model, locked 2026-07-01).
 2. **Affiliation is a float [0.0, 100.0] per path**. Only one path can be in active-tier status (Tier 1+) at a time. A player is "unaffiliated" until any path reaches Tier 1.
-3. **Two additive mechanisms push affiliation**: (a) card resolution automatically increments path-tagged pattern counters via HistoryFlagManager (`card_contribution`); (b) the player can actively spend resources to accelerate investment in any path *the player has already begun choosing via cards* (`investment_contribution` — see Core Rule 4a). `affiliation[path] = card_contribution[path] + investment_contribution[path]`, capped at 100.0.
+3. **Two additive mechanisms push affiliation**: (a) card resolution automatically increments path-tagged pattern counters via HistoryFlagManager (`card_contribution`); (b) the player can actively spend resources to accelerate investment in any path *the player has already begun choosing via cards* (`investment_contribution` — see Core Rules 4a–4b). Usable investment is capped by card-choice history before total affiliation is capped at 100.0.
 4. **Card contribution alone cannot reach the top of the ladder** — it is capped at `CARD_CONTRIBUTION_MAX` (60.0 default), forcing conscious active investment to cross into the top tiers (Beggar's Life "must consciously invest" principle). **Design invariant** (see Tuning Knobs): `CARD_CONTRIBUTION_MAX` must stay ≥ `TIER_THRESHOLDS[3]` (60.0) for this rule to mean "investment required past Tier 3" as intended — if the cap is tuned below that threshold, the rule's effective meaning shifts to a lower tier; re-validate this invariant whenever either value changes.
 5. **Tier boundaries are hard thresholds** (20/40/60/80/100) — crossing one triggers a tier-unlock notification and activates that tier's bonus. Affiliation only increases within an era, matching HistoryFlagManager's pattern-counter immutability contract — tiers cannot be lost mid-era. **Note**: this notification announces the unlock immediately; it does not imply the player consciously feels the multiplier's effect at that same instant (see Player Fantasy).
 6. **Only the active path contributes multipliers.** The active path is the highest-affiliation path that has crossed Tier 1 (≥20). If two paths are within `PATH_AFFILIATION_TIE_BREAK_MARGIN` of each other at Tier 1+, no multiplier applies and the UI shows "Ambiguous — keep investing to commit," alongside the numeric gap remaining to resolve it (see UI Requirements — this was a review gap: the margin math must be visible, not just the state label). Secondary paths never stack (prevents multi-path-maxing). *Open Question: this creates a rational incentive to commit to one path immediately and never touch card choices tagged to the other three — flagged as a replay-variety concern in Open Questions, not resolved by a rule change in this pass.*
-7. **Path multipliers are active-play only by default** (Pillar 4) — offline simulation uses the same flat formula regardless of path/tier. A `PATH_MULTIPLIER_OFFLINE` flag exists for a future single flat offline-efficiency modifier per tier, off by default, evaluated only after profiling shows it won't confuse offline reports.
+7. **Modifier scope (resolved 2026-08-05)** — action Reach/duration/yield multipliers are active-play only. The explicit ambient effects `haters_growth_mult`, `morale_drain_mult`, and `morale_floor` apply to the shared live/offline resource transition. There is no generic `PATH_MULTIPLIER_OFFLINE` switch.
 8. **No explicit moral score** (Anti-Pillar). Affiliation is shown as a neutral progress bar labeled with tier names — never "good" vs. "evil." The satire lives entirely in flavor text and what the multipliers reward, not in UI framing.
 9. **Era reset clears all era-local state** (affiliation, tiers, path-tagged counters, signature cards, active-path multipliers) but writes permanent meta-flags first (`best_tier_reached`, `eras_spent_as`) that persist across eras and feed the Prestige/Checkpoint System's meta-bonus calculation.
 
@@ -57,9 +57,15 @@ Gracz czuje dwa splecione uczucia: (1) bezpośrednie — otwierając panel ście
 Active investment in a path is only possible once the player has made **at least one** path-tagged card choice in that path this era, i.e. `card_contribution[path] > 0`. Until then:
 
 - The path's "Invest" control is **disabled** in the Class Path Panel (visibly present — per Core Rule 1, all four paths stay visible — but not interactable, with a short tooltip/label explaining why, e.g. "Make a [Path] choice first").
-- No resource is deducted and no affiliation is added if an investment attempt is somehow made against a `card_contribution[path] == 0` path (defensive — the UI should prevent reaching this state, but the system-level rule holds regardless of UI state, same defensive pattern as the at-100.0 case in Edge Cases).
+- No resource is deducted and no affiliation is added if an investment attempt is somehow made against a `card_contribution[path] == 0` path (defensive — the UI should prevent reaching this state, as it also does when F6 headroom is exhausted).
 
 **Why**: this is the direct fix for the review finding that investment let players buy tier progress and signature cards in a path they had never actually chosen via cards — a "points, not memory" mechanic that contradicted this system's Pillar 2 claim. Gating investment on prior card-choice history means active investment is always an *acceleration of a direction the player already established*, not an independent, decision-free path to progress.
+
+#### Core Rule 4b — Decision-backed investment ceiling (F6, added 2026-08-11)
+
+Investment may accelerate card history, but may not replace it. For current card contribution `C`, usable investment is capped at `min(100 - C, 20 + C)`. Once that ceiling is reached, Invest is disabled and further calls are rejected without deducting resources; excess progress is never banked for later choices. This prevents a large offline stockpile from buying the full Class Path ladder after only one decision.
+
+At the locked default `CARD_AFFILIATION_PER_CHOICE = 4`: one choice permits at most 28 affiliation (T1), five choices permit 60 (T3), and ten choices permit 100 (T5). Retune this constant only together with F6's choice-count anchors; its former 2–8 range is no longer independently safe.
 
 #### The Four Paths
 
@@ -160,13 +166,13 @@ per Core Rule 5).
 | Symbol | Type | Range | Description |
 |--------|------|-------|--------------|
 | `choice_count[path]` | int | 0 – unbounded, monotonically non-decreasing within an era | Value of the HistoryFlagManager counter `{path_id}_choices_count`; incremented once per resolved Decision Card tagged with this path |
-| `CARD_AFFILIATION_PER_CHOICE` | float (tuning knob) | 2.0 – 8.0 (default 4.0) | Affiliation granted per path-tagged card choice |
+| `CARD_AFFILIATION_PER_CHOICE` | float (locked F6 invariant) | 4.0 | Affiliation granted per path-tagged card choice; retuning requires reauthoring F6's choice-count anchors |
 | `CARD_CONTRIBUTION_MAX` | float (tuning knob) | 40.0 – 75.0 (default 60.0) | Hard ceiling on affiliation earned from card choices alone |
 | `card_contribution[path]` | float | 0.0 – `CARD_CONTRIBUTION_MAX` | Card-derived portion of this path's affiliation |
 
 **Output range**: `[0.0, CARD_CONTRIBUTION_MAX]` — clamped by `min()`. At default values this is `[0.0, 60.0]`. Choices beyond the point where the cap is reached contribute zero additional affiliation; the counter itself keeps incrementing (immutable/monotonic per HistoryFlagManager contract), it simply stops moving `card_contribution`.
 
-**Worked example**: `choice_count = 15`, `CARD_AFFILIATION_PER_CHOICE = 4.0` → `raw = 60.0` → `card_contribution = min(60.0, 60.0) = 60.0` (cap reached exactly at 15 choices). A 16th path-tagged choice still increments `choice_count` to 16, but `card_contribution` remains 60.0. **Note (systems-designer, 2026-07-12)**: this "15 choices" figure holds only at default tuning — at `CARD_AFFILIATION_PER_CHOICE=2.0` it takes 30 choices; at `8.0` it takes 8. Don't treat "15" as a locked design target, only as the default-tuning illustration.
+**Worked example**: `choice_count = 15`, `CARD_AFFILIATION_PER_CHOICE = 4.0` → `raw = 60.0` → `card_contribution = min(60.0, 60.0) = 60.0` (cap reached exactly at 15 choices). A 16th path-tagged choice still increments `choice_count` to 16, but `card_contribution` remains 60.0.
 
 ### F2. Investment Contribution (revised 2026-07-12, post-review — see Core Rule 4a)
 
@@ -179,11 +185,11 @@ investment_contribution[path] =
 | Symbol | Type | Range | Description |
 |--------|------|-------|--------------|
 | `card_contribution[path]` | float | 0.0 – `CARD_CONTRIBUTION_MAX` (F1 output) | Gate condition — see Core Rule 4a |
-| `resource_spent[path]` | float | 0.0 – unbounded, cumulative and monotonic within an era | Total units of this path's investment resource spent via the Invest button this era. Cannot be spent at all while the gate condition above holds (UI disables the control; system rejects the spend defensively even if reached) |
+| `resource_spent[path]` | float | 0.0 – current F6 cap divided by the path rate | Accepted units of this path's investment resource spent via the Invest button this era. Gated and over-cap calls are rejected without deduction |
 | `INVESTMENT_AFFILIATION_RATE[path]` | float (tuning knob, **per-path**, **canonical stored value — not a derived cost**; see Tuning Knobs note) | path-dependent — see table below | Affiliation granted per unit of investment resource spent |
-| `investment_contribution[path]` | float | 0.0 – unbounded (pre-clamp) | Investment-derived portion, before the total-affiliation clamp in F3 |
+| `investment_contribution[path]` | float | 0.0 – F3 investment cap | Accepted investment-derived portion; attempts beyond current headroom are rejected without deduction |
 
-**Output range**: `0` while gated; otherwise unbounded on its own — always re-clamped by F3's `min(..., 100.0)`. Once `card_contribution[path] + investment_contribution[path]` reaches 100.0, further spend still deducts the resource but yields zero marginal affiliation (Edge Case — Invest button should stop offering marginal-gain preview at that point).
+**Output range**: `0` while gated; otherwise bounded by the current F3 decision-backed investment cap. Progress is not pre-banked: once headroom reaches zero, further spend is rejected and no resource is deducted.
 
 **Design correction vs. quick-spec**: the quick-spec proposed a single global `INVESTMENT_AFFILIATION_RATE = 0.1` for all four paths — this contradicts its own "Investment Cost Scale" table, which prices each path's resource differently (10 Cringe / 5 Sponsors / 8 Morale / 50 Reach per affiliation point; a single global rate can only reproduce one of those four costs). `INVESTMENT_AFFILIATION_RATE` is corrected here to a **per-path array**, derived as the reciprocal of the Investment Cost Scale table:
 
@@ -200,19 +206,23 @@ These four derived rates are candidate values only — the underlying "cost per 
 
 **Worked example**: `pato_streamer`, `card_contribution = 20.0` (gate satisfied), `resource_spent = 200` Cringe, `RATE = 0.1` → `investment_contribution = 200 * 0.1 = 20.0`.
 
-### F3. Total Affiliation
+### F3. Decision-Backed Investment Cap and Total Affiliation (F6)
 
-`affiliation[path] = min( card_contribution[path] + investment_contribution[path], 100.0 )`
+```
+investment_cap[path] = min(100.0 - card_contribution[path], 20.0 + card_contribution[path])
+affiliation[path] = clamp(card_contribution[path] + min(investment_contribution[path], investment_cap[path]), 0.0, 100.0)
+```
 
 | Symbol | Type | Range | Description |
 |--------|------|-------|--------------|
 | `card_contribution[path]` | float | 0.0 – `CARD_CONTRIBUTION_MAX` (F1 output) | Card-derived contribution |
-| `investment_contribution[path]` | float | 0.0 – unbounded (F2 output, pre-clamp) | Investment-derived contribution |
+| `investment_contribution[path]` | float | 0.0 – `investment_cap[path]` | Accepted investment-derived contribution |
+| `investment_cap[path]` | float | 20.0 – 60.0 before the Core Rule 4a gate | Maximum usable investment at the current card history |
 | `affiliation[path]` | float | 0.0 – 100.0 | Canonical value read by `ClassPathSystem.get_affiliation()` |
 
 **Output range**: `[0.0, 100.0]`, hard-clamped. This is the value stored, serialized, and compared against `TIER_THRESHOLDS` in F4.
 
-**Worked example**: continuing F1/F2 — `card_contribution = 60.0`, `investment_contribution = 20.0` → `affiliation = min(80.0, 100.0) = 80.0`.
+**Worked anchors at the locked 4 points/choice**: `C=4` → `I_cap=24` → maximum affiliation `28` (T1); `C=20` → `I_cap=40` → maximum `60` (T3); `C=40` → `I_cap=60` → maximum `100` (T5).
 
 ### F4. Tier Resolution
 
@@ -265,13 +275,15 @@ active_path =
 
 *Specialist not consulted at authoring — Lean mode. Re-reviewed 2026-07-12 during full `/design-review` (qa-lead, systems-designer).*
 
-- **If a player invests resources after affiliation is already at 100.0**: the resource is still deducted (the Invest button does not block the transaction), but `investment_contribution` adds zero marginal affiliation (F3's clamp absorbs it). The Invest button's UI should stop showing a ">0 affiliation gain" preview once a path is at 100.0, to avoid implying wasted spend is productive.
-- **If a player attempts to invest in a path with `card_contribution[path] == 0`** (added 2026-07-12, Core Rule 4a): the Invest control is disabled in the UI for that path; defensively, even if an investment call somehow reaches the system in this state, no resource is deducted and no affiliation is added. This is distinct from the at-100.0 case above — one is "too late to matter," this one is "too early to be allowed."
+- **If a player attempts to invest beyond the current F6 headroom**: the Invest control is disabled; defensively, a direct call is rejected without deducting resources. No excess investment is banked.
+- **If a player attempts to invest in a path with `card_contribution[path] == 0`** (added 2026-07-12, Core Rule 4a): the Invest control is disabled in the UI for that path; defensively, even if an investment call reaches the system, no resource is deducted and no affiliation is added.
 - **If two paths are within `PATH_AFFILIATION_TIE_BREAK_MARGIN` of each other at Tier 1+**: no active path is set (F5), no multiplier applies to either, UI shows "Ambiguous — keep investing to commit" plus the numeric gap remaining. This is a known current gap in shipped code — see BUG-003.
 - **If a path's `card_contribution` is already at `CARD_CONTRIBUTION_MAX` and the player keeps making path-tagged card choices**: `choice_count` keeps incrementing (HistoryFlagManager counters are immutable/monotonic and must never be capped at the source), but `card_contribution` does not move past the cap — only investment can push affiliation further.
 - **If `BurnoutSystem.era_transitioned` fires while a card modal is open**: `reset_era_state()` must not fire mid-resolution of an in-flight card (would desync the path-tag increment from the era it was meant to count toward). Ordering contract: `reset_era_state()` runs only after the current card's resolution (including its `increment_counter` call) fully completes — this is a listener-ordering requirement on `era_transitioned`, not a new state.
-- **If the player reaches Tier 5 on a path, then investment continues (they keep spending)**: no further effect — Tier 5 is terminal within the era (States and Transitions). The Invest button remains functional (spend still works, e.g. player wants to bank resources elsewhere) but affiliation cannot exceed 100.0 and no Tier 6 exists.
-- **If `PATH_MULTIPLIER_OFFLINE` is toggled true mid-era**: the flag change only affects future offline simulations from that point forward — it does not retroactively recompute prior offline reports. (No retroactive-recompute mechanism exists elsewhere in the game either, e.g. Offline Progress System doesn't replay past sessions.)
+- **If the player reaches Tier 5 on a path**: Tier 5 is terminal within the era and Invest is disabled because F6 headroom is zero.
+- **If the active path/tier changes mid-session**: future live ticks read the
+  new explicit ambient factors immediately; one offline window snapshots its
+  factors at simulation start. Prior ticks/reports are never recomputed.
 - **If a save is loaded from before this system existed (schema migration)**: all affiliation floats default to 0.0, all tiers to 0, no active path — equivalent to a fresh-era unaffiliated state. This must be handled the same way `SaveSystem`'s existing schema-fallback pattern handles other new-field migrations (no special-case logic needed beyond the standard default-on-missing-key pattern already used by `OnboardingGate`/`SettingsSystem`).
 - **If the active path's signature card (Tier 5) is present in the Decision Card pool and era resets mid-way through that exact card being displayed to the player**: the card modal is allowed to resolve normally (same ordering contract as above); the signature card is removed from the pool only after the current resolution completes, so the player is never shown a card that "shouldn't exist" mid-interaction.
 
@@ -296,11 +308,11 @@ All values live in `assets/data/balance.json` under the `class_path` key (matchi
 
 | Knob | Default | Range | What Changes Outside It |
 |------|---------|-------|--------------------------|
-| `CARD_AFFILIATION_PER_CHOICE` | 4.0 | 2.0–8.0 | Too low: path progress feels invisible over normal play. Too high: Tier 5 reachable on card choices alone, defeating Core Rule 4's "active investment required past Tier 3" |
+| `CARD_AFFILIATION_PER_CHOICE` | 4.0 | locked while F6 uses current anchors | Retuning shifts how many decisions unlock T1/T3/T5 headroom; revise F6 and its tests together |
+| `PATH_INVESTMENT_HISTORY_BASE` | 20.0 | 10.0–30.0 candidate | Too low: earned resources feel unusable. Too high: one decision plus an offline stockpile skips too much of the ladder |
 | `CARD_CONTRIBUTION_MAX` | 60.0 | 40.0–75.0 | Too low: active investment feels mandatory too early (friction). Too high: card-only players approach Tier 5 without ever investing (removes agency from the investment mechanic). **Invariant (added 2026-07-12)**: must stay ≥ `TIER_THRESHOLDS[3]` (60.0) for Core Rule 4's "past Tier 3" framing to hold literally — if tuned into the 40.0–59.9 sub-range, Core Rule 4's guarantee silently shifts to "past Tier 2." Re-validate this specific interaction before shipping a tuning change here. |
 | `INVESTMENT_AFFILIATION_RATE[path]` (per-path array) | `{0.1, 0.2, 0.125, 0.02}` (pato/guru/ekspert/biznesmen) | path-dependent, ±50% from default | Too low on any path: investing in it feels pointless (economy-designer territory, see Open Questions). Too high: resource-rich players buy tiers instantly, devaluing card-driven progress. **Canonical-value note (systems-designer, 2026-07-12)**: `RATE` (affiliation per resource unit) is the value actually stored and tuned — not "cost per point." If a future balance pass instead stores cost-per-point and derives rate as `1/cost` at runtime, note that a symmetric ±50% swing in cost produces an *asymmetric* swing in rate (−33%/+100%), and a misconfigured `cost=0` would produce `rate=∞`. Tune `RATE` directly; don't reintroduce the cost-table as the stored value. |
 | `PATH_AFFILIATION_TIE_BREAK_MARGIN` | 5.0 | 2.0–10.0 | Too low: two-path players resolve to a winner too easily (loses the "ambiguous" tension). Too high: players feel stuck in "Ambiguous" limbo too long even when meaningfully ahead |
-| `PATH_MULTIPLIER_OFFLINE` | `false` | bool | Enable only after profiling confirms offline-report complexity from path multipliers doesn't confuse the report's readability (Pillar 4 constraint) |
 | `TIER_THRESHOLDS` | `[0, 20, 40, 60, 80, 100]` | fixed structure, values could shift | Changing spacing changes how "gated" progression feels tier-to-tier; asymmetric spacing (e.g. wider gap T4→T5) is a valid future tuning direction not yet explored |
 
 Not duplicated here (owned by History Flag System GDD, referenced not redefined): `margin` (global HistoryFlagManager tie-break, currently 2) and `threshold_min` per path (currently 5, the card-count floor before a path becomes eligible via `resolve_path_eligibility()`).
@@ -317,7 +329,7 @@ Not duplicated here (owned by History Flag System GDD, referenced not redefined)
 ## UI Requirements
 
 - **Class Path Panel** (new full screen, not a pop-up — player navigates to it, doesn't have it interrupt play): vertical card list on mobile portrait, four path rows always visible, collapsed-by-default with tap-to-expand detail (full layout already specified in `design/quick-specs/class-path-system-2026-07-01.md` §Path UI — this GDD does not restate the ASCII mockups, they remain the source of truth until a `/ux-design` pass formalizes them).
-- **Invest control (locked 2026-07-12, post-review — ux-designer finding: this was previously unspecified)**: fixed-increment-per-tap. Each tap of a path's Invest button spends one fixed unit of that path's investment resource (exact unit size is a tuning value, not specified here — matches the touch-first mobile input model per this project's technical preferences) and shows a live preview of that tap's marginal affiliation gain, recomputed each time the button is shown/refreshed. The preview reads zero and the control becomes visually (not just functionally) disabled in two cases: `card_contribution[path] == 0` (Core Rule 4a gate) and `affiliation[path] == 100.0` (Edge Cases cap) — both must be visually distinguishable from the normal enabled state, not just non-functional.
+- **Invest control (revised for F6 2026-08-11)**: fixed-increment-per-tap. Each tap spends one fixed unit and previews its marginal affiliation gain. The control becomes visually disabled in three distinguishable cases: no card history ("Make a choice first"), current F6 headroom exhausted ("Make more choices to raise the investment limit"), or the path is fully invested at 100.
 - **Ambiguous-state gap display (added 2026-07-12, post-review — game-designer + ux-designer convergent finding)**: when the panel shows "Ambiguous — keep investing to commit" for two tied paths, it must also show the numeric gap remaining to resolve the tie (`M − (a_max − a_2nd)`, i.e. how much more lead the front path needs) — showing only the text label without the number was flagged as opaque/frustrating in review.
 - **HUD Indicator**: persistent small element on the main HUD's top bar, alongside the existing resource pill row — appears only once any path reaches Tier 1, absent before. Tapping navigates to the Class Path Panel. See Visual Requirements above for the layout-crowding flag.
 - Both UI pieces are currently unbuilt (quick-spec's own Alpha vs MVP Scope Split marks the full panel as Vertical Slice+ work; only the MVP's 2-path HUD indicator concept exists, and even that isn't wired into a scene yet per the earlier Settings/Avatar session — needs its own dev-story once prioritized).
@@ -341,12 +353,12 @@ Not duplicated here (owned by History Flag System GDD, referenced not redefined)
 - **GIVEN** `pato_streamer` has `card_contribution = 0` (no path-tagged card choice made yet this era), **WHEN** the player attempts to invest any amount of Cringe into `pato_streamer`, **THEN** no resource is deducted, `investment_contribution["pato_streamer"]` remains `0`, and the Invest control for that path reports itself disabled. **[Logic — BLOCKING]** *(new 2026-07-12, covers Core Rule 4a)*
 - **GIVEN** `pato_streamer` has `card_contribution = 20.0` (gate satisfied) and 0 investment contribution, **WHEN** the player invests 200 Cringe, **THEN** `investment_contribution["pato_streamer"]` becomes `20.0` (200 × 0.1). **[Logic — BLOCKING]**
 - **GIVEN** the same 200-unit spend is applied to `guru_celebryta` (rate 0.2) and `biznesmen_contentu` (rate 0.02) instead, both with their gate already satisfied, **WHEN** each invest resolves, **THEN** `guru_celebryta` gains `40.0` affiliation and `biznesmen_contentu` gains `4.0` — confirming four independent per-path rates, not one shared global constant. **[Logic — BLOCKING]** *(regression test for the quick-spec's stale single global rate)*
-- **GIVEN** a path's total affiliation is already `100.0`, **WHEN** the player invests further resource into it, **THEN** the resource is still deducted via Resource Manager but `get_affiliation(path)` remains `100.0`. **[Integration — BLOCKING]**
+- **GIVEN** a path has zero F6 investment headroom, **WHEN** the player attempts another investment, **THEN** the call returns false, no resource is deducted, and no progress is banked. **[Integration — BLOCKING]**
 - **GIVEN** the player cannot afford a path's investment cost, **WHEN** they tap Invest, **THEN** no resource is deducted and no affiliation change occurs. **[Integration — BLOCKING]**
 
 ### Affiliation Tracking — Total Affiliation Clamp (F3)
 
-- **GIVEN** `card_contribution["pato_streamer"] = 60.0` and the player invests enough Cringe to add `50.0` more investment contribution, **WHEN** `get_affiliation("pato_streamer")` is queried, **THEN** it returns `100.0` (`min(60+50, 100) = 100`), not `110`. **[Logic — BLOCKING]**
+- **GIVEN** default 4 affiliation per choice, **THEN** 1 / 5 / 10 choices plus maximum permitted investment yield exactly 28 (T1) / 60 (T3) / 100 (T5). **[Logic — BLOCKING]**
 
 ### Tier Unlocks (F4)
 
@@ -390,7 +402,7 @@ Not duplicated here (owned by History Flag System GDD, referenced not redefined)
 
 ### Pillar Compliance
 
-- **GIVEN** `PATH_MULTIPLIER_OFFLINE = false` (default), **WHEN** offline simulation runs regardless of active path/tier, **THEN** resulting resource deltas are identical to a simulation with no active path at all (Pillar 4). **[Integration — BLOCKING]**
+- **GIVEN** an active Class Path, **WHEN** live or offline ambient simulation runs, **THEN** only its explicit Haters growth, Morale drain, and Morale floor effects apply; action reward/duration/yield multipliers do not leak into passive Reach. **[Integration — BLOCKING]**
 - **GIVEN** any path/tier state, **THEN** no UI string in the Class Path Panel or HUD contains "dobry"/"zły"/"good"/"evil"/"moral" or an equivalent. **[UI — ADVISORY, text-audit walkthrough]**
 - **GIVEN** an arbitrary sequence of card resolutions and investments within one era, **THEN** affiliation for every path is non-decreasing at every step. **[Logic — BLOCKING]**
 - **GIVEN** `pato_streamer` is active at T1 (+30% Reach on "Zrób dramę") and a second, independent Reach modifier source also applies +10% to the same action, **WHEN** the action resolves, **THEN** the combined bonus is +40% (additive: `base × 1.40`), never `base × 1.3 × 1.1`. **[Logic — BLOCKING]** — no second modifier source exists in the codebase yet; **implement this test now against a stubbed/mocked second bonus source** (per this project's DI-over-singletons testability standard), rather than deferring it as not-executable. *(Revised 2026-07-12: previously tagged "currently not executable," which qa-lead flagged as a self-contradictory permanently-blocking-on-nothing state — a mocked second source makes it genuinely testable today.)*
@@ -409,7 +421,9 @@ The large majority are **Logic** — pure formula/state, unit-testable in isolat
 - **BLOCKING-before-Alpha — per-path investment economic normalization** (strengthened 2026-07-12, economy-designer) — F2's derived rates (0.1/0.2/0.125/0.02) are reciprocals of the quick-spec's rough "Investment Cost Scale" table, explicitly marked there as "deliberately rough — need a playtest pass before Alpha lock." The four investment resources are not economically fungible (bounded feedback meters vs. unbounded stockpiles at different velocities); flat per-unit pricing risks a structurally dominant path (candidate: `pato_streamer`) independent of the stated rate. Core Rule 4a's history-gate mitigates the "buy a path you never chose" exploit but does not fix this normalization gap. Also flagged: potential sink collision on Sponsors between `guru_celebryta`'s investment cost, the existing Sponsor Shield sink, and the future (undesigned) Team/Staff Management system. *Owner: economy-designer, before Alpha implementation of active investment — needs real ActionSystem/balance.json income-curve data.*
 - **Replay-variety concern with "single active path, no stacking"** (added 2026-07-12, game-designer, judged real but not identity-breaking by creative-director) — since affiliation never decays and only one path ever contributes multipliers, the rational strategy is committing to one path immediately and never touching the other three paths' cards again. This may undercut exploring all four satirical personas across replays/eras. No rule change made in this pass — flagged for consideration alongside the Prestige/Checkpoint System design (per-era path variety could become a meta-progression incentive there) or a future revision if playtesting confirms the concern. *Owner: unassigned — revisit at Prestige/Checkpoint System design or post-Vertical-Slice playtest.*
 - ~~**This GDD was authored specifically to unblock Prestige/Checkpoint System**~~ — **RESOLVED 2026-07-12**: `design/gdd/prestige-checkpoint-system.md` is now Designed. It reads `best_tier_reached`/`eras_spent_as` for informational/era-summary display only, not as meta-bonus formula inputs *(corrected 2026-07-13 — see Dependencies above; the original wording here overstated the coupling)*.
-- **`PATH_MULTIPLIER_OFFLINE` evaluation** — off by default per Pillar 4; the quick-spec defers enabling it until profiling confirms it won't confuse offline-report readability. No target date; revisit once Offline Report Screen has path-aware content to show. *Owner: unassigned, Alpha-tier.*
+- ~~**`PATH_MULTIPLIER_OFFLINE` evaluation**~~ — **RESOLVED 2026-08-05**:
+  removed the generic switch. Only named ambient Haters/drain/floor effects
+  cross the online/offline boundary; action modifiers remain active-only.
 - ~~**Cosmetic Persona Customization** (systems-index #18, Full Vision, undesigned) is listed as depending on this system, but no contract exists yet for what "active path" means to that system.~~ — **RESOLVED 2026-07-23**: `design/gdd/cosmetic-persona-customization.md` designed — contract is `HistoryFlagManager` milestones, not "active path" at all. See Dependencies above.
 - **Signature card copy is placeholder** (per quick-spec) — final Polish text for the 4 Tier-5 cards is a narrative-director/writer task deferred to Alpha, not blocking this GDD.
 - ~~**ClassPathPanel shows "Tier N bonus in effect" with no numbers — Pillar 1 violation, found 2026-07-22 (user screenshot review)**~~ **RESOLVED 2026-07-28 (tier-bonus fill)**: `class_path_panel.gd` now renders one line per unlocked tier with concrete values (from `ClassPathSystem.get_tier_effect_data()`) plus a next-tier teaser on every row, Tier-0 rows included (the ladder is visible before the first threshold). Evidence: `tests/integration/class-path/class_path_panel_legibility_test.gd`.

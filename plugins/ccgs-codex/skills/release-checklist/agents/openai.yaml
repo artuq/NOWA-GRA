@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Checklist"
+  short_description: "Run the CCGS Release Checklist workflow in Codex."
+  default_prompt: "Use $release-checklist to handle this game-development task."

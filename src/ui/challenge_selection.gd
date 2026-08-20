@@ -59,12 +59,33 @@ var _challenge_ids: Array[StringName] = []
 ## takes effect (change_scene_to_file() defers to end-of-frame).
 var _confirming: bool = false
 
+const _CHALLENGE_NAME_KEYS: Dictionary[StringName, StringName] = {
+	&"brak_duszy": &"META_CHALLENGE_BRAK_DUSZY_NAME",
+	&"drama_bez_granic": &"META_CHALLENGE_DRAMA_BEZ_GRANIC_NAME",
+	&"przepros_na_niby": &"META_CHALLENGE_PRZEPROS_NA_NIBY_NAME",
+	&"bez_tlumu": &"META_CHALLENGE_BEZ_TLUMU_NAME",
+	&"wypalony_ale_core": &"META_CHALLENGE_WYPALONY_ALE_CORE_NAME",
+}
+
+const _MODIFIER_AXIS_KEYS: Dictionary[StringName, StringName] = {
+	&"reach_multiplier": &"META_CHALLENGE_AXIS_REACH",
+	&"cringe_multiplier": &"META_CHALLENGE_AXIS_CRINGE",
+	&"morale_multiplier": &"META_CHALLENGE_AXIS_MORALE",
+}
+
 
 func _ready() -> void:
+	_era_summary_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_meta_bonus_granted_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_combined_multiplier_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_selection_count_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	for card: Button in _challenge_cards:
+		card.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	_challenge_ids = ChallengeSystem.get_all_challenge_ids()
 	_render_header()
 	_render_cards()
 	_confirm_button.pressed.connect(_on_confirm_pressed)
+	SettingsSystem.language_changed.connect(_on_language_changed)
 	if OS.has_feature("web"):
 		_web_suppress_back_gesture()
 
@@ -74,17 +95,17 @@ func _ready() -> void:
 ## get_last_grant(), NOT a re-derivation -- same underlying compute_next_
 ## grant() math on both ends, guaranteeing the two numbers can never diverge).
 func _render_header() -> void:
-	_era_summary_label.text = "Era %d started." % PrestigeSystem.get_era_count()
+	_era_summary_label.text = tr("META_CHALLENGE_ERA_STARTED") % PrestigeSystem.get_era_count()
 	var grant: Dictionary = PrestigeSystem.get_last_grant()
 	if not grant.get("granted", false):
 		# No Bonus Granted state (States & Variants) -- previous era ended
 		# without an active Class Path. Never a blank label, never a
 		# misleading "0%" that would imply some (even zero) grant happened.
-		_meta_bonus_granted_label.text = "No bonus this era."
+		_meta_bonus_granted_label.text = tr("META_CHALLENGE_NO_BONUS")
 		return
 	var bonus_type: StringName = grant["type"]
 	var amount: float = grant["amount"]
-	_meta_bonus_granted_label.text = "Permanent bonus gained: +%s%% %s" % [
+	_meta_bonus_granted_label.text = tr("META_CHALLENGE_BONUS_GAINED") % [
 		String("%.1f" % (amount * 100.0)), _bonus_type_display_name(bonus_type),
 	]
 
@@ -95,10 +116,10 @@ func _render_header() -> void:
 ## independently; unifying the two is future cleanup, not this story's scope).
 func _bonus_type_display_name(bonus_type: StringName) -> String:
 	match bonus_type:
-		&"META_REACH_MULT": return "Reach"
-		&"META_SPONSOR_MULT": return "Sponsors"
-		&"META_HATERS_RESIST": return "Haters Resist"
-		&"META_SPONSOR_FLOOR": return "Sponsors Floor"
+		&"META_REACH_MULT": return tr("META_CHALLENGE_BONUS_REACH")
+		&"META_SPONSOR_MULT": return tr("META_CHALLENGE_BONUS_SPONSORS")
+		&"META_HATERS_RESIST": return tr("META_CHALLENGE_BONUS_HATERS_RESIST")
+		&"META_SPONSOR_FLOOR": return tr("META_CHALLENGE_BONUS_SPONSOR_FLOOR")
 		_: return String(bonus_type)
 
 
@@ -125,10 +146,12 @@ func _render_cards() -> void:
 ## (Accessibility section: "Brak informacji tylko przez kolor").
 func _render_card_label(card: Button, data: Dictionary, selected: bool) -> void:
 	var glyph: String = "☑" if selected else "☐"
-	var name_text: String = data.get("name", "")
+	var challenge_id: StringName = data.get("id", &"")
+	var name_key: StringName = _CHALLENGE_NAME_KEYS.get(challenge_id, &"")
+	var name_text: String = tr(name_key) if not name_key.is_empty() else data.get("name", "")
 	var modifier_text: String = _format_modifier(data)
 	var meta_mult: float = data.get("meta_bonus_multiplier", 1.0)
-	card.text = "%s %s\n%s\n×%s meta-bonus" % [glyph, name_text, modifier_text, String("%.1f" % meta_mult)]
+	card.text = tr("META_CHALLENGE_CARD_FORMAT") % [glyph, name_text, modifier_text, String("%.1f" % meta_mult)]
 
 
 ## "Nagraj vloga: 0.3× Reach"-style modifier line (Component Inventory's
@@ -140,8 +163,9 @@ func _render_card_label(card: Button, data: Dictionary, selected: bool) -> void:
 func _format_modifier(data: Dictionary) -> String:
 	var axis: StringName = data.get("modifier_type", &"")
 	var value: float = data.get("modifier_value", 1.0)
-	var axis_label: String = String(axis).replace("_multiplier", "").capitalize()
-	return "%s× %s" % [String("%.1f" % value), axis_label]
+	var axis_key: StringName = _MODIFIER_AXIS_KEYS.get(axis, &"")
+	var axis_label: String = tr(axis_key) if not axis_key.is_empty() else String(axis).replace("_multiplier", "").capitalize()
+	return tr("META_CHALLENGE_MODIFIER_FORMAT") % [String("%.1f" % value), axis_label]
 
 
 ## Toggle handler for one ChallengeCard. Enforces CHALLENGE_MAX_ACTIVE
@@ -152,7 +176,7 @@ func _format_modifier(data: Dictionary) -> String:
 func _on_card_toggled(pressed: bool, card: Button) -> void:
 	if pressed and _selected_count() > ChallengeSystem.CHALLENGE_MAX_ACTIVE:
 		card.button_pressed = false  # revert -- this signal already reflects the rejected press
-		card.tooltip_text = "You can only select %d Challenges this era." % ChallengeSystem.CHALLENGE_MAX_ACTIVE
+		card.tooltip_text = tr("META_CHALLENGE_AT_CAP") % ChallengeSystem.CHALLENGE_MAX_ACTIVE
 		return
 	var data: Dictionary = ChallengeSystem.get_challenge_data(StringName(card.get_meta("challenge_id")))
 	_render_card_label(card, data, pressed)
@@ -172,7 +196,7 @@ func _update_footer() -> void:
 		if card.button_pressed:
 			count += 1
 			product *= float(card.get_meta("meta_bonus_multiplier"))
-	_combined_multiplier_label.text = "Combined multiplier: ×%s" % String("%.1f" % product)
+	_combined_multiplier_label.text = tr("META_CHALLENGE_COMBINED_MULTIPLIER") % String("%.1f" % product)
 	_selection_count_label.text = "%d/%d" % [count, ChallengeSystem.CHALLENGE_MAX_ACTIVE]
 	# Disable the remaining unselected cards once at cap -- Disabled-State
 	# Tooltip pattern (interaction-patterns.md), not a silent reject-only UX.
@@ -180,8 +204,18 @@ func _update_footer() -> void:
 	for card: Button in _challenge_cards:
 		if not card.button_pressed:
 			card.disabled = at_cap
-			if at_cap:
-				card.tooltip_text = "You can only select %d Challenges this era." % ChallengeSystem.CHALLENGE_MAX_ACTIVE
+			card.tooltip_text = (
+				tr("META_CHALLENGE_AT_CAP") % ChallengeSystem.CHALLENGE_MAX_ACTIVE
+				if at_cap else ""
+			)
+
+
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
+	_render_header()
+	for i in _challenge_ids.size():
+		var card: Button = _challenge_cards[i]
+		_render_card_label(card, ChallengeSystem.get_challenge_data(_challenge_ids[i]), card.button_pressed)
+	_update_footer()
 
 
 func _selected_count() -> int:

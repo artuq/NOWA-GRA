@@ -1,0 +1,4 @@
+interface:
+  display_name: "Save Systems"
+  short_description: "Imported game-development capability: Save Systems."
+  default_prompt: "Use $save-systems for this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Puzzle"
+  short_description: "Imported game-development capability: Puzzle."
+  default_prompt: "Use $puzzle for this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Gdscript"
+  short_description: "Imported game-development capability: Godot Gdscript."
+  default_prompt: "Use $godot-gdscript for this game-development task."

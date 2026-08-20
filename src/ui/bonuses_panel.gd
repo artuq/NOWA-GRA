@@ -25,30 +25,30 @@ signal close_requested
 
 ## Display order + per-type presentation (spec Information Hierarchy:
 ## humanized name ≤18 chars EN, value format %/flat, origin path for
-## discoverability). Static UI content, not game state.
+## discoverability). Keys are presentation metadata, not game state.
 const _ROWS: Array[Dictionary] = [
 	{
 		"type": &"META_REACH_MULT",
-		"label": "Permanent Reach",
-		"origin": "from Trash Streamer eras",
+		"label_key": &"META_BONUS_REACH_NAME",
+		"origin_key": &"META_BONUS_REACH_ORIGIN",
 		"is_percent": true,
 	},
 	{
 		"type": &"META_SPONSOR_MULT",
-		"label": "Sponsor income",
-		"origin": "from Guru Celeb eras",
+		"label_key": &"META_BONUS_SPONSOR_NAME",
+		"origin_key": &"META_BONUS_SPONSOR_ORIGIN",
 		"is_percent": true,
 	},
 	{
 		"type": &"META_HATERS_RESIST",
-		"label": "Haters resistance",
-		"origin": "from Niche Expert eras",
+		"label_key": &"META_BONUS_HATERS_NAME",
+		"origin_key": &"META_BONUS_HATERS_ORIGIN",
 		"is_percent": true,
 	},
 	{
 		"type": &"META_SPONSOR_FLOOR",
-		"label": "Sponsor floor",
-		"origin": "from Content Mogul eras",
+		"label_key": &"META_BONUS_FLOOR_NAME",
+		"origin_key": &"META_BONUS_FLOOR_ORIGIN",
 		"is_percent": false,
 	},
 ]
@@ -76,12 +76,14 @@ var _pulse_tweens: Array[Tween] = []
 
 func _ready() -> void:
 	visible = false
+	_era_count_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	for label: Label in _name_labels + _value_labels + _origin_labels:
+		label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	_close_button.pressed.connect(func() -> void: close_requested.emit())
 	visibility_changed.connect(_on_visibility_changed)
 	for i in _ROWS.size():
-		_name_labels[i].text = _ROWS[i]["label"]
-		_origin_labels[i].text = _ROWS[i]["origin"]
 		_last_seen[_ROWS[i]["type"]] = PrestigeSystem.get_meta_bonus_total(_ROWS[i]["type"])
+	SettingsSystem.language_changed.connect(_on_language_changed)
 
 
 func _on_visibility_changed() -> void:
@@ -96,6 +98,11 @@ func _on_visibility_changed() -> void:
 			_last_seen[row["type"]] = PrestigeSystem.get_meta_bonus_total(row["type"])
 
 
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
+	if visible:
+		_refresh_all()
+
+
 ## Types whose total changed since the panel was last closed. Pure read —
 ## split out from the pulse so tests can assert the diff without tweens.
 func _compute_fresh_types() -> Array[StringName]:
@@ -108,9 +115,11 @@ func _compute_fresh_types() -> Array[StringName]:
 
 
 func _refresh_all() -> void:
-	_era_count_label.text = "Eras completed: %d" % PrestigeSystem.get_era_count()
+	_era_count_label.text = tr("META_BONUSES_ERA_COUNT") % PrestigeSystem.get_era_count()
 	for i in _ROWS.size():
 		var row: Dictionary = _ROWS[i]
+		_name_labels[i].text = tr(row["label_key"])
+		_origin_labels[i].text = tr(row["origin_key"])
 		var bonus_type: StringName = row["type"]
 		var total: float = PrestigeSystem.get_meta_bonus_total(bonus_type)
 		var cap: float = PrestigeFormulas.META_BONUS_MAX[bonus_type]

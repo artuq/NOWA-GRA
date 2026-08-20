@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Flakiness"
+  short_description: "Run the CCGS Test Flakiness workflow in Codex."
+  default_prompt: "Use $test-flakiness to handle this game-development task."

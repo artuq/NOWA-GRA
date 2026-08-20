@@ -1,0 +1,117 @@
+---
+name: ccgs-studio
+description: Route any game-development task through the CCGS Codex studio, including design, implementation, production, QA, release, UX, art, audio, economy, progression, and balance work.
+---
+
+# CCGS Studio Router
+
+Use this skill when the user asks for CCGS generally, when the exact workflow is
+unclear, or when a specialized workflow may be missing from the initial skill
+discovery budget.
+
+1. Identify the smallest workflow or set of workflows that covers the request.
+2. Open only those workflow `SKILL.md` files from the sibling skill folders.
+3. Keep user-facing decisions in the primary thread. Delegate bounded analysis
+   or implementation to the matching profile under `.codex/agents/` when useful.
+4. Batch team workflows to respect the active concurrency limit.
+5. For balance and economy review, choose `$balance-check` and the
+   `economy-designer` profile.
+6. For story implementation, require an explicit story path. If none is given,
+   consult `production/sprint-status.yaml`; ask the user when it does not resolve
+   to exactly one ready story.
+7. For release readiness, invoke `$gate-check release` explicitly so the current
+   `production/stage.txt` does not redirect the audit to an earlier phase gate.
+8. Follow the nearest `AGENTS.md`; do not commit or push unless asked.
+
+## Specialized capability layer
+
+For engine APIs, reusable gameplay disciplines, genre implementation patterns,
+and platform-specific publishing details, invoke `$gamedev-skill-router` after
+selecting the CCGS workflow. It imports the portable
+`awesome-gamedev-agent-skills` catalog and loads only the smallest relevant set.
+
+- CCGS owns project workflow, production state, roles, quality gates, and
+  design/architecture traceability.
+- `$gamedev-skill-router` owns engine/discipline/genre capability selection.
+- The project's pinned engine version always overrides an imported catalog
+  baseline. For this project, read `docs/engine-reference/godot/VERSION.md`.
+- Do not load an entire engine/category when one or two focused skills cover the
+  task.
+
+## Workflow index
+
+| Workflow | Recommended role | Use when |
+|---|---|---|
+| `$adopt` | `technical-director` | Brownfield onboarding — audits existing project artifacts for template format compliance (not just existence), classifies gaps by impact, and produces a numbered migration plan. Run this when joining an in-progress project or upgrading from an older template version. Distinct from $project-stage-detect (which checks what exists) — this checks whether what exists will actually work with the template's skills. |
+| `$architecture-decision` | `primary` | Creates an Architecture Decision Record (ADR) documenting a significant technical decision, its context, alternatives considered, and consequences. Every major technical choice should have an ADR. |
+| `$architecture-review` | `technical-director` | Validates completeness and consistency of the project architecture against all GDDs. Builds a traceability matrix mapping every GDD technical requirement to ADRs, identifies coverage gaps, detects cross-ADR conflicts, verifies engine compatibility consistency across all decisions, and produces a PASS/CONCERNS/FAIL verdict. The architecture equivalent of $design-review. |
+| `$art-bible` | `primary` | Guided, section-by-section Art Bible authoring. Creates the visual identity specification that gates all asset production. Run after $brainstorm is approved and before $map-systems or any GDD authoring begins. |
+| `$asset-audit` | `primary` | Audits game assets for compliance with naming conventions, file size budgets, format standards, and pipeline requirements. Identifies orphaned assets, missing references, and standard violations. |
+| `$asset-spec` | `primary` | Generate per-asset visual specifications and AI generation prompts from GDDs, level docs, or character profiles. Produces structured spec files and updates the master asset manifest. Run after art bible and GDD/level design are approved, before production begins. |
+| `$balance-check` | `economy-designer` | Analyzes game balance data files, formulas, and configuration to identify outliers, broken progressions, degenerate strategies, and economy imbalances. Use after modifying any balance-related data or design. Use when user says 'balance report', 'check game balance', 'run a balance check'. |
+| `$brainstorm` | `primary` | Guided game concept ideation — from zero idea to a structured game concept document. Uses professional studio ideation techniques, player psychology frameworks, and structured creative exploration. |
+| `$bug-report` | `primary` | Creates a structured bug report from a description, or analyzes code to identify potential bugs. Ensures every bug report has full reproduction steps, severity assessment, and context. |
+| `$bug-triage` | `primary` | Read all open bugs in production/qa/bugs/, re-evaluate priority vs. severity, assign to sprints, surface systemic trends, and produce a triage report. Run at sprint start or when the bug count grows enough to need re-prioritization. |
+| `$changelog` | `primary` | Auto-generates a changelog from git commits, sprint data, and design documents. Produces both internal and player-facing versions. |
+| `$code-review` | `lead-programmer` | Performs an architectural and quality code review on a specified file or set of files. Checks for coding standard compliance, architectural pattern adherence, SOLID principles, testability, and performance concerns. |
+| `$consistency-check` | `primary` | Scan all GDDs against the entity registry to detect cross-document inconsistencies: same entity with different stats, same item with different values, same formula with different variables. Grep-first approach — reads registry then targets only conflicting GDD sections rather than full document reads. |
+| `$content-audit` | `producer` | Audit GDD-specified content counts against implemented content. Identifies what's planned vs built. |
+| `$create-architecture` | `technical-director` | Guided, section-by-section authoring of the master architecture document for the game. Reads all GDDs, the systems index, existing ADRs, and the engine reference library to produce a complete architecture blueprint before any code is written. Engine-version-aware: flags knowledge gaps and validates decisions against the pinned engine version. |
+| `$create-control-manifest` | `technical-director` | After architecture is complete, produces a flat actionable rules sheet for programmers — what you must do, what you must never do, per system and per layer. Extracted from all Accepted ADRs, technical preferences, and engine reference docs. More immediately actionable than ADRs (which explain why). |
+| `$create-epics` | `technical-director` | Translate approved GDDs + architecture into epics — one epic per architectural module. Defines scope, governing ADRs, engine risk, and untraced requirements. Does NOT break into stories — run $create-stories [epic-slug] after each epic is created. |
+| `$create-stories` | `lead-programmer` | Break a single epic into implementable story files. Reads the epic, its GDD, governing ADRs, and control manifest. Each story embeds its GDD requirement TR-ID, ADR guidance, acceptance criteria, story type, and test evidence path. Run after $create-epics for each epic. |
+| `$day-one-patch` | `primary` | Prepare a day-one patch for a game launch. Scopes, prioritises, implements, and QA-gates a focused patch addressing known issues discovered after gold master but before or immediately after public launch. Treats the patch as a mini-sprint with its own QA gate and rollback plan. |
+| `$design-review` | `primary` | Reviews a game design document for completeness, internal consistency, implementability, and adherence to project design standards. Run this before handing a design document to programmers. |
+| `$design-system` | `primary` | Guided, section-by-section GDD authoring for a single game system. Gathers context from existing docs, walks through each required section collaboratively, cross-references dependencies, and writes incrementally to file. |
+| `$dev-story` | `primary` | Read a story file and implement it. Loads the full context (story, GDD requirement, ADR guidelines, control manifest), routes to the right programmer agent for the system and engine, implements the code and test, and confirms each acceptance criterion. The core implementation skill — run after $story-readiness, before $code-review and $story-done. |
+| `$estimate` | `primary` | Estimates task effort by analyzing complexity, dependencies, historical velocity, and risk factors. Produces a structured estimate with confidence levels. |
+| `$gate-check` | `primary` | Validate readiness to advance between development phases. Produces a PASS/CONCERNS/FAIL verdict with specific blockers and required artifacts. Use when user says 'are we ready to move to X', 'can we advance to production', 'check if we can start the next phase', 'pass the gate'. |
+| `$help` | `primary` | Analyzes what is done and the users query and offers advice on what to do next. Use if user says what should I do next or what do I do now or I'm stuck or I don't know what to do |
+| `$hotfix` | `primary` | Emergency fix workflow that bypasses normal sprint processes with a full audit trail. Creates hotfix branch, tracks approvals, and ensures the fix is backported correctly. |
+| `$launch-checklist` | `primary` | Complete launch readiness validation covering every department: code, content, store, marketing, community, infrastructure, legal, and go/no-go sign-offs. |
+| `$localize` | `localization-lead` | Full localization pipeline: scan for hardcoded strings, extract and manage string tables, validate translations, generate translator briefings, run cultural/sensitivity review, manage VO localization, test RTL/platform requirements, enforce string freeze, and report coverage. |
+| `$map-systems` | `primary` | Decompose a game concept into individual systems, map dependencies, prioritize design order, and create the systems index. |
+| `$milestone-review` | `primary` | Generates a comprehensive milestone progress review including feature completeness, quality metrics, risk assessment, and go/no-go recommendation. Use at milestone checkpoints or when evaluating readiness for a milestone deadline. |
+| `$onboard` | `primary` | Generates a contextual onboarding document for a new contributor or agent joining the project. Summarizes project state, architecture, conventions, and current priorities relevant to the specified role or area. |
+| `$patch-notes` | `community-manager` | Generate player-facing patch notes from git history, sprint data, and internal changelogs. Translates developer language into clear, engaging player communication. |
+| `$perf-profile` | `performance-analyst` | Structured performance profiling workflow. Identifies bottlenecks, measures against budgets, and generates optimization recommendations with priority rankings. |
+| `$playtest-report` | `primary` | Generates a structured playtest report template or analyzes existing playtest notes into a structured format. Use this to standardize playtest feedback collection and analysis. |
+| `$project-stage-detect` | `primary` | Automatically analyze project state, detect stage, identify gaps, and recommend next steps based on existing artifacts. Use when user asks 'where are we in development', 'what stage are we in', 'full project audit'. |
+| `$propagate-design-change` | `technical-director` | When a GDD is revised, scans all ADRs and the traceability index to identify which architectural decisions are now potentially stale. Produces a change impact report and guides the user through resolution. |
+| `$prototype` | `prototyper` | Concept prototype — validate the core idea is worth designing before writing GDDs. Run right after $brainstorm and $setup-engine. Routes to HTML, Engine, or Paper path based on game type. Produces a throwaway build and a PROCEED/PIVOT/KILL verdict. |
+| `$qa-plan` | `qa-lead` | Generate a QA test plan for a sprint or feature. Reads GDDs and story files, classifies stories by test type (Logic/Integration/Visual/UI), and produces a structured test plan covering automated tests required, manual test cases, smoke test scope, and playtest sign-off requirements. Run before sprint begins or when starting a major feature. |
+| `$quick-design` | `primary` | Lightweight design spec for small changes — tuning adjustments, minor mechanics, balance tweaks. Skips full GDD authoring when a system GDD already exists or the change is too small to warrant one. Produces a Quick Design Spec that embeds directly into story files. |
+| `$regression-suite` | `primary` | Map test coverage to GDD critical paths, identify fixed bugs without regression tests, flag coverage drift from new features, and maintain tests/regression-suite.md. Run after implementing a bug fix or before a release gate. |
+| `$release-checklist` | `primary` | Generates a comprehensive pre-release validation checklist covering build verification, certification requirements, store metadata, and launch readiness. |
+| `$retrospective` | `primary` | Generates a sprint or milestone retrospective by analyzing completed work, velocity, blockers, and patterns. Produces actionable insights for the next iteration. |
+| `$reverse-document` | `primary` | Generate design or architecture documents from existing implementation. Works backwards from code/prototypes to create missing planning docs. |
+| `$review-all-gdds` | `primary` | Holistic cross-GDD consistency and game design review. Reads all system GDDs simultaneously and checks for contradictions between them, stale references, ownership conflicts, formula incompatibilities, and game design theory violations (dominant strategies, economic imbalance, cognitive overload, pillar drift). Run after all MVP GDDs are written, before architecture begins. |
+| `$scope-check` | `primary` | Analyze a feature or sprint for scope creep by comparing current scope against the original plan. Flags additions, quantifies bloat, and recommends cuts. Use when user says 'any scope creep', 'scope review', 'are we staying in scope'. |
+| `$security-audit` | `security-engineer` | Audit the game for security vulnerabilities: save tampering, cheat vectors, network exploits, data exposure, and input validation gaps. Produces a prioritised security report with remediation guidance. Run before any public release or multiplayer launch. |
+| `$setup-engine` | `primary` | Configure the project's game engine and version. Pins the engine in AGENTS.md, detects knowledge gaps, and populates engine reference docs via WebSearch when the version is beyond the LLM's training data. |
+| `$skill-improve` | `primary` | Improve one editable Codex skill through a safe baseline, minimal patch, validation, and retest loop while preserving unrelated user changes. |
+| `$skill-test` | `primary` | Validate Codex skill files in four modes: static structure checks, optional behavioral specs, category quality rubrics, and a dynamic coverage audit. |
+| `$smoke-check` | `primary` | Run the critical path smoke test gate before QA hand-off. Executes the automated test suite, verifies core functionality, and produces a PASS/FAIL report. Run after a sprint's stories are implemented and before manual QA begins. A failed smoke check means the build is not ready for QA. |
+| `$soak-test` | `primary` | Generate a soak test protocol for extended play sessions. Defines what to observe, measure, and log during long play sessions to surface slow leaks, fatigue effects, and edge cases that only appear after sustained play. Primarily used in Polish and Release phases. |
+| `$sprint-plan` | `primary` | Generates a new sprint plan or updates an existing one based on the current milestone, completed work, and available capacity. Pulls context from production documents and design backlogs. |
+| `$sprint-status` | `primary` | Fast sprint status check. Reads the current sprint plan, scans story files for status, and produces a concise progress snapshot with burndown assessment and emerging risks. Run at any time during a sprint for quick situational awareness. Use when user asks 'how is the sprint going', 'sprint update', 'show sprint progress'. |
+| `$start` | `primary` | First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions. |
+| `$story-done` | `primary` | End-of-story completion review. Reads the story file, verifies each acceptance criterion against the implementation, checks for GDD/ADR deviations, prompts code review, updates story status to Complete, and surfaces the next ready story from the sprint. |
+| `$story-readiness` | `primary` | Validate that a story file is implementation-ready. Checks for embedded GDD requirements, ADR references, engine notes, clear acceptance criteria, and no open design questions. Produces READY / NEEDS WORK / BLOCKED verdict with specific gaps. Use when user says 'is this story ready', 'can I start on this story', 'is story X ready to implement'. |
+| `$team-audio` | `primary` | Orchestrate audio team: audio-director + sound-designer + technical-artist + gameplay-programmer for full audio pipeline from direction to implementation. |
+| `$team-combat` | `primary` | Orchestrate the combat team: coordinates game-designer, gameplay-programmer, ai-programmer, technical-artist, sound-designer, and qa-tester to design, implement, and validate a combat feature end-to-end. |
+| `$team-level` | `primary` | Orchestrate level design team: level-designer + narrative-director + world-builder + art-director + systems-designer + qa-tester for complete area/level creation. |
+| `$team-live-ops` | `primary` | Orchestrate the live-ops team for post-launch content planning: coordinates live-ops-designer, economy-designer, analytics-engineer, community-manager, writer, and narrative-director to design and plan a season, event, or live content update. |
+| `$team-narrative` | `primary` | Orchestrate the narrative team: coordinates narrative-director, writer, world-builder, and level-designer to create cohesive story content, world lore, and narrative-driven level design. |
+| `$team-polish` | `primary` | Orchestrate the polish team: coordinates performance-analyst, technical-artist, sound-designer, and qa-tester to optimize, polish, and harden a feature or area for release quality. |
+| `$team-qa` | `qa-lead` | Orchestrate the QA team through a full testing cycle. Coordinates qa-lead (strategy + test plan) and qa-tester (test case writing + bug reporting) to produce a complete QA package for a sprint or feature. Covers: test plan generation, test case writing, smoke check gate, manual QA execution, and sign-off report. |
+| `$team-release` | `primary` | Orchestrate the release team: coordinates release-manager, qa-lead, devops-engineer, and producer to execute a release from candidate to deployment. |
+| `$team-ui` | `primary` | Orchestrate the UI team through the full UX pipeline: from UX spec authoring through visual design, implementation, review, and polish. Integrates with $ux-design, $ux-review, and studio UX templates. |
+| `$tech-debt` | `primary` | Track, categorize, and prioritize technical debt across the codebase. Scans for debt indicators, maintains a debt register, and recommends repayment scheduling. |
+| `$test-evidence-review` | `primary` | Quality review of test files and manual evidence documents. Goes beyond existence checks — evaluates assertion coverage, edge case handling, naming conventions, and evidence completeness. Produces ADEQUATE/INCOMPLETE/MISSING verdict per story. Run before QA sign-off or on demand. |
+| `$test-flakiness` | `primary` | Detect non-deterministic (flaky) tests by reading CI run logs or test result history. Aggregates pass rates per test, identifies intermittent failures, recommends quarantine or fix, and maintains a flaky test registry. Best run during Polish phase or after multiple CI runs. |
+| `$test-helpers` | `primary` | Generate engine-specific test helper libraries for the project's test suite. Reads existing test patterns and produces tests/helpers/ with assertion utilities, factory functions, and mock objects tailored to the project's systems. Reduces boilerplate in new test files. |
+| `$test-setup` | `primary` | Scaffold the test framework and CI/CD pipeline for the project's engine. Creates the tests/ directory structure, engine-specific test runner configuration, and GitHub Actions workflow. Run once during Technical Setup phase before the first sprint begins. |
+| `$ux-design` | `ux-designer` | Guided, section-by-section UX spec authoring for a screen, flow, or HUD. Reads game concept, player journey, and relevant GDDs to provide context-aware design guidance. Produces ux-spec.md (per screen/flow) or hud-design.md using the studio templates. |
+| `$ux-review` | `ux-designer` | Validates a UX spec, HUD design, or interaction pattern library for completeness, accessibility compliance, GDD alignment, and implementation readiness. Produces APPROVED / NEEDS REVISION / MAJOR REVISION NEEDED verdict with specific gaps. |
+| `$vertical-slice` | `prototyper` | Pre-Production validation — build a production-quality end-to-end build to confirm the full game loop is achievable before committing to Production. Run after GDDs, architecture, and UX specs are complete. Produces a PROCEED/PIVOT/KILL verdict that gates the Pre-Production → Production transition. |

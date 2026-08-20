@@ -1,0 +1,4 @@
+interface:
+  display_name: "Estimate"
+  short_description: "Run the CCGS Estimate workflow in Codex."
+  default_prompt: "Use $estimate to handle this game-development task."

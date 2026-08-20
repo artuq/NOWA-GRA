@@ -15,14 +15,23 @@ const APOLOGY: StringName = &"przeprosiny"
 
 var _onboarding_phase_snapshot: int
 var _completed_types_snapshot: Dictionary
+var _skill_challenge_intro_snapshot: bool
+var _seen_skill_challenges_snapshot: Dictionary[StringName, bool]
+var _seen_showcase_cards_snapshot: Dictionary[StringName, bool]
 
 func before_test() -> void:
 	_onboarding_phase_snapshot = OnboardingGate.phase
 	_completed_types_snapshot = OnboardingGate._completed_types.duplicate()
+	_skill_challenge_intro_snapshot = OnboardingGate._skill_challenge_intro_seen
+	_seen_skill_challenges_snapshot = OnboardingGate._seen_skill_challenges.duplicate()
+	_seen_showcase_cards_snapshot = OnboardingGate._seen_showcase_cards.duplicate()
 
 func after_test() -> void:
 	OnboardingGate.phase = _onboarding_phase_snapshot
 	OnboardingGate._completed_types = _completed_types_snapshot
+	OnboardingGate._skill_challenge_intro_seen = _skill_challenge_intro_snapshot
+	OnboardingGate._seen_skill_challenges = _seen_skill_challenges_snapshot
+	OnboardingGate._seen_showcase_cards = _seen_showcase_cards_snapshot
 	SaveSystem._debounce_timer.stop()
 
 ## AC: mid-phase save/restore -- 1 of 3 types completed, captured and restored,
@@ -102,11 +111,48 @@ func test_empty_restore_enters_first_card_hook() -> void:
 	assert_int(gate.phase).is_equal(OnboardingGateScript.Phase.FIRST_CARD_PENDING)
 	assert_bool(gate._completed_types.is_empty()).is_true()
 	assert_bool(gate.is_card_suppressed()).is_false()  # cards live from action #1
+	assert_bool(gate.should_show_skill_challenge_intro()).is_true()
 	gate.free()
 	# Consume the deferred force_cooldown_zero aimed at the real Autoload,
 	# then restore its cooldown so later suites see the default state.
 	await get_tree().process_frame
 	DecisionCardSystem._actions_until_check = DecisionCardSystem.COOLDOWN_ACTIONS
+
+
+func test_skill_challenge_intro_flag_round_trips_and_old_save_defaults_unseen() -> void:
+	var gate: Node = OnboardingGateScript.new()
+	gate.restore_state({"phase": OnboardingGateScript.Phase.NORMAL, "completed_types": []})
+	assert_bool(gate.should_show_skill_challenge_intro()).is_true()
+
+	gate.mark_skill_challenge_intro_seen()
+	var restored: Node = OnboardingGateScript.new()
+	restored.restore_state(gate.serialize_state())
+	assert_bool(restored.should_show_skill_challenge_intro()).is_false()
+	gate.free()
+	restored.free()
+
+
+func test_showcase_progress_round_trips_and_old_save_migrates_seen_minigames() -> void:
+	var gate: Node = OnboardingGateScript.new()
+	gate.mark_showcase_card_seen(&"feed_sprint_challenge")
+	gate.mark_showcase_card_seen(&"brand_deal_choice")
+	var restored: Node = OnboardingGateScript.new()
+	restored.restore_state(gate.serialize_state())
+	assert_bool(restored.has_seen_showcase_card(&"feed_sprint_challenge")).is_true()
+	assert_bool(restored.has_seen_showcase_card(&"brand_deal_choice")).is_true()
+	assert_bool(restored.has_seen_showcase_card(&"comment_moderation_challenge")).is_false()
+
+	var migrated: Node = OnboardingGateScript.new()
+	migrated.restore_state({
+		"phase": OnboardingGateScript.Phase.NORMAL,
+		"skill_challenge_intro_seen": true,
+		"seen_skill_challenges": ["feed_sprint_challenge"],
+	})
+	assert_bool(migrated.has_seen_showcase_card(&"feed_sprint_challenge")).is_true()
+	assert_bool(migrated.has_seen_showcase_card(&"brand_deal_choice")).is_false()
+	gate.free()
+	restored.free()
+	migrated.free()
 
 
 ## AC (first-card hook, end-to-end contract): after a fresh restore, the very

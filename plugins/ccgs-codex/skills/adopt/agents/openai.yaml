@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adopt"
+  short_description: "Run the CCGS Adopt workflow in Codex."
+  default_prompt: "Use $adopt to handle this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prototype"
+  short_description: "Run the CCGS Prototype workflow in Codex."
+  default_prompt: "Use $prototype to handle this game-development task."

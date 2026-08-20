@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Architecture"
+  short_description: "Run the CCGS Create Architecture workflow in Codex."
+  default_prompt: "Use $create-architecture to handle this game-development task."

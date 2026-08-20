@@ -67,7 +67,7 @@ theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 30
-text = "Permanent Bonuses"
+text = "META_BONUSES_TITLE"
 
 [node name="TopBarSpacer" type="Control" parent="MainLayout/TopBar"]
 layout_mode = 2
@@ -78,7 +78,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(88, 44)
 layout_mode = 2
 size_flags_vertical = 4
-text = "Close"
+text = "META_COMMON_CLOSE"
 
 [node name="EraCountLabel" type="Label" parent="MainLayout"]
 unique_name_in_owner = true
@@ -87,7 +87,7 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 22
-text = "Eras completed: 0"
+text = "META_BONUSES_ERA_COUNT_PLACEHOLDER"
 
 [node name="BonusList" type="VBoxContainer" parent="MainLayout"]
 layout_mode = 2
@@ -124,7 +124,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 24
 visible = false
-text = "MAX"
+text = "META_BONUSES_MAX"
 
 [node name="Row1ValueLabel" type="Label" parent="MainLayout/BonusList/Row1/VBox/HeaderRow"]
 unique_name_in_owner = true
@@ -185,7 +185,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 24
 visible = false
-text = "MAX"
+text = "META_BONUSES_MAX"
 
 [node name="Row2ValueLabel" type="Label" parent="MainLayout/BonusList/Row2/VBox/HeaderRow"]
 unique_name_in_owner = true
@@ -246,7 +246,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 24
 visible = false
-text = "MAX"
+text = "META_BONUSES_MAX"
 
 [node name="Row3ValueLabel" type="Label" parent="MainLayout/BonusList/Row3/VBox/HeaderRow"]
 unique_name_in_owner = true
@@ -307,7 +307,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 24
 visible = false
-text = "MAX"
+text = "META_BONUSES_MAX"
 
 [node name="Row4ValueLabel" type="Label" parent="MainLayout/BonusList/Row4/VBox/HeaderRow"]
 unique_name_in_owner = true

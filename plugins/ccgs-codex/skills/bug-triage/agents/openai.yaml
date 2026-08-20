@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bug Triage"
+  short_description: "Run the CCGS Bug Triage workflow in Codex."
+  default_prompt: "Use $bug-triage to handle this game-development task."

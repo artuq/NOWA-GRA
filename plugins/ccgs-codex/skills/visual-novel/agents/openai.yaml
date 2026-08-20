@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Novel"
+  short_description: "Imported game-development capability: Visual Novel."
+  default_prompt: "Use $visual-novel for this game-development task."

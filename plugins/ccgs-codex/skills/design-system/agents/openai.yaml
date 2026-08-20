@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design System"
+  short_description: "Run the CCGS Design System workflow in Codex."
+  default_prompt: "Use $design-system to handle this game-development task."

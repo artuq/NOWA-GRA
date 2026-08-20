@@ -7,15 +7,19 @@ extends GdUnitTestSuite
 const PANEL_SCENE: String = "res://scenes/action_screen/bonuses_panel.tscn"
 
 var _prestige_snapshot: Dictionary = {}
+var _locale_snapshot: String = ""
 
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_prestige_snapshot = PrestigeSystem.serialize_state()
 	PrestigeSystem.meta_bonus_totals.clear()
 	PrestigeSystem.era_count = 0
 
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	PrestigeSystem.meta_bonus_totals.clear()
 	PrestigeSystem.restore_state(_prestige_snapshot)
 	SaveSystem._debounce_timer.stop()
@@ -60,6 +64,24 @@ func test_capped_type_shows_max_marker() -> void:
 	var s: Control = _open(scene_runner(PANEL_SCENE))
 	assert_bool((s.find_child("Row1MaxLabel", true, false) as Label).visible).is_true()
 	assert_bool((s.find_child("Row2MaxLabel", true, false) as Label).visible).is_false()
+
+
+func test_open_panel_refreshes_after_polish_language_change() -> void:
+	var runner: GdUnitSceneRunner = scene_runner(PANEL_SCENE)
+	var s: Control = _open(runner)
+	TranslationServer.set_locale("pl_PL")
+	SettingsSystem.language_changed.emit(&"pl", &"pl_PL")
+	await get_tree().process_frame
+
+	assert_str((s.find_child("EraCountLabel", true, false) as Label).text).is_equal("Ukończone ery: 0")
+	assert_str((s.find_child("Row1NameLabel", true, false) as Label).text).is_equal("Stały Zasięg")
+	assert_str((s.find_child("Row1OriginLabel", true, false) as Label).text).contains("Patostreamera")
+
+	TranslationServer.set_locale("en")
+	SettingsSystem.language_changed.emit(&"en", &"en")
+	await get_tree().process_frame
+	assert_str((s.find_child("EraCountLabel", true, false) as Label).text).is_equal("Eras completed: 0")
+	assert_str((s.find_child("Row1NameLabel", true, false) as Label).text).is_equal("Permanent Reach")
 
 
 ## AC: fresh-grant diff — a type granted since the panel was last closed is

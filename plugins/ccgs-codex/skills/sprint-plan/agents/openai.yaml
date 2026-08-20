@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sprint Plan"
+  short_description: "Run the CCGS Sprint Plan workflow in Codex."
+  default_prompt: "Use $sprint-plan to handle this game-development task."

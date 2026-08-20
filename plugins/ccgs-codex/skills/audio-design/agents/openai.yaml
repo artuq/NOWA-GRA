@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audio Design"
+  short_description: "Imported game-development capability: Audio Design."
+  default_prompt: "Use $audio-design for this game-development task."

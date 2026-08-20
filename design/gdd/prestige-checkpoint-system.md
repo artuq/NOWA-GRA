@@ -382,7 +382,7 @@ All values in `assets/data/balance.json` under a `prestige` key. BurnoutSystem's
 
 ### F3c — Offline/Online Parity Scope (locked decision, 2026-07-12)
 
-- **GIVEN** `META_HATERS_RESIST_total=0.30` and `OfflineProgressSystem.simulate_offline()` runs for an elapsed window, **WHEN** offline Haters growth is computed, **THEN** the accrual is exactly `0.70×` of what the same window produces with `META_HATERS_RESIST_total=0.0` — the resistance applies identically online and offline. **[Integration — BLOCKING]** *Contrast: Class Path's `PATH_MULTIPLIER_OFFLINE=false` and Challenge's Formula-D exclusion both assert offline output is IDENTICAL with or without the system — this asserts offline output DIFFERS by exactly the resistance factor. Intentional divergence per F3c's locked scope, not a bug.*
+- **GIVEN** `META_HATERS_RESIST_total=0.30` and either ambient simulation context runs for an elapsed window, **WHEN** Haters growth is computed, **THEN** the accrual is exactly `0.70×` of what the same window produces with `META_HATERS_RESIST_total=0.0` — the resistance applies identically online and offline. **[Integration — BLOCKING]** *Class Path's named ambient modifiers follow the same parity rule; Challenge Formula-D remains action-only and is intentionally excluded from offline output.*
 
 ### Choice B (Defer) — Morale Floor, No Grant
 

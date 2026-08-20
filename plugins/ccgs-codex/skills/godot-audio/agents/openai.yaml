@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Audio"
+  short_description: "Imported game-development capability: Godot Audio."
+  default_prompt: "Use $godot-audio for this game-development task."

@@ -1,0 +1,67 @@
+{
+  "feed_sprint": {
+    "event_duration_seconds": 1.5,
+    "event_count": 16,
+    "lane_count": 3,
+    "reward_resource": "Reach",
+    "reward_min": 30.0,
+    "reward_max": 220.0,
+    "reward_curve_exponent": 1.5,
+    "events": [
+      {"kind": "trend", "lane": 1},
+      {"kind": "strike", "lane": 0},
+      {"kind": "trend", "lane": 2},
+      {"kind": "trend", "lane": 0},
+      {"kind": "strike", "lane": 1},
+      {"kind": "trend", "lane": 2},
+      {"kind": "strike", "lane": 2},
+      {"kind": "trend", "lane": 1},
+      {"kind": "trend", "lane": 0},
+      {"kind": "strike", "lane": 0},
+      {"kind": "trend", "lane": 2},
+      {"kind": "strike", "lane": 1},
+      {"kind": "trend", "lane": 0},
+      {"kind": "trend", "lane": 1},
+      {"kind": "strike", "lane": 2},
+      {"kind": "trend", "lane": 2}
+    ]
+  },
+  "comment_moderation": {
+    "event_duration_seconds": 5.0,
+    "feedback_pause_seconds": 0.45,
+    "event_order": "shuffle_nontrivial",
+    "event_count": 10,
+    "reward_resource": "Reach",
+    "reward_min": 25.0,
+    "reward_max": 190.0,
+    "reward_curve_exponent": 1.35,
+    "events": [
+      {"text_key": "MINIGAME_COMMENT_TUTORIAL_HELPED", "text": "This tutorial actually helped. Thanks!", "correct_action": "keep", "type": "fan"},
+      {"text_key": "MINIGAME_COMMENT_FREE_FOLLOWERS", "text": "FREE FOLLOWERS — click profile link NOW", "correct_action": "remove", "type": "spam"},
+      {"text_key": "MINIGAME_COMMENT_AUDIO_FEEDBACK", "text": "Audio is clipping at 01:42, but the topic is solid.", "correct_action": "keep", "type": "feedback"},
+      {"text_key": "MINIGAME_COMMENT_DELETE_CHANNEL", "text": "Nobody asked. Delete your channel.", "correct_action": "remove", "type": "hate"},
+      {"text_key": "MINIGAME_COMMENT_JACKET", "text": "Where did you get the jacket?", "correct_action": "keep", "type": "fan"},
+      {"text_key": "MINIGAME_COMMENT_CRYPTO_SCAM", "text": "I made $9000 today! Message me on CryptoGram.", "correct_action": "remove", "type": "scam"},
+      {"text_key": "MINIGAME_COMMENT_CAPTIONS", "text": "Could you add captions next time?", "correct_action": "keep", "type": "feedback"},
+      {"text_key": "MINIGAME_COMMENT_DISGUSTING", "text": "You look disgusting. Everyone agrees.", "correct_action": "remove", "type": "hate"},
+      {"text_key": "MINIGAME_COMMENT_PART_TWO", "text": "Part two please — the ending got interesting.", "correct_action": "keep", "type": "fan"},
+      {"text_key": "MINIGAME_COMMENT_INVESTMENT_SPAM", "text": "BEST INVESTMENT SIGNALS at totally-real.example", "correct_action": "remove", "type": "spam"}
+    ]
+  },
+  "brief_puzzle": {
+    "event_duration_seconds": 5.0,
+    "event_count": 4,
+    "max_attempts": 3,
+    "reward_resource": "Sponsors",
+    "reward_min": 1.0,
+    "reward_max": 3.0,
+    "reward_curve_exponent": 1.0,
+    "solution": ["legal", "proof", "claim", "cta"],
+    "events": [
+      {"id": "claim", "text_key": "MINIGAME_BRIEF_CLAIM", "text": "Promise the impossible"},
+      {"id": "cta", "text_key": "MINIGAME_BRIEF_CTA", "text": "Publish the call to action"},
+      {"id": "legal", "text_key": "MINIGAME_BRIEF_LEGAL", "text": "Read the legal warning"},
+      {"id": "proof", "text_key": "MINIGAME_BRIEF_PROOF", "text": "Check the campaign proof"}
+    ]
+  }
+}

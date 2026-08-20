@@ -1,0 +1,1 @@
+- [Offline progress Morale-floor spiral](offline_morale_spiral.md) — Morale has no offline recovery; collapses to 0 within ~2-3h for most players, locking Mult at 0.5x for rest of 24h window every day.

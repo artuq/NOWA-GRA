@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Level"
+  short_description: "Run the CCGS Team Level workflow in Codex."
+  default_prompt: "Use $team-level to handle this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reverse Document"
+  short_description: "Run the CCGS Reverse Document workflow in Codex."
+  default_prompt: "Use $reverse-document to handle this game-development task."

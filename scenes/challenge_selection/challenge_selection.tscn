@@ -95,7 +95,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 34
-text = "Era 1 started."
+text = "META_CHALLENGE_ERA_PLACEHOLDER"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -104,7 +104,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.721569, 0.721569, 0.752941, 1)
 theme_override_font_sizes/font_size = 26
-text = "No bonus this era."
+text = "META_CHALLENGE_NO_BONUS"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -130,7 +130,7 @@ theme_override_styles/hover = SubResource("CardNormal")
 theme_override_styles/pressed = SubResource("CardSelected")
 theme_override_styles/disabled = SubResource("CardNormal")
 toggle_mode = true
-text = "☐ Challenge 0"
+text = "META_CHALLENGE_CARD_PLACEHOLDER"
 autowrap_mode = 3
 alignment = 0
 
@@ -146,7 +146,7 @@ theme_override_styles/hover = SubResource("CardNormal")
 theme_override_styles/pressed = SubResource("CardSelected")
 theme_override_styles/disabled = SubResource("CardNormal")
 toggle_mode = true
-text = "☐ Challenge 1"
+text = "META_CHALLENGE_CARD_PLACEHOLDER"
 autowrap_mode = 3
 alignment = 0
 
@@ -162,7 +162,7 @@ theme_override_styles/hover = SubResource("CardNormal")
 theme_override_styles/pressed = SubResource("CardSelected")
 theme_override_styles/disabled = SubResource("CardNormal")
 toggle_mode = true
-text = "☐ Challenge 2"
+text = "META_CHALLENGE_CARD_PLACEHOLDER"
 autowrap_mode = 3
 alignment = 0
 
@@ -178,7 +178,7 @@ theme_override_styles/hover = SubResource("CardNormal")
 theme_override_styles/pressed = SubResource("CardSelected")
 theme_override_styles/disabled = SubResource("CardNormal")
 toggle_mode = true
-text = "☐ Challenge 3"
+text = "META_CHALLENGE_CARD_PLACEHOLDER"
 autowrap_mode = 3
 alignment = 0
 
@@ -194,7 +194,7 @@ theme_override_styles/hover = SubResource("CardNormal")
 theme_override_styles/pressed = SubResource("CardSelected")
 theme_override_styles/disabled = SubResource("CardNormal")
 toggle_mode = true
-text = "☐ Challenge 4"
+text = "META_CHALLENGE_CARD_PLACEHOLDER"
 autowrap_mode = 3
 alignment = 0
 
@@ -218,7 +218,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 26
-text = "Combined multiplier: ×1.0"
+text = "META_CHALLENGE_COMBINED_PLACEHOLDER"
 
 [node name="SelectionCountLabel" type="Label" parent="Margin/VBox/Footer/FooterRow"]
 unique_name_in_owner = true
@@ -239,4 +239,4 @@ theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("ConfirmBtn")
 theme_override_styles/hover = SubResource("ConfirmBtn")
 theme_override_styles/pressed = SubResource("ConfirmBtn")
-text = "CONFIRM"
+text = "META_CHALLENGE_CONFIRM"

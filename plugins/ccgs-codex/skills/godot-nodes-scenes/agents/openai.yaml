@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Nodes Scenes"
+  short_description: "Imported game-development capability: Godot Nodes Scenes."
+  default_prompt: "Use $godot-nodes-scenes for this game-development task."

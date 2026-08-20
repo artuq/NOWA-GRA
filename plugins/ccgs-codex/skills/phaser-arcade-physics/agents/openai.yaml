@@ -1,0 +1,4 @@
+interface:
+  display_name: "Phaser Arcade Physics"
+  short_description: "Imported game-development capability: Phaser Arcade Physics."
+  default_prompt: "Use $phaser-arcade-physics for this game-development task."

@@ -12,10 +12,10 @@
 ## order (after `ResourceManager`, ADR-0001/ADR-0003).
 ##
 ## On resolution (Story 002 / TR-act-001, ADR-0004's 2026-06-23 correction):
-## `_on_action_timeout()` reads the current Morale via
-## `ResourceManager.get_resource(&"Morale")`, scales the base Reach reward by
-## `ResourceFormulas.action_effectiveness_multiplier()` (round-half-away-from-
-## zero via `roundf`), writes the final Reach/Cringe/Morale deltas in one
+## `_on_action_timeout()` reads the current Morale and composes Morale,
+## Class Path, Challenge, and permanent Prestige Reach multipliers through
+## `PrestigeFormulas.final_reach()` (one final round plus the GDD's floor of
+## 1 Reach), then writes the final Reach/Cringe/Morale deltas in one
 ## atomic `ResourceManager.apply_delta()` call (ADR-0001 direct-call
 ## ownership), then emits `action_completed` carrying those same final,
 ## post-scaling deltas — never the raw `ACTION_REWARDS` base values.
@@ -70,13 +70,21 @@ const ACTION_REWARDS: Dictionary[StringName, Dictionary] = {
 	&"wydaj_kurs": {&"Reach": 40.0, &"Cringe": 18.0, &"Morale": -5.0},
 }
 
-## English UI display names, keyed by action_id. The game's UI language is
-## English (user decision, 2026-06-25); action_id keys themselves stay as-is
-## (internal identifiers, not player-facing). Moved here from ActionGrid
-## (Action UI epic, Story 003) so it's accessible to any Action UI zone
-## without cross-zone coupling (ADR-0007) -- RunningActionOverlay needed this
-## too and previously fell back to displaying the raw action_id, a real bug
-## found via user playtesting.
+## Stable localization keys for player-facing action names. Gameplay/save IDs
+## stay unchanged when the locale changes; presentation resolves these keys at
+## the UI boundary through [method get_display_name].
+const ACTION_DISPLAY_NAME_KEYS: Dictionary[StringName, StringName] = {
+	&"nagraj_vloga": &"ACTION_NAGRAJ_VLOGA_LABEL",
+	&"zrob_drame": &"ACTION_ZROB_DRAME_LABEL",
+	&"przeprosiny": &"ACTION_PRZEPROSINY_LABEL",
+	&"nagraj_kolaba": &"ACTION_NAGRAJ_KOLABA_LABEL",
+	&"udziel_wywiadu": &"ACTION_UDZIEL_WYWIADU_LABEL",
+	&"wydaj_kurs": &"ACTION_WYDAJ_KURS_LABEL",
+}
+
+## English safety copy for unknown/missing translation payloads and legacy UI
+## consumers. New player-facing code should call [method get_display_name]
+## rather than read this table directly.
 const ACTION_DISPLAY_NAMES: Dictionary[StringName, String] = {
 	&"nagraj_vloga": "Record a Vlog",
 	&"zrob_drame": "Make Drama",
@@ -128,9 +136,10 @@ var _timer: Timer
 ## values — per ADR-0004's 2026-06-23 correction.
 signal action_completed(action_id: StringName, rewards: Dictionary[StringName, float])
 
-## Emitted by `start_action()` immediately after a successful start (i.e.,
-## exactly when it is about to return `true`) — never emitted on a rejected
-## start (already running, or unknown action_id). Added for Action UI's
+## Emitted immediately after an action actually starts and its Timer is armed.
+## A call accepted into the queue does not emit this signal until that queued
+## action is later dequeued and becomes the active action. Rejected unknown ids
+## and full-queue requests never emit it. Added for Action UI's
 ## RunningActionOverlay (Story 004) to react to "an action just started"
 ## without polling or cross-zone coupling — a one-line addition to
 ## ActionSystem's existing public surface, not a new architectural decision
@@ -197,11 +206,13 @@ func start_action(action_id: StringName) -> bool:
 		return true
 	# Idle: start immediately.
 	current_action_id = action_id
-	action_started.emit(action_id)
 	# Class path T4 power spike (ADR-0010 pull model, tier-fill 2026-07-28):
 	# duration cut for the active path's spiked action(s); 1.0 when none.
 	_timer.wait_time = ACTION_DURATIONS[action_id] * ClassPathSystem.get_action_duration_multiplier(action_id)
 	_timer.start()
+	# Notify only after the Timer is fully armed so synchronous listeners can
+	# read get_current_duration() and observe this action's effective value.
+	action_started.emit(action_id)
 	return true
 
 
@@ -217,6 +228,30 @@ func get_progress() -> float:
 	return 1.0 - (_timer.time_left / _timer.wait_time)
 
 
+## Returns the active action's effective total duration in seconds, including
+## modifiers captured when the action started. Returns exactly `0.0` while
+## idle. Presentation code uses this instead of reaching into the private
+## Timer or recomputing modifiers that could change during an action.
+func get_current_duration() -> float:
+	if current_action_id == &"":
+		return 0.0
+	return _timer.wait_time
+
+
+## Returns the localized player-facing name for [param action_id]. A missing
+## locale entry falls back to the established English display name instead of
+## leaking a raw localization key into the UI. The action ID, timing, and
+## rewards are never derived from this string.
+func get_display_name(action_id: StringName) -> String:
+	var key: StringName = ACTION_DISPLAY_NAME_KEYS.get(action_id, &"")
+	if key == &"":
+		return ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+	var localized: String = tr(String(key))
+	if localized == String(key):
+		return ACTION_DISPLAY_NAMES.get(action_id, String(action_id))
+	return localized
+
+
 ## Returns the current number of actions in the queue. Read-only accessor —
 ## callers must not mutate `_queue` directly. ActionGrid uses this to determine
 ## whether to disable action buttons at the QUEUE_CAP limit.
@@ -224,17 +259,43 @@ func get_queue_size() -> int:
 	return _queue.size()
 
 
+## Returns an ordered, typed copy of the current queue (front = next action).
+## Presentation can reconstruct itself after a scene change without receiving
+## mutation access to ActionSystem's owned array.
+func get_queue_snapshot() -> Array[StringName]:
+	return _queue.duplicate()
+
+
 ## Empties the queue without affecting the currently running action. Safe to
 ## call at any time, including when idle or suspended. Emits `queue_changed`
 ## with an empty snapshot so the queue bar UI updates immediately.
 func clear_queue() -> void:
 	_queue.clear()
-	queue_changed.emit([])
+	# duplicate() preserves Array[StringName]'s element type; emitting a bare
+	# [] produces Array[Variant] and cannot bind to typed signal listeners.
+	queue_changed.emit(_queue.duplicate())
 
 
-## Resolves the completed action: reads the current Morale, scales the base
-## Reach reward by `ResourceFormulas.action_effectiveness_multiplier()`
-## (round-half-away-from-zero via `roundf`), writes the final Reach/Cringe/
+## Stops every in-flight action and clears the ephemeral queue for New Game.
+## Scene reloads do not reconstruct this Autoload, so its Timer must be
+## cancelled explicitly before the fresh career starts.
+func reset_for_new_game() -> void:
+	if _timer != null:
+		_timer.stop()
+	current_action_id = &""
+	_resolving = false
+	var was_suspended: bool = _suspended_by_card or _suspended_by_morale
+	_suspended_by_card = false
+	_suspended_by_morale = false
+	_queue.clear()
+	queue_changed.emit(_queue.duplicate())
+	if was_suspended:
+		queue_suspended_changed.emit(false)
+
+
+## Resolves the completed action: reads the current Morale, composes the full
+## F3a Reach product through `PrestigeFormulas.final_reach()` with exactly one
+## final rounding operation, writes the final Reach/Cringe/
 ## Morale deltas in one atomic `ResourceManager.apply_delta()` call, then
 ## emits `action_completed` with those same final, post-scaling deltas. After
 ## emitting, attempts to dequeue the next action via `_try_dequeue()`.
@@ -243,18 +304,10 @@ func clear_queue() -> void:
 ## call when `current_action_id == &""` — the Timer itself never triggers
 ## this case, since it only fires after `start_action()` sets a valid id).
 ##
-## Story 006 (TR-pcs-007, ADR-0013): adds `ChallengeSystem.get_modifier()` as
-## a further multiplicative pass on all three axes -- Reach, Cringe, Morale --
-## per the quick-spec's Rule 2/4. Ordering choice (not specified by ADR-0013,
-## which was written without cross-referencing this already-shipped
-## `path_bonus` step from a different epic): the challenge modifier is applied
-## AFTER the existing Morale-multiplier + Class-Path-bonus passes, as an
-## additional third `roundf()` step on Reach, rather than inserted between
-## them -- the least invasive ordering, preserving both already-shipped
-## passes' existing behavior unchanged when no challenge is active (challenge
-## modifier defaults to 1.0, a true no-op). For Cringe/Morale, the modifier
-## scales the declared delta directly (no existing multiplicative pass exists
-## there to order against) and is rounded with the same convention.
+## Challenge modifiers still scale all three axes. Reach follows Prestige GDD
+## F3a's newer all-layers contract: multiply Morale, Class Path, Challenge,
+## and META_REACH_MULT first, then round once. Cringe/Morale retain their
+## direct per-axis challenge scaling and one final round.
 func _on_action_timeout() -> void:
 	if current_action_id == &"":
 		return
@@ -263,16 +316,16 @@ func _on_action_timeout() -> void:
 	_resolving = true
 	var base_rewards: Dictionary = ACTION_REWARDS[completed_id]
 	var morale: float = ResourceManager.get_resource(&"Morale")
-	var multiplier: float = ResourceFormulas.action_effectiveness_multiplier(morale)
-	var scaled_reach: float = roundf(base_rewards[&"Reach"] * multiplier)
-	# Class path tier bonus (ADR-0010 pull model): 1.0 when no active path.
+	var morale_multiplier: float = ResourceFormulas.action_effectiveness_multiplier(morale)
+	# Pull-model factors are read at the resolution point. Their neutral values
+	# are all identities, so no path/challenge/prestige preserves base behavior.
 	var path_bonus: float = ClassPathSystem.get_active_multiplier(completed_id)
-	scaled_reach = roundf(scaled_reach * path_bonus)
-	# Challenge modifiers (ADR-0013 pull model): 1.0 when no active challenge
-	# targets this action/axis. Third multiplicative pass, after Morale +
-	# Class Path -- see this method's own doc comment for the ordering choice.
 	var reach_challenge_mod: float = ChallengeSystem.get_modifier(completed_id, &"reach_multiplier")
-	scaled_reach = roundf(scaled_reach * reach_challenge_mod)
+	var meta_reach_total: float = PrestigeSystem.get_meta_bonus_total(&"META_REACH_MULT")
+	var scaled_reach: float = float(PrestigeFormulas.final_reach(
+		base_rewards[&"Reach"], morale_multiplier, path_bonus,
+		reach_challenge_mod, meta_reach_total
+	))
 	# Class path tier effects (tier-fill 2026-07-28, ADR-0010 pull model —
 	# all default to neutral when no active path): pato T5 scales positive
 	# Cringe gains; biznesmen T5 scales (to zero) negative Morale costs.
@@ -311,11 +364,18 @@ func _on_action_timeout() -> void:
 
 ## Pops the front of the queue and starts it, if conditions allow. No-ops when:
 ## - either suspend flag is set (`_suspended_by_card` or `_suspended_by_morale`)
+## - an action is still running (lifting a suspend must never rotate FIFO order)
 ## - the queue is empty
 ## Called automatically after every action completes, and after every suspend
 ## lift (`_set_card_suspended(false)` / `_set_morale_suspended(false)`).
 func _try_dequeue() -> void:
-	if _resolving or _suspended_by_card or _suspended_by_morale or _queue.is_empty():
+	if (
+		_resolving
+		or current_action_id != &""
+		or _suspended_by_card
+		or _suspended_by_morale
+		or _queue.is_empty()
+	):
 		return
 	var next: StringName = _queue.pop_front()
 	queue_changed.emit(_queue.duplicate())

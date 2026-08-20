@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-07-24
-version: 9
+last_updated: 2026-08-11
+version: 10
 
 requirements:
   - id: TR-res-001
@@ -178,11 +178,11 @@ requirements:
 
   - id: TR-cps-007
     system: class-path-system
-    gdd: design/quick-specs/class-path-system-2026-07-01.md
-    requirement: Path multipliers excluded from offline progress by default (Pillar 4); PATH_MULTIPLIER_OFFLINE flag off by default
-    adr: [ADR-0006, ADR-0010]
-    status: partial
-    note: Behaviour correct — ADR-0006 offline loop owns its formula and never calls get_active_multiplier. ADR-0010 does not state the exclusion explicitly; recommend a one-line clarification before acceptance.
+    gdd: design/gdd/class-path-system.md
+    requirement: Named ambient path effects apply identically online and offline; action reward and speed modifiers remain active-session only
+    adr: [ADR-0006, ADR-0010, ADR-0020]
+    status: covered
+    note: Superseded 2026-08-05. ResourceSimulationStep shares ambient Haters/Morale effects across live and offline simulation; action modifiers are still excluded from offline progress.
 
   - id: TR-juice-001
     system: juice-feedback-system
@@ -349,3 +349,38 @@ requirements:
     adr: [ADR-0018]
     status: covered
     note: Registered 2026-07-24 (/architecture-review). ADR-0018 Proposed but design already shipped (commit 05d74f5, story 12-2) and verified accurate against action_screen.gd + challenge_selection.gd. Scene swap sits outside coordination_state (ADR-0014) by construction. Ready Proposed->Accepted.
+
+  - id: TR-acr-001
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Dedicated AlgorithmContractSystem owns armed plan, fixed-point remainder, credits, ladder rung, and staged transaction
+    adr: [ADR-0021]
+    status: covered
+
+  - id: TR-acr-002
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Boot stages chosen and neutral return results without mutating resources or progression
+    adr: [ADR-0003, ADR-0006, ADR-0021]
+    status: covered
+
+  - id: TR-acr-003
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Confirm applies return effects exactly once and exposes atomic save failure as retryable COMMITTING state
+    adr: [ADR-0002, ADR-0021]
+    status: covered
+
+  - id: TR-acr-004
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Burnout clears era-local contract state; New Game clears all contract state; neutral boot flow remains compatible
+    adr: [ADR-0013, ADR-0021]
+    status: covered
+
+  - id: TR-acr-005
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Offline resources cannot advance irreversible Class Path progress without decision history; F6 rejects pre-banking
+    adr: [ADR-0010, ADR-0021]
+    status: covered

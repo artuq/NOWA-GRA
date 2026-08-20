@@ -1,0 +1,4 @@
+interface:
+  display_name: "Threejs Materials Lighting"
+  short_description: "Imported game-development capability: Threejs Materials Lighting."
+  default_prompt: "Use $threejs-materials-lighting for this game-development task."

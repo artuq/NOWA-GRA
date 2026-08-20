@@ -240,6 +240,8 @@ func on_burnout_accepted() -> void:
 	_apply_sponsors_era_start_override()
 
 	era_count += 1
+	AlgorithmContractSystem.clear_for_burnout()
+	AlgorithmContractSystem.refresh_ladder()
 
 	# Step 6b (code-review fix, BLOCKING finding, Core Rule 7 AC-2): the
 	# "burnout_accepted_era_N" meta-persistent milestone, N = the
@@ -556,6 +558,15 @@ func restore_state(data: Dictionary) -> void:
 		"type": StringName(grant_in.get("type", "")),
 		"amount": float(grant_in.get("amount", 0.0)),
 	}
+
+
+## Clears all prestige and era-transition state for a brand-new career.
+func reset_for_new_game() -> void:
+	era_count = 0
+	meta_bonus_totals.clear()
+	_last_captured_tier = -1
+	_deferred_this_era = false
+	_last_grant = {"granted": false, "type": &"", "amount": 0.0}
 
 
 ## Serializes persisted state for SaveSystem.save_now(). Story 003 scope

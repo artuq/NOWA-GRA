@@ -1,0 +1,1 @@
+- [Art bible deferred across gates](project_art_bible_deferred.md) — RESOLVED 2026-07-07: full 9-section art-bible.md complete, cite it directly.

@@ -177,3 +177,13 @@ N/A — first save format for this project.
 - ADR-0001 (Autoload singleton architecture) — defines the `SaveSystem` interface this ADR implements
 - ADR-0003 (Scene management/boot order) — consumes `load_save()`'s return value as the first boot step
 - `design/gdd/save-persistence-system.md` — source GDD this ADR implements
+
+## Implementation Amendment (2026-08-05): Maximum Dirty Age
+
+`mark_dirty()` still restarts the 2-second trailing debounce. It now also starts
+a separate one-shot `MAX_DIRTY_AGE_SEC = 10` Timer only when that Timer is not
+already running. Repeated live-resource ticks therefore cannot defer a save
+past ten seconds from the first unsaved mutation. Any `save_now()`, reset, or
+application-pause flush stops both Timers, preventing a duplicate trailing
+write. Autosave suppression gates both routine timeout handlers; an OS pause
+still takes priority and flushes either pending schedule.

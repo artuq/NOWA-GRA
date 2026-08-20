@@ -1,0 +1,4 @@
+interface:
+  display_name: "Story Readiness"
+  short_description: "Run the CCGS Story Readiness workflow in Codex."
+  default_prompt: "Use $story-readiness to handle this game-development task."

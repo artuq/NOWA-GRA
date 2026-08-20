@@ -1,0 +1,451 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: King of Cringe\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+
+# Wspólne teksty ekranów metagry.
+msgid "META_COMMON_CLOSE"
+msgstr "Zamknij"
+
+msgid "META_RESOURCE_REACH"
+msgstr "Zasięgu"
+
+msgid "META_RESOURCE_CRINGE"
+msgstr "Cringe'u"
+
+msgid "META_RESOURCE_HATERS"
+msgstr "Hejterów"
+
+msgid "META_RESOURCE_MORALE"
+msgstr "Morale"
+
+msgid "META_RESOURCE_SPONSORS"
+msgstr "Sponsorów"
+
+# Ścieżki klasy i znacznik HUD.
+msgid "META_PATH_TITLE"
+msgstr "Ścieżka kariery"
+
+msgid "META_PATH_PATO_STREAMER"
+msgstr "Patostreamer"
+
+msgid "META_PATH_GURU_CELEBRYTA"
+msgstr "Guru-celebryta"
+
+msgid "META_PATH_EKSPERT_NISZOWY"
+msgstr "Ekspert niszowy"
+
+msgid "META_PATH_BIZNESMEN_CONTENTU"
+msgstr "Magnat contentu"
+
+msgid "META_PATH_HUD_PLACEHOLDER"
+msgstr "Patostreamer T1"
+
+msgid "META_PATH_STATUS_AMBIGUOUS"
+msgstr "Remis — inwestuj dalej, by wybrać kierunek. (różnica: %.1f)"
+
+msgid "META_PATH_STATUS_ACTIVE"
+msgstr "Aktywna — działa bonus poziomu %d"
+
+msgid "META_PATH_STATUS_SECONDARY"
+msgstr "Poziom %d (poboczna — bonus wyłączony przez aktywną ścieżkę)"
+
+msgid "META_PATH_INVEST"
+msgstr "Inwestuj"
+
+msgid "META_PATH_INVEST_CHOICE_FIRST"
+msgstr "Najpierw podejmij decyzję ścieżki: %s"
+
+msgid "META_PATH_INVEST_FULL"
+msgstr "Limit inwestycji tej ery osiągnięty"
+
+msgid "META_PATH_INVEST_RAISE_LIMIT"
+msgstr "Podejmuj decyzje ścieżki „%s”, by podnieść limit"
+
+msgid "META_PATH_INVEST_FORMAT"
+msgstr "Zainwestuj %d %s (+%.1f afiliacji)"
+
+msgid "META_PATH_TIER_BONUS"
+msgstr "T%d: %s"
+
+msgid "META_PATH_NEXT_TIER"
+msgstr "Następny T%d: %s"
+
+msgid "META_PATH_EFFECT_ACTION_REACH"
+msgstr "%s: Zasięg ×%s"
+
+msgid "META_PATH_EFFECT_SECONDARY_YIELD"
+msgstr "%s daje też +%d %s"
+
+msgid "META_PATH_ALL_ACTIONS"
+msgstr "Wszystkie akcje"
+
+msgid "META_PATH_EFFECT_DURATION"
+msgstr "%s: czas ×%s"
+
+msgid "META_PATH_EFFECT_ALL_REACH"
+msgstr "Wszystkie akcje: Zasięg ×%s"
+
+msgid "META_PATH_EFFECT_CRINGE_GAIN"
+msgstr "Przyrost Cringe'u ×%s"
+
+msgid "META_PATH_EFFECT_SPONSOR_INCOME"
+msgstr "Wpływy od sponsorów ×%s"
+
+msgid "META_PATH_EFFECT_MORALE_COST"
+msgstr "Koszt Morale akcji ×%s"
+
+msgid "META_PATH_EFFECT_MORALE_DRAIN"
+msgstr "Spadek Morale offline ×%s"
+
+msgid "META_PATH_EFFECT_HATERS_GROWTH"
+msgstr "Przyrost Hejterów ×%s"
+
+msgid "META_PATH_EFFECT_MORALE_FLOOR"
+msgstr "Minimum Morale offline: %d"
+
+msgid "META_PATH_SIGNATURE_CARD"
+msgstr "karta popisowa"
+
+# Ekipa.
+msgid "META_STAFF_TITLE"
+msgstr "Ekipa"
+
+msgid "META_STAFF_SPONSORS"
+msgstr "Sponsorzy: %d"
+
+msgid "META_STAFF_SPONSORS_PLACEHOLDER"
+msgstr "Sponsorzy: 0"
+
+msgid "META_STAFF_TROLL_NAME"
+msgstr "Trolle"
+
+msgid "META_STAFF_TROLL_EFFECT"
+msgstr "Podkręcają tempo przyrostu Hejterów"
+
+msgid "META_STAFF_ASSISTANT_NAME"
+msgstr "Asystenci"
+
+msgid "META_STAFF_ASSISTANT_EFFECT"
+msgstr "Mnożą postęp offline — tylko pod twoją nieobecność"
+
+msgid "META_STAFF_SPONSOR_MANAGER_NAME"
+msgstr "Managerowie współprac"
+
+msgid "META_STAFF_SPONSOR_MANAGER_EFFECT"
+msgstr "Mnożą wypłaty Sponsorów z kart współprac"
+
+msgid "META_STAFF_STATS"
+msgstr "Zatrudnieni: %d   Efekt: ×%s"
+
+msgid "META_STAFF_STATS_PLACEHOLDER"
+msgstr "Zatrudnieni: 0   Efekt: x1"
+
+msgid "META_STAFF_HIRE"
+msgstr "Zatrudnij — %d Sponsorów"
+
+msgid "META_STAFF_HIRE_PLACEHOLDER"
+msgstr "Zatrudnij"
+
+msgid "META_STAFF_SHORTFALL"
+msgstr "Brakuje %d Sponsorów"
+
+# Stałe bonusy.
+msgid "META_BONUSES_TITLE"
+msgstr "Stałe bonusy"
+
+msgid "META_BONUSES_ERA_COUNT"
+msgstr "Ukończone ery: %d"
+
+msgid "META_BONUSES_ERA_COUNT_PLACEHOLDER"
+msgstr "Ukończone ery: 0"
+
+msgid "META_BONUSES_MAX"
+msgstr "MAX"
+
+msgid "META_BONUS_REACH_NAME"
+msgstr "Stały Zasięg"
+
+msgid "META_BONUS_REACH_ORIGIN"
+msgstr "z er Patostreamera"
+
+msgid "META_BONUS_SPONSOR_NAME"
+msgstr "Wpływy sponsorów"
+
+msgid "META_BONUS_SPONSOR_ORIGIN"
+msgstr "z er Guru-celebryty"
+
+msgid "META_BONUS_HATERS_NAME"
+msgstr "Odporność na Hejterów"
+
+msgid "META_BONUS_HATERS_ORIGIN"
+msgstr "z er Eksperta niszowego"
+
+msgid "META_BONUS_FLOOR_NAME"
+msgstr "Pakiet startowy"
+
+msgid "META_BONUS_FLOOR_ORIGIN"
+msgstr "z er Magnata contentu"
+
+# Wybór wyzwań.
+msgid "META_CHALLENGE_ERA_STARTED"
+msgstr "Era %d rozpoczęta."
+
+msgid "META_CHALLENGE_ERA_PLACEHOLDER"
+msgstr "Era 1 rozpoczęta."
+
+msgid "META_CHALLENGE_NO_BONUS"
+msgstr "W tej erze bez nowego bonusu."
+
+msgid "META_CHALLENGE_BONUS_GAINED"
+msgstr "Stały bonus: +%s%% %s"
+
+msgid "META_CHALLENGE_BONUS_REACH"
+msgstr "Zasięgu"
+
+msgid "META_CHALLENGE_BONUS_SPONSORS"
+msgstr "Sponsorów"
+
+msgid "META_CHALLENGE_BONUS_HATERS_RESIST"
+msgstr "odporności na Hejterów"
+
+msgid "META_CHALLENGE_BONUS_SPONSOR_FLOOR"
+msgstr "Sponsorów na start"
+
+msgid "META_CHALLENGE_BRAK_DUSZY_NAME"
+msgstr "Influencer bez duszy"
+
+msgid "META_CHALLENGE_DRAMA_BEZ_GRANIC_NAME"
+msgstr "Królowa dramy bez hamulców"
+
+msgid "META_CHALLENGE_PRZEPROS_NA_NIBY_NAME"
+msgstr "Przeproś, ale tak ledwo"
+
+msgid "META_CHALLENGE_BEZ_TLUMU_NAME"
+msgstr "Bez tłumu nie ma show"
+
+msgid "META_CHALLENGE_WYPALONY_ALE_CORE_NAME"
+msgstr "Wypalony, ale core"
+
+msgid "META_CHALLENGE_AXIS_REACH"
+msgstr "Zasięg"
+
+msgid "META_CHALLENGE_AXIS_CRINGE"
+msgstr "Cringe"
+
+msgid "META_CHALLENGE_AXIS_MORALE"
+msgstr "Morale"
+
+msgid "META_CHALLENGE_CARD_FORMAT"
+msgstr "%s %s\n%s\n×%s do bonusu meta"
+
+msgid "META_CHALLENGE_CARD_PLACEHOLDER"
+msgstr "☐ Wyzwanie"
+
+msgid "META_CHALLENGE_MODIFIER_FORMAT"
+msgstr "%s× %s"
+
+msgid "META_CHALLENGE_AT_CAP"
+msgstr "W tej erze wybierasz maksymalnie %d wyzwania."
+
+msgid "META_CHALLENGE_COMBINED_MULTIPLIER"
+msgstr "Łączny mnożnik: ×%s"
+
+msgid "META_CHALLENGE_COMBINED_PLACEHOLDER"
+msgstr "Łączny mnożnik: ×1.0"
+
+msgid "META_CHALLENGE_CONFIRM"
+msgstr "POTWIERDŹ"
+
+# Tarcza sponsorów.
+msgid "META_SHIELD_COST"
+msgstr "Koszt: %d Sponsorów"
+
+msgid "META_SHIELD_COST_PLACEHOLDER"
+msgstr "Koszt: 5 Sponsorów"
+
+msgid "META_SHIELD_ACTIVE"
+msgstr "Tarcza aktywna — %s"
+
+msgid "META_SHIELD_INACTIVE"
+msgstr "Tarcza wyłączona — bufor Morale: od 3 do 8 Hejterów"
+
+msgid "META_SHIELD_ADD"
+msgstr "Dodaj +5:00"
+
+msgid "META_SHIELD_ACTIVATE"
+msgstr "Włącz na 5:00"
+
+msgid "META_SHIELD_SHORTFALL"
+msgstr "Brakuje %d Sponsorów"
+
+msgid "META_SHIELD_SHORTFALL_PLACEHOLDER"
+msgstr "Brakuje 5 Sponsorów"
+
+# Ostrzeżenie przed wypaleniem.
+msgid "META_BURNOUT_IDENTITY"
+msgstr "Wypalenie"
+
+msgid "META_BURNOUT_NO_PATH"
+msgstr "Wypalenie nadchodzi — bez aktywnej ścieżki niczego nie zapiszesz"
+
+msgid "META_BURNOUT_CAP_REACHED"
+msgstr "Wypalenie nadchodzi — limit bonusu osiągnięty, nic nowego nie zapiszesz"
+
+msgid "META_BURNOUT_BANK_FLAT"
+msgstr "Wypalenie nadchodzi — akceptacja zapisze +%d %s na stałe"
+
+msgid "META_BURNOUT_BANK_PERCENT"
+msgstr "Wypalenie nadchodzi — akceptacja zapisze +%s%% %s na stałe"
+
+msgid "META_BURNOUT_NOUN_REACH"
+msgstr "Zasięgu"
+
+msgid "META_BURNOUT_NOUN_SPONSOR_INCOME"
+msgstr "wpływów od sponsorów"
+
+msgid "META_BURNOUT_NOUN_HATERS_RESISTANCE"
+msgstr "odporności na Hejterów"
+
+msgid "META_BURNOUT_NOUN_ERA_START_SPONSORS"
+msgstr "Sponsorów na start ery"
+
+# Pętla kontraktów algorytmu.
+msgid "ALGORITHM_PLAN_TITLE"
+msgstr "PLAN NA NIEOBECNOŚĆ"
+
+msgid "ALGORITHM_PLAN_INTRO"
+msgstr "Opcjonalnie wybierz, co algorytm zrobi podczas Twojej nieobecności. Bez planu zwykły postęp offline działa bez zmian."
+
+msgid "ALGORITHM_PLAN_NEUTRAL_NAME"
+msgstr "Neutralny"
+
+msgid "ALGORITHM_PLAN_NEUTRAL_DESC"
+msgstr "Zwykła symulacja Zasięgu, Hejterów i Morale offline. Bez punktu kontraktu."
+
+msgid "ALGORITHM_CONTRACT_DRAMA_NAME"
+msgstr "Drama"
+
+msgid "ALGORITHM_CONTRACT_DRAMA_DESC"
+msgstr "Hejterzy rosną ×1,50. Reszta działa jak zwykle offline; Zasięg zmienia się tylko przez dodatkowych Hejterów."
+
+msgid "ALGORITHM_CONTRACT_BUSINESS_NAME"
+msgstr "Biznes"
+
+msgid "ALGORITHM_CONTRACT_BUSINESS_DESC"
+msgstr "Wzrost Zasięgu i Hejterów staje. Obecni Hejterzy nadal obniżają Morale. Zysk: 1,5 Sponsora/h, z bonusami Ścieżki i Prestiżu (bez Ekipy)."
+
+msgid "ALGORITHM_CONTRACT_DETOX_NAME"
+msgstr "Detoks"
+
+msgid "ALGORITHM_CONTRACT_DETOX_DESC"
+msgstr "Bez Zasięgu i Sponsorów. Usuń 10 Hejterów/h i odzyskaj 12 Morale/h, do zwykłych limitów."
+
+msgid "ALGORITHM_PLAN_CAP"
+msgstr "Ekonomia kontraktu liczy maksymalnie 24 godziny. Powrót przed 5 minutami pozostawia plan aktywny."
+
+msgid "ALGORITHM_PLAN_PREVIEW"
+msgstr "Podgląd 1 godziny teraz: Zasięg %s • Hejterzy %s • Morale %s • Sponsorzy %s\nZasięg względem Neutralnego: %s"
+
+msgid "ALGORITHM_PLAN_ARM"
+msgstr "UZBRÓJ PLAN"
+
+msgid "ALGORITHM_PLAN_REPLACE"
+msgstr "ZMIEŃ PLAN"
+
+msgid "ALGORITHM_PLAN_CONTINUE_NEUTRAL"
+msgstr "GRAJ NEUTRALNIE"
+
+msgid "ALGORITHM_PLAN_SET"
+msgstr "Ustaw plan"
+
+msgid "ALGORITHM_PLAN_CHANGE"
+msgstr "Zmień plan"
+
+msgid "ALGORITHM_PLAN_CANCEL"
+msgstr "Anuluj plan"
+
+msgid "ALGORITHM_PLAN_NEUTRAL"
+msgstr "Plan offline: Neutralny"
+
+msgid "ALGORITHM_PLAN_ACTIVE"
+msgstr "Plan offline: %s — aktywny"
+
+msgid "ALGORITHM_EMPIRE_CURRENT"
+msgstr "Imperium Twórcy %d — %s"
+
+msgid "ALGORITHM_EMPIRE_NEXT"
+msgstr "Dalej: %s  •  Ery %d/%d  •  Mistrzostwo %d/%d  •  Kontrakty %d/%d"
+
+msgid "ALGORITHM_EMPIRE_COMPLETE"
+msgstr "Imperium ukończone — wszystkie tytuły odblokowane."
+
+msgid "CREATOR_EMPIRE_RUNG_1"
+msgstr "Nadawca z Pokoju"
+
+msgid "CREATOR_EMPIRE_RUNG_2"
+msgstr "Lokator Algorytmu"
+
+msgid "CREATOR_EMPIRE_RUNG_3"
+msgstr "Brygadzista Feedu"
+
+msgid "CREATOR_EMPIRE_RUNG_4"
+msgstr "Dyrektor Uwagi"
+
+msgid "CREATOR_EMPIRE_RUNG_5"
+msgstr "Baron Platform"
+
+msgid "CREATOR_EMPIRE_RUNG_6"
+msgstr "Monopolista Kultury"
+
+msgid "CREATOR_EMPIRE_RUNG_7"
+msgstr "Influencer Ostateczny"
+
+msgid "ALGORITHM_REPORT_CONTRACT"
+msgstr "KONTRAKT WYKONANY: %s"
+
+msgid "ALGORITHM_REPORT_TOTAL"
+msgstr "ŁĄCZNIE PODCZAS NIEOBECNOŚCI\nZasięg %s  •  Hejterzy %s  •  Morale %s  •  Sponsorzy %s"
+
+msgid "ALGORITHM_REPORT_ATTRIBUTION"
+msgstr "DZIĘKI TWOJEMU PLANOWI (względem Neutralnego)\nZasięg %s  •  Hejterzy %s  •  Morale %s  •  Sponsorzy %s"
+
+msgid "ALGORITHM_REPORT_EMPIRE"
+msgstr "Punkty kontraktów %d → %d  •  Imperium Twórcy %d → %d"
+
+msgid "ALGORITHM_REPORT_CARRY"
+msgstr "Reszta Biznesu: %d/1000 Sponsora"
+
+msgid "ALGORITHM_REPORT_DURATION"
+msgstr "Nieobecność: %s  •  Czas policzony przez kontrakt: %s"
+
+msgid "ALGORITHM_REPORT_TITLES"
+msgstr "Nowe tytuły: %s"
+
+msgid "ALGORITHM_REPORT_CONFIRM"
+msgstr "ZATWIERDŹ WYNIK"
+
+msgid "ALGORITHM_REPORT_SAVING"
+msgstr "Zapisywanie wyniku..."
+
+msgid "ALGORITHM_REPORT_SAVED"
+msgstr "Wynik zapisany. Co algorytm ma robić dalej?"
+
+msgid "ALGORITHM_REPORT_SAVE_FAILED"
+msgstr "Zapis nie powiódł się. Wynik pozostaje tutaj i nie zostanie naliczony drugi raz."
+
+msgid "ALGORITHM_REPORT_RETRY"
+msgstr "PONÓW ZAPIS"
+
+msgid "ALGORITHM_REPORT_REPEAT"
+msgstr "Powtórz: %s"
+
+msgid "ALGORITHM_REPORT_CHOOSE"
+msgstr "Wybierz inny plan"
+
+msgid "ALGORITHM_REPORT_NEUTRAL"
+msgstr "Kontynuuj neutralnie"

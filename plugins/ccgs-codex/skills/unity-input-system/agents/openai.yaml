@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Input System"
+  short_description: "Imported game-development capability: Unity Input System."
+  default_prompt: "Use $unity-input-system for this game-development task."

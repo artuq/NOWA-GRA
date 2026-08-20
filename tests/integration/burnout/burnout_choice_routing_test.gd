@@ -5,9 +5,9 @@
 ## routes to PrestigeSystem.on_burnout_accepted()), AC-2 (Defer routes to
 ## PrestigeSystem.on_burnout_deferred()), AC-3 (any other card is ignored),
 ## AC-4 (PrestigeSystem.has_deferred_this_era() getter exists and reflects
-## live/era-reset state), AC-5 (the two _OPTION_LABEL_* consts exactly match
-## CardContentDatabase's real final_burnout entry -- a label-drift regression
-## test).
+## live/era-reset state), AC-5 (the two _OPTION_ID_* consts exactly match
+## CardContentDatabase's real final_burnout entry and label edits cannot
+## change routing).
 ##
 ## Testing technique for _ready()'s new DecisionCardSystem.card_resolved.
 ## connect() wiring (docs/tech-debt-register.md, Story 001 entry, flagged this
@@ -147,7 +147,7 @@ func test_ac1_accept_clears_card_pending_and_calls_on_burnout_accepted_exactly_o
 
 	var transition_count: int = _count_era_transitions(
 		func() -> void:
-			_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_LABEL_ACCEPT)
+			_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_ID_ACCEPT)
 	)
 
 	assert_bool(_bs._card_pending).override_failure_message(
@@ -174,7 +174,7 @@ func test_ac1_card_pending_already_false_by_the_time_era_transitioned_fires() ->
 	var probe: Callable = func() -> void: observed.append(_bs._card_pending)
 	PrestigeSystem.era_transitioned.connect(probe)
 
-	_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_LABEL_ACCEPT)
+	_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_ID_ACCEPT)
 
 	PrestigeSystem.era_transitioned.disconnect(probe)
 	assert_array(observed).has_size(1)
@@ -193,7 +193,7 @@ func test_ac2_defer_clears_card_pending_and_calls_on_burnout_deferred_with_corre
 
 	var transition_count: int = _count_era_transitions(
 		func() -> void:
-			_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_LABEL_DEFER)
+			_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_ID_DEFER)
 	)
 
 	assert_bool(_bs._card_pending).override_failure_message(
@@ -286,50 +286,65 @@ func test_ac4_has_deferred_this_era_reflects_burnout_system_routed_defer() -> vo
 	PrestigeSystem._deferred_this_era = false
 	_bs._card_pending = true
 
-	_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_LABEL_DEFER)
+	_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_ID_DEFER)
 
 	assert_bool(PrestigeSystem.has_deferred_this_era()).override_failure_message(
 		"has_deferred_this_era() must return true after BurnoutSystem routes a Defer through to the real on_burnout_deferred()"
 	).is_true()
 
 
-# --- AC-5: label-drift regression test -- consts must match the real CardContentDatabase entry ---
+# --- AC-5: semantic ids match content; label drift cannot change routing ---
 
-func test_ac5_option_label_consts_match_real_card_content_database_entry() -> void:
+func test_ac5_option_id_consts_match_real_card_content_database_entry() -> void:
 	var card: Dictionary = CardContentDatabase.get_card(BurnoutSystemScript.BURNOUT_CARD_ID)
 	assert_bool(card.is_empty()).is_false()
 	assert_array(card["options"]).has_size(2)
 
-	var labels: Array = []
+	var option_ids: Array = []
 	for option: Dictionary in card["options"]:
-		labels.append(option["label"])
+		option_ids.append(option["id"])
 
-	assert_bool(labels.has(String(BurnoutSystemScript._OPTION_LABEL_ACCEPT))).override_failure_message(
-		"BurnoutSystem._OPTION_LABEL_ACCEPT ('%s') must exactly match one of final_burnout's real option labels %s -- a drift here silently no-ops the Accept branch" %
-		[BurnoutSystemScript._OPTION_LABEL_ACCEPT, labels]
+	assert_bool(option_ids.has(String(BurnoutSystemScript._OPTION_ID_ACCEPT))).override_failure_message(
+		"BurnoutSystem._OPTION_ID_ACCEPT ('%s') must match final_burnout's semantic option ids %s" %
+		[BurnoutSystemScript._OPTION_ID_ACCEPT, option_ids]
 	).is_true()
-	assert_bool(labels.has(String(BurnoutSystemScript._OPTION_LABEL_DEFER))).override_failure_message(
-		"BurnoutSystem._OPTION_LABEL_DEFER ('%s') must exactly match one of final_burnout's real option labels %s -- a drift here silently no-ops the Defer branch" %
-		[BurnoutSystemScript._OPTION_LABEL_DEFER, labels]
+	assert_bool(option_ids.has(String(BurnoutSystemScript._OPTION_ID_DEFER))).override_failure_message(
+		"BurnoutSystem._OPTION_ID_DEFER ('%s') must match final_burnout's semantic option ids %s" %
+		[BurnoutSystemScript._OPTION_ID_DEFER, option_ids]
 	).is_true()
 
 
-## Companion to AC-5: an unrecognized third value must push_error(), not
-## silently fall into either branch (story-readiness-time correction --
-## explicit if/elif/else, not ADR-0013's original simplified if/else). Also
-## confirms _card_pending still clears and neither PrestigeSystem entry point
-## fires on a drifted/garbage label.
-func test_unrecognized_option_chosen_pushes_error_and_calls_neither_prestige_entry_point() -> void:
+## A localization/copy edit changes only the presentation label. Routing
+## still receives the unchanged semantic option id and accepts burnout.
+func test_ac5_changing_label_does_not_change_accept_routing() -> void:
+	var localized_card: Dictionary = CardContentDatabase.get_card(BurnoutSystemScript.BURNOUT_CARD_ID).duplicate(true)
+	localized_card["options"][0]["label"] = "Zmieniona etykieta wyboru"
+	_bs._card_pending = true
+	var era_before: int = PrestigeSystem.era_count
+
+	_bs._on_card_resolved(
+		BurnoutSystemScript.BURNOUT_CARD_ID,
+		&"",
+		StringName(localized_card["options"][0]["id"])
+	)
+
+	assert_int(PrestigeSystem.era_count).is_equal(era_before + 1)
+	assert_bool(_bs._card_pending).is_false()
+
+
+## An unrecognized third id must push_error(), not silently fall into either
+## branch. The card is resolved, so pending state still clears.
+func test_unrecognized_option_id_pushes_error_and_calls_neither_prestige_entry_point() -> void:
 	_bs._card_pending = true
 	var era_before: int = PrestigeSystem.era_count
 	var morale_before: float = ResourceManager.get_resource(&"Morale")
 
 	var probe: Callable = func() -> void:
-		_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", &"Some Drifted Label")
+		_bs._on_card_resolved(BurnoutSystemScript.BURNOUT_CARD_ID, &"", &"unknown")
 	assert_error(probe).is_push_error(any_string())
 
 	assert_bool(_bs._card_pending).override_failure_message(
-		"_card_pending must still clear even on an unrecognized option_chosen -- the card DID resolve, it just couldn't be routed"
+		"_card_pending must still clear even on an unrecognized option_id -- the card DID resolve, it just couldn't be routed"
 	).is_false()
 	assert_int(PrestigeSystem.era_count).is_equal(era_before)
 	assert_float(ResourceManager.get_resource(&"Morale")).is_equal_approx(morale_before, 0.0001)
@@ -369,7 +384,7 @@ func test_ready_wiring_real_signal_emission_routes_through_to_prestige_system() 
 
 	var transition_count: int = _count_era_transitions(
 		func() -> void:
-			DecisionCardSystem.card_resolved.emit(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_LABEL_ACCEPT)
+			DecisionCardSystem.card_resolved.emit(BurnoutSystemScript.BURNOUT_CARD_ID, &"", BurnoutSystemScript._OPTION_ID_ACCEPT)
 	)
 
 	assert_int(transition_count).override_failure_message(
@@ -393,7 +408,7 @@ func test_ready_wiring_real_signal_emission_ignores_non_burnout_card() -> void:
 	var era_before: int = PrestigeSystem.era_count
 	var morale_before: float = ResourceManager.get_resource(&"Morale")
 
-	DecisionCardSystem.card_resolved.emit(&"hater_callout", &"", &"Some Label")
+	DecisionCardSystem.card_resolved.emit(&"hater_callout", &"", &"a")
 
 	assert_bool(_bs._card_pending).is_true()
 	assert_int(PrestigeSystem.era_count).is_equal(era_before)

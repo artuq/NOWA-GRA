@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Ui"
+  short_description: "Run the CCGS Team Ui workflow in Codex."
+  default_prompt: "Use $team-ui to handle this game-development task."

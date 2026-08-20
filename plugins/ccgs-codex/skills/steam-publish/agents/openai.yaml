@@ -1,0 +1,4 @@
+interface:
+  display_name: "Steam Publish"
+  short_description: "Imported game-development capability: Steam Publish."
+  default_prompt: "Use $steam-publish for this game-development task."

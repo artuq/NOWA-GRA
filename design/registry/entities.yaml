@@ -230,13 +230,13 @@ formulas:
   - name: investment_contribution
     expression: "investment_contribution[path] = resource_spent[path] * INVESTMENT_AFFILIATION_RATE[path]"
     variables: [resource_spent, INVESTMENT_AFFILIATION_RATE]
-    output_range: "[0.0, unbounded) pre-clamp — re-clamped by affiliation formula"
+    output_range: "[0.0, investment_cap[path]]; over-cap spends are rejected without deduction"
     source: design/gdd/class-path-system.md
     referenced_by: []
 
   - name: affiliation
-    expression: "affiliation[path] = min(card_contribution[path] + investment_contribution[path], 100.0)"
-    variables: [card_contribution, investment_contribution]
+    expression: "investment_cap[path] = min(100 - card_contribution[path], 20 + card_contribution[path]); affiliation[path] = clamp(card_contribution[path] + min(investment_contribution[path], investment_cap[path]), 0, 100)"
+    variables: [card_contribution, investment_contribution, investment_cap]
     output_range: "[0.0, 100.0]"
     source: design/gdd/class-path-system.md
     referenced_by: [design/gdd/prestige-checkpoint-system.md, design/gdd/team-staff-management.md]
@@ -435,7 +435,7 @@ constants:
     referenced_by: [design/gdd/card-content-database.md]
 
   - name: sponsorzy_qualifying_cards
-    value: "sponsor_offer_shady, brand_deal_choice only"
+    value: "sponsor_offer_shady, brand_deal_choice, sponsor_contract_mega_fallout, sponsor_contract_indie_fallout, sponsor_contract_finale"
     note: "Resolves Resource System's open question on what 'qualifying card' means"
     source: design/gdd/card-content-database.md
     referenced_by: []

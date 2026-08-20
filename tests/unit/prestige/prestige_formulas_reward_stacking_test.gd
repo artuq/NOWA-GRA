@@ -7,24 +7,17 @@
 ## PrestigeFormulas is a stateless static utility — no instance, no
 ## setup/teardown state, every test is a pure function call.
 ##
-## AC-4's `class_path_sponsor_multiplier` argument is a MOCKED float, not a
-## real `ClassPathSystem.get_active_sponsor_multiplier()` (ADR-0010 §5a) call
-## — that call site's wiring at card resolution is a separate Class Path
-## System epic concern, explicitly out of scope for this story (per the
-## story's own Out of Scope section and QA Test Cases wording).
+## AC-4's formula inputs remain explicit mocked floats here. Their real
+## Action/Card/Offline application points are covered separately by
+## tests/integration/prestige/prestige_effect_application_test.gd.
 ##
 ## AC-8's offline/online Haters-resistance parity check is reproduced via a
 ## local mock of `OfflineProgressSystem.simulate_offline()`'s Haters-accrual
 ## step (built only from `ResourceFormulas.haters_growth_rate()` and
 ## `PrestigeFormulas.haters_rate_final()`), NOT the real Autoload method —
 ## same "local reproduction, no live Autoload" precedent already established
-## by prestige_formulas_grant_test.gd's AC-9/10/11 variety-bonus mock and
-## prestige_formulas_stacking_test.gd's header comment. Wiring
-## `PrestigeSystem.get_meta_bonus_total(&"META_HATERS_RESIST")` into the real
-## `OfflineProgressSystem.simulate_offline()` (and into `ActionSystem`, which
-## currently has no live Haters-rate call site at all) is flagged as a
-## follow-up decision, not performed by this story — see this story's
-## implementation report.
+## by prestige_formulas_grant_test.gd. The real offline call is now wired;
+## the missing live ambient ticker remains a separate architecture task.
 extends GdUnitTestSuite
 
 ## Preloaded (not the bare class_name) so the suite parses even before the
@@ -96,6 +89,13 @@ func test_ac4_sponsor_stacking_mocked_class_path_multiplier_is_5() -> void:
 func test_ac4_sponsor_stacking_no_op_at_identity_multipliers() -> void:
 	var result: int = PrestigeFormulas.final_sponsors(3.0, 1.0, 0.0)
 	assert_int(result).is_equal(3)
+
+
+## Team/Staff Management composes at the same F3b resolution point and must
+## still round only once after every multiplier is applied.
+func test_ac4_sponsor_stacking_composes_staff_before_single_final_round() -> void:
+	var result: int = PrestigeFormulas.final_sponsors(3.0, 1.20, 0.50, 1.25)
+	assert_int(result).is_equal(7)  # round(3 × 1.20 × 1.50 × 1.25) = round(6.75)
 
 
 # --- AC-5: Haters resistance multiplier ---

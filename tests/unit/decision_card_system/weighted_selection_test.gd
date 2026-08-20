@@ -35,6 +35,7 @@ const _RISKY_SAFE_IDS: Array[String] = [
 ]
 const _NEUTRAL_IDS: Array[String] = [
 	"fan_in_trouble", "brand_deal_choice", "algorithm_hack", "burnout_warning",
+	"feed_sprint_challenge", "comment_moderation_challenge", "polish_export_disaster",
 ]
 ## Exact weights at Cringe=100 per the GDD's Formulas table, plus the 4
 ## Sprint 12 wave-2 cards (weight = BASE_WEIGHT + risky-option Cringe delta,
@@ -57,20 +58,23 @@ const _EXPECTED_WEIGHTS_AT_100: Dictionary = {
 	"ai_content_farm": 40.0, "merch_drop_qa": 37.0,
 	"trend_hijack_tragedy": 40.0, "old_friend_collab": 32.0,
 }
-## Exact probabilities at Cringe=100 -- pool weight is 732.0 as of wave 3
+## Exact probabilities at Cringe=100 -- pool weight is 762.0 after the two
+## standalone Skill Challenge cards and cultural-humour card added neutral
+## weight of 10 each
+## (732.0 as of wave 3 before that addition).
 ## (was 457.0 after story 12-6; +275.0 from the 8 wave-3 cards' weights:
 ## 36+34+26+30+40+37+40+32=275). Raw weights of older cards unchanged;
 ## probabilities recomputed against the grown denominator.
 const _EXPECTED_PROBABILITIES_AT_100: Dictionary = {
-	"staged_drama": 0.0615, "leaked_dm": 0.0574, "cancel_threat": 0.0546,
-	"exposed_friend": 0.0519, "hater_callout": 0.0478, "competitor_drama": 0.0464,
-	"sponsor_offer_shady": 0.0437, "apology_tour": 0.0410,
-	"engagement_farming": 0.0519, "quarterly_content_review": 0.0410,
-	"deep_dive_or_trend": 0.0383, "thousand_true_fans": 0.0342,
-	"masterclass_launch": 0.0492, "guru_retreat": 0.0464,
-	"wikipedia_correction": 0.0355, "sponsored_inaccuracy": 0.0410,
-	"ai_content_farm": 0.0546, "merch_drop_qa": 0.0505,
-	"trend_hijack_tragedy": 0.0546, "old_friend_collab": 0.0437,
+	"staged_drama": 0.0591, "leaked_dm": 0.0551, "cancel_threat": 0.0525,
+	"exposed_friend": 0.0499, "hater_callout": 0.0459, "competitor_drama": 0.0446,
+	"sponsor_offer_shady": 0.0420, "apology_tour": 0.0394,
+	"engagement_farming": 0.0499, "quarterly_content_review": 0.0394,
+	"deep_dive_or_trend": 0.0367, "thousand_true_fans": 0.0328,
+	"masterclass_launch": 0.0472, "guru_retreat": 0.0446,
+	"wikipedia_correction": 0.0341, "sponsored_inaccuracy": 0.0394,
+	"ai_content_farm": 0.0525, "merch_drop_qa": 0.0486,
+	"trend_hijack_tragedy": 0.0525, "old_friend_collab": 0.0420,
 }
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
@@ -78,12 +82,18 @@ var _instances: Array[Node] = []
 
 
 var _onboarding_phase_snapshot: int
+var _skill_challenge_intro_snapshot: bool
+var _seen_skill_challenges_snapshot: Dictionary[StringName, bool]
+var _seen_showcase_cards_snapshot: Dictionary[StringName, bool]
 
 func before_test() -> void:
 	# See cooldown_pool_test.gd's before_test() comment: force the real
 	# OnboardingGate un-suppressed so this suite's own weighting logic isn't
 	# affected by onboarding state. Restored in after_test().
 	_onboarding_phase_snapshot = OnboardingGate.phase
+	_skill_challenge_intro_snapshot = OnboardingGate._skill_challenge_intro_seen
+	_seen_skill_challenges_snapshot = OnboardingGate._seen_skill_challenges.duplicate()
+	_seen_showcase_cards_snapshot = OnboardingGate._seen_showcase_cards.duplicate()
 	OnboardingGate.phase = OnboardingGate.Phase.NORMAL
 	_resource_snapshot[&"Cringe"] = ResourceManager.get_resource(&"Cringe")
 	_instances = []
@@ -91,6 +101,9 @@ func before_test() -> void:
 
 func after_test() -> void:
 	OnboardingGate.phase = _onboarding_phase_snapshot
+	OnboardingGate._skill_challenge_intro_seen = _skill_challenge_intro_snapshot
+	OnboardingGate._seen_skill_challenges = _seen_skill_challenges_snapshot
+	OnboardingGate._seen_showcase_cards = _seen_showcase_cards_snapshot
 	# See cooldown_pool_test.gd's after_test() comment: real mutation call
 	# sites now mark the real SaveSystem dirty (2026-06-29 fix) -- stop its
 	# debounce timer so a delayed save_now() can't fire mid-suite.
@@ -161,9 +174,91 @@ func test_cringe_zero_all_cards_have_base_weight() -> void:
 		assert_float(probability).is_equal_approx(1.0 / pool.size(), 0.001)
 
 
+func test_unseen_skill_challenge_is_guaranteed_as_second_card_then_guard_disables() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var ordinary: Dictionary = _synthetic_card("ordinary_fixture")
+	var challenge: Dictionary = CardContentDatabase.get_card(&"feed_sprint_challenge")
+	var ordinary_pool: Array[Dictionary] = [ordinary]
+	var full_pool: Array[Dictionary] = [ordinary, challenge]
+	OnboardingGate._skill_challenge_intro_seen = false
+	OnboardingGate._seen_skill_challenges.clear()
+	OnboardingGate._seen_showcase_cards.clear()
+
+	for _i: int in DecisionCardSystemScript.FIRST_SKILL_CHALLENGE_AFTER_ORDINARY_CARDS:
+		assert_str(dcs._pick_with_first_skill_challenge_guard(ordinary_pool)["id"]).is_equal("ordinary_fixture")
+
+	var guaranteed: Dictionary = dcs._pick_with_first_skill_challenge_guard(full_pool)
+	assert_str(guaranteed["id"]).is_equal("feed_sprint_challenge")
+
+	# Once discovered, the guard no longer substitutes the challenge.
+	var after_first: Dictionary = dcs._pick_with_first_skill_challenge_guard(ordinary_pool)
+	assert_str(after_first["id"]).is_equal("ordinary_fixture")
+	assert_bool(OnboardingGate.has_seen_skill_challenge(&"feed_sprint_challenge")).is_true()
+
+
+func test_next_unseen_skill_challenge_gets_its_own_showcase() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var ordinary: Dictionary = _synthetic_card("ordinary_fixture")
+	var feed: Dictionary = CardContentDatabase.get_card(&"feed_sprint_challenge")
+	var moderation: Dictionary = CardContentDatabase.get_card(&"comment_moderation_challenge")
+	var pool: Array[Dictionary] = [ordinary, feed, moderation]
+	OnboardingGate._seen_skill_challenges = {&"feed_sprint_challenge": true}
+	OnboardingGate._seen_showcase_cards = {&"feed_sprint_challenge": true, &"brand_deal_choice": true}
+	dcs._ordinary_cards_before_first_skill = 1
+
+	var picked: Dictionary = dcs._pick_with_first_skill_challenge_guard(pool)
+	assert_str(picked["id"]).is_equal("comment_moderation_challenge")
+
+
+func test_save_with_completed_intro_does_not_force_skill_challenge_showcase() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var ordinary: Dictionary = _synthetic_card("ordinary_fixture")
+	var ordinary_pool: Array[Dictionary] = [ordinary]
+	OnboardingGate._skill_challenge_intro_seen = true
+	OnboardingGate._seen_skill_challenges = {
+		&"feed_sprint_challenge": true,
+		&"comment_moderation_challenge": true,
+	}
+	OnboardingGate._seen_showcase_cards = {
+		&"feed_sprint_challenge": true,
+		&"brand_deal_choice": true,
+		&"comment_moderation_challenge": true,
+		&"polish_export_disaster": true,
+	}
+	dcs._ordinary_cards_before_first_skill = 99
+
+	var picked: Dictionary = dcs._pick_with_first_skill_challenge_guard(ordinary_pool)
+	assert_str(picked["id"]).is_equal("ordinary_fixture")
+
+
+func test_fresh_showcase_orders_minigame_sponsor_minigame_and_polish_humour() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var ordinary: Dictionary = _synthetic_card("ordinary_fixture")
+	var pool: Array[Dictionary] = [ordinary]
+	for card_id: StringName in DecisionCardSystemScript.ONBOARDING_SHOWCASE_CARD_IDS:
+		pool.append(CardContentDatabase.get_card(card_id))
+	OnboardingGate._seen_skill_challenges.clear()
+	OnboardingGate._seen_showcase_cards.clear()
+
+	assert_str(dcs._pick_with_first_skill_challenge_guard(pool)["id"]).is_equal("ordinary_fixture")
+	for expected_id: StringName in DecisionCardSystemScript.ONBOARDING_SHOWCASE_CARD_IDS:
+		assert_str(dcs._pick_with_first_skill_challenge_guard(pool)["id"]).is_equal(String(expected_id))
+		assert_bool(OnboardingGate.has_seen_showcase_card(expected_id)).is_true()
+
+	var ordinary_only: Array[Dictionary] = [ordinary]
+	var after_showcase: Dictionary = dcs._pick_with_first_skill_challenge_guard(ordinary_only)
+	assert_str(after_showcase["id"]).is_equal("ordinary_fixture")
+
+
+func test_guaranteed_sponsor_showcase_pays_on_both_choices() -> void:
+	var card: Dictionary = CardContentDatabase.get_card(&"brand_deal_choice")
+	for option: Dictionary in card["options"]:
+		assert_float(option["resource_deltas"].get(&"Sponsors", 0.0)).is_greater(0.0)
+
+
 ## AC-3/AC-4/AC-5: Cringe=100, all "always"-eligible real cards -> exact
 ## weights, probabilities, and a 4.5x ratio between the top card and a
-## neutral card. Pool total is 732.0 as of wave 3, 2026-07-28 (see
+## neutral card. Pool total is 762.0 after adding the cultural-humour card (see
 ## _EXPECTED_PROBABILITIES_AT_100's own header note).
 func test_cringe_hundred_exact_weights_probabilities_and_ratio() -> void:
 	var dcs: Node = _new_decision_card_system()
@@ -181,14 +276,14 @@ func test_cringe_hundred_exact_weights_probabilities_and_ratio() -> void:
 	for card_id: String in _NEUTRAL_IDS:
 		assert_float(weight_by_id[card_id]).is_equal_approx(10.0, 0.0001)
 
-	assert_float(total).is_equal_approx(732.0, 0.0001)
+	assert_float(total).is_equal_approx(762.0, 0.0001)
 
 	for card_id: String in _EXPECTED_PROBABILITIES_AT_100:
 		var probability: float = weight_by_id[card_id] / total
 		assert_float(probability).is_equal_approx(_EXPECTED_PROBABILITIES_AT_100[card_id], 0.001)
 	for card_id: String in _NEUTRAL_IDS:
 		var probability: float = weight_by_id[card_id] / total
-		assert_float(probability).is_equal_approx(10.0 / 732.0, 0.001)
+		assert_float(probability).is_equal_approx(10.0 / 762.0, 0.001)
 
 	var top_weight: float = weight_by_id["staged_drama"]
 	var neutral_weight: float = weight_by_id["fan_in_trouble"]

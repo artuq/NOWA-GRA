@@ -27,7 +27,7 @@ Gracz dotyka ekranu i czuje, że dzieje się coś realnego — duży, responsywn
 
 1. **Resource HUD** (top) — displays all 5 resources in real time (Zasięgi, Cringe, Hatersi, Morale, Sponsorzy), per Resource System GDD's UI requirement. The Morale indicator communicates the band (High/Normal/Low/Critical), not just the raw %.
 2. **Action Grid** (middle) — 6 slots: 3 unlocked actions (Nagraj vloga / Zrób dramę / Przeproś w internecie) + 3 locked slots (🔒, with unlock threshold), modeled on the "locked action preview" from the v2 prototype, which proved to be a strong motivator on its own.
-3. **Running Action Overlay** — while an action is `running`, the entire Action Grid goes disabled, and the active action shows a progress bar labeled with its name and remaining time.
+3. **Running Action Overlay** — while an action is `running`, the active action shows a progress bar labeled with its name and effective remaining time. Live action choices stay available for queueing and disable only when `QUEUE_CAP` is reached.
 
 **Unlocked action button anatomy:**
 ```
@@ -38,7 +38,7 @@ e.g., "Zrób dramę / 9s — +10Z, +20C, -3M" (values pulled from registry's `ac
 
 **Rules:**
 1. All 6 slots are always visible — the layout never reflows when a new action unlocks; a slot simply switches from 🔒 to active.
-2. Tapping an unlocked button while `idle` → sends the choice to Action System; tapping a locked button or any button during `running` → no-op (per Action System's Acceptance Criteria).
+2. Tapping an unlocked button while `idle` starts it; tapping one while `running` adds it to Action System's queue. At `QUEUE_CAP`, live action buttons disable with the `Queue full` explanation. Tapping a locked preview never starts or queues an action and instead shows its unlock requirement.
 3. The progress bar updates smoothly (every frame, not every second) for a legible sense of progress, consistent with what the prototypes confirmed.
 
 ### States and Transitions
@@ -46,11 +46,11 @@ e.g., "Zrób dramę / 9s — +10Z, +20C, -3M" (values pulled from registry's `ac
 | UI State | Description | Transition |
 |---|---|---|
 | `idle_display` | All unlocked buttons active, no progress bar | → `running_display` when Action System enters `running` |
-| `running_display` | All buttons disabled, progress bar visible and updating | → `idle_display` when Action System reaches `resolved`→`idle` |
+| `running_display` | Progress bar visible and updating; live action buttons enqueue until `QUEUE_CAP` | → `idle_display` when Action System reaches `resolved`→`idle` with no queued successor |
 
 ### Interactions with Other Systems
 
-- **Action System** (hard, read+write) → reads state (`idle`/`running`/`resolved`) and action data (duration, rewards) to display; sends the player's choice as input
+- **Action System** (hard, read+write) → reads state, effective active duration, progress, queue state, and action data to display; sends the player's choice as start-or-enqueue input
 - **Resource System** (hard, read) → reads the 5 resource values in real time for the Resource HUD
 - **Juice/Feedback System** (downstream, undesigned, Vertical Slice) → will own resolution-beat effects, not this GDD
 
@@ -136,17 +136,19 @@ Rounding: **CORRECTED 2026-06-24** (Action UI Story 001) — this section origin
 **Button enable/disable:**
 - **GIVEN** `idle`, **WHEN** rendered, **THEN** all 3 unlocked buttons enabled.
 - **GIVEN** `idle`, **WHEN** tapping an unlocked button, **THEN** choice sent to Action System.
-- **GIVEN** `idle`, **WHEN** tapping a locked slot, **THEN** no-op, no visible change.
-- **GIVEN** `running`, **WHEN** rendered, **THEN** all 6 buttons disabled.
-- **GIVEN** `running`, **WHEN** tapping any button, **THEN** no-op.
-- **GIVEN** `running→resolved→idle` transition completes, **THEN** overlay hides, unlocked buttons re-enable.
+- **GIVEN** a slot is locked, **WHEN** tapped, **THEN** no action starts and its unlock requirement is shown.
+- **GIVEN** `running` and queue length < `QUEUE_CAP`, **WHEN** rendered, **THEN** every live action button remains enabled.
+- **GIVEN** `running` and queue length < `QUEUE_CAP`, **WHEN** tapping a live action, **THEN** it is appended without interrupting the active action.
+- **GIVEN** queue length = `QUEUE_CAP`, **WHEN** rendered, **THEN** live action buttons are disabled with `Queue full`; locked preview slots remain tappable.
+- **GIVEN** the queue is cleared below cap, **THEN** live action buttons re-enable immediately.
+- **GIVEN** ActionGrid is recreated while a queue already exists, **WHEN** its first frame renders, **THEN** the queue strip, Clear control, and cap state are reconstructed from the current ordered snapshot.
 
 **Progress bar fill:**
 - **GIVEN** elapsed_time=0, duration=D>0, **WHEN** first frame renders, **THEN** fill_ratio=0, no flicker.
 - **GIVEN** 0<elapsed_time<duration, **WHEN** rendered, **THEN** fill_ratio=clamp(E/D,0,1).
 - **GIVEN** elapsed_time≥duration, **WHEN** rendered, **THEN** fill_ratio=1 (clamped).
 - **GIVEN** running, **WHEN** successive frames render, **THEN** the bar updates every frame, not throttled.
-- **GIVEN** the overlay is visible, **WHEN** rendered, **THEN** action name and remaining time both shown alongside the bar.
+- **GIVEN** the overlay is visible, **WHEN** rendered, **THEN** action name and remaining time based on the effective duration captured at start both show alongside the bar.
 
 **Number formatting (boundaries):**
 - **GIVEN** 847, **WHEN** formatted, **THEN** `"847"`.

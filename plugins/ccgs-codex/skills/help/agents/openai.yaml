@@ -1,0 +1,4 @@
+interface:
+  display_name: "Help"
+  short_description: "Run the CCGS Help workflow in Codex."
+  default_prompt: "Use $help to handle this game-development task."

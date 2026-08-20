@@ -20,14 +20,18 @@ extends GdUnitTestSuite
 
 var _cps_snapshot: Dictionary = {}
 var _resource_snapshot: Dictionary = {}
+var _locale_snapshot: String = ""
 
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_cps_snapshot = ClassPathSystem.serialize_state()
 	_resource_snapshot = ResourceManager.serialize_state()
 
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	# Full wipe first -- restore_state() alone would leave any path key this
 	# test added (and the snapshot didn't have) stuck at its test value (same
 	# precedent as class_path_signature_card_test.gd).
@@ -188,6 +192,35 @@ func test_invest_button_enabled_when_card_contribution_positive() -> void:
 	assert_str(button.text).is_equal("Invest 10 Cringe (+1.0 affiliation)")
 
 
+func test_open_panel_and_hud_refresh_after_polish_language_change() -> void:
+	_seed_affiliation(&"pato_streamer", 20.0)
+	var panel_runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/class_path_panel.tscn")
+	var panel: Control = panel_runner.scene()
+	panel.visible = true
+	var hud_runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/class_path_hud_indicator.tscn")
+	var hud: Control = hud_runner.scene()
+	hud._on_active_path_changed(&"pato_streamer")
+
+	TranslationServer.set_locale("pl_PL")
+	SettingsSystem.language_changed.emit(&"pl", &"pl_PL")
+	await get_tree().process_frame
+
+	assert_str((panel.find_child("Row1NameLabel") as Label).text).is_equal("Patostreamer")
+	assert_str((panel.find_child("Row1StatusLabel") as Label).text).contains("Aktywna")
+	assert_str((panel.find_child("Row1InvestButton") as Button).text).contains("Zainwestuj")
+	assert_str((panel.find_child("Row1BonusLabel") as Label).text).contains("Zrób dramę: Zasięg")
+	assert_str((panel.find_child("Row1BonusLabel") as Label).text).not_contains("Reach")
+	assert_str((hud.find_child("ClassPathLabel") as Label).text).is_equal("Patostreamer T1")
+
+	TranslationServer.set_locale("en")
+	SettingsSystem.language_changed.emit(&"en", &"en")
+	await get_tree().process_frame
+	assert_str((panel.find_child("Row1NameLabel") as Label).text).is_equal("Trash Streamer")
+	assert_str((panel.find_child("Row1BonusLabel") as Label).text).contains("Make Drama Reach")
+	assert_str((panel.find_child("Row1BonusLabel") as Label).text).not_contains("Zasięg")
+	assert_str((hud.find_child("ClassPathLabel") as Label).text).is_equal("Trash Streamer T1")
+
+
 ## GDD-documented second disabled case (F3 clamp cap) -- not itself one of
 ## this story's 5 required ACs, but a cheap pure-read extra per the GDD's
 ## own Invest control spec.
@@ -204,6 +237,22 @@ func test_invest_button_disabled_when_affiliation_at_full_cap() -> void:
 	assert_bool(button.disabled).is_true()
 	assert_bool(explanation.visible).is_true()
 	assert_str(explanation.text).is_equal("Fully invested this era")
+
+
+func test_invest_button_explains_when_f6_history_cap_is_reached() -> void:
+	ClassPathSystem._card_contribution[&"pato_streamer"] = 4.0
+	ClassPathSystem._investment_contribution[&"pato_streamer"] = 24.0
+	ClassPathSystem._recalculate_total_affiliation(&"pato_streamer")
+
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/class_path_panel.tscn")
+	var panel: Node = runner.scene()
+	panel.visible = true
+
+	var button: Button = panel.find_child("Row1InvestButton") as Button
+	var explanation: Label = panel.find_child("Row1InvestExplanationLabel") as Label
+	assert_bool(button.disabled).is_true()
+	assert_bool(explanation.visible).is_true()
+	assert_str(explanation.text).contains("Make more Trash Streamer choices")
 
 
 ## Invest button press actually spends the resource and grants +1.0

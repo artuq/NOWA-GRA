@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Scriptableobjects"
+  short_description: "Imported game-development capability: Unity Scriptableobjects."
+  default_prompt: "Use $unity-scriptableobjects for this game-development task."

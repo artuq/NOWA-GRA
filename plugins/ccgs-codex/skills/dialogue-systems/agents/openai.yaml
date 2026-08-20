@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dialogue Systems"
+  short_description: "Imported game-development capability: Dialogue Systems."
+  default_prompt: "Use $dialogue-systems for this game-development task."

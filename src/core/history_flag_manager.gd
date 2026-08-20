@@ -189,3 +189,10 @@ func restore_state(data: Dictionary) -> void:
 	var counters_in: Dictionary = data.get("counters", {})
 	for key: String in counters_in:
 		_counters[StringName(key)] = int(counters_in[key])
+
+
+## Destructive full-career wipe used only by New Game. Ordinary gameplay has
+## no milestone-unset/decrement API; this explicit boundary is the exception.
+func reset_for_new_game() -> void:
+	_milestones.clear()
+	_counters.clear()

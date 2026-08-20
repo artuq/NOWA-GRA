@@ -7,6 +7,7 @@
 ## before each test; restore in after_test() to prevent cross-test state leakage.
 ## _process() is called directly (bypassing real frame time) to test ticking
 ## without awaiting wall-clock seconds.
+## Story type: Integration. Evidence: this file. Gate: BLOCKING.
 extends GdUnitTestSuite
 
 var _snap_sponsors: float = 0.0
@@ -25,7 +26,7 @@ func before_test() -> void:
 	ResourceManager._shield_remaining_seconds = 0.0
 	var delta: float = 20.0 - ResourceManager.get_resource(&"Sponsors")
 	ResourceManager.apply_delta({&"Sponsors": delta})
-	SaveSystem._debounce_timer.stop()
+	_stop_save_timers()
 
 
 func after_test() -> void:
@@ -36,7 +37,13 @@ func after_test() -> void:
 	ResourceManager.apply_delta({&"Haters": haters_delta})
 	var morale_delta: float = _snap_morale - ResourceManager.get_resource(&"Morale")
 	ResourceManager.apply_delta({&"Morale": morale_delta})
-	SaveSystem._debounce_timer.stop()
+	_stop_save_timers()
+
+
+func _stop_save_timers() -> void:
+	for child: Node in SaveSystem.get_children():
+		if child is Timer:
+			(child as Timer).stop()
 
 
 ## AC-1: Spending SHIELD_COST Sponsors activates the shield for SHIELD_DURATION seconds.
@@ -64,13 +71,22 @@ func test_activate_spends_sponsors_and_sets_timer() -> void:
 ## AC-2: Activating while already active adds SHIELD_DURATION to remaining time (stacks).
 func test_activate_while_active_stacks_duration() -> void:
 	ResourceManager._shield_remaining_seconds = 100.0
+	var emitted: Array[Array] = []
+	var on_changed := func(is_active: bool, remaining: float) -> void:
+		emitted.append([is_active, remaining])
+	ResourceManager.shield_changed.connect(on_changed)
 
 	var ok: bool = ResourceManager.activate_sponsor_shield()
 
+	ResourceManager.shield_changed.disconnect(on_changed)
 	assert_bool(ok).is_true()
 	assert_float(ResourceManager._shield_remaining_seconds).is_equal_approx(
 		100.0 + ResourceManager.SHIELD_DURATION, 0.01
 	)
+	assert_int(emitted.size()).is_equal(1)
+	if not emitted.is_empty():
+		assert_bool(emitted[0][0]).is_true()
+		assert_float(emitted[0][1]).is_equal_approx(100.0 + ResourceManager.SHIELD_DURATION, 0.01)
 
 
 ## AC-3: While active, get_shield_effective_buffer() returns elevated buffer.
@@ -142,7 +158,7 @@ func test_offline_sim_two_segment_drain() -> void:
 	ResourceManager.apply_delta({&"Haters": haters_delta})
 	var morale_delta: float = 80.0 - ResourceManager.get_resource(&"Morale")
 	ResourceManager.apply_delta({&"Morale": morale_delta})
-	SaveSystem._debounce_timer.stop()
+	_stop_save_timers()
 
 	var result_shielded: Dictionary = OfflineProgressSystem.simulate_offline(300)
 
@@ -150,10 +166,68 @@ func test_offline_sim_two_segment_drain() -> void:
 	# Haters and Morale are still at their pre-sim values. Reset only the shield
 	# so the second sim runs from an identical resource baseline without it.
 	ResourceManager._shield_remaining_seconds = 0.0
-	SaveSystem._debounce_timer.stop()
+	_stop_save_timers()
 
 	var result_unshielded: Dictionary = OfflineProgressSystem.simulate_offline(300)
 
 	# Shielded sim should result in higher final Morale (less drain during
 	# the first 60s where buffer=8 instead of 3 reduces excess Haters drain).
 	assert_float(result_shielded["final_M"]).is_greater(result_unshielded["final_M"])
+
+
+## Package 2 AC: wall-clock/offline shield consumption can advance the timer
+## without depending on a rendered frame. A partial elapsed duration leaves
+## the exact remainder and does not emit a false expiry.
+func test_elapse_sponsor_shield_partial_preserves_remainder_without_expiry() -> void:
+	ResourceManager._shield_remaining_seconds = 300.0
+	assert_bool(ResourceManager.has_method("elapse_sponsor_shield")).is_true()
+	if not ResourceManager.has_method("elapse_sponsor_shield"):
+		return
+	var emissions: Array[Array] = []
+	var on_changed := func(is_active: bool, remaining: float) -> void:
+		emissions.append([is_active, remaining])
+	ResourceManager.shield_changed.connect(on_changed)
+
+	ResourceManager.elapse_sponsor_shield(120.0)
+
+	ResourceManager.shield_changed.disconnect(on_changed)
+	assert_float(ResourceManager.get_shield_remaining_seconds()).is_equal_approx(180.0, 0.0001)
+	assert_array(emissions).is_empty()
+
+
+## Package 2 AC: elapsed time clamps at zero and emits exactly one inactive
+## transition. Further elapsed calls while inactive remain silent.
+func test_elapse_sponsor_shield_expiry_clamps_and_emits_once() -> void:
+	ResourceManager._shield_remaining_seconds = 60.0
+	assert_bool(ResourceManager.has_method("elapse_sponsor_shield")).is_true()
+	if not ResourceManager.has_method("elapse_sponsor_shield"):
+		return
+	var emissions: Array[Array] = []
+	var on_changed := func(is_active: bool, remaining: float) -> void:
+		emissions.append([is_active, remaining])
+	ResourceManager.shield_changed.connect(on_changed)
+
+	ResourceManager.elapse_sponsor_shield(90.0)
+	ResourceManager.elapse_sponsor_shield(10.0)
+
+	ResourceManager.shield_changed.disconnect(on_changed)
+	assert_float(ResourceManager.get_shield_remaining_seconds()).is_equal_approx(0.0, 0.0001)
+	assert_int(emissions.size()).is_equal(1)
+	assert_bool(emissions[0][0]).is_false()
+	assert_float(emissions[0][1]).is_equal_approx(0.0, 0.0001)
+
+
+## Package 2 AC: elapsed time operates on the full additive stack rather than
+## a single activation duration.
+func test_elapse_sponsor_shield_consumes_from_stacked_duration() -> void:
+	ResourceManager._shield_remaining_seconds = ResourceManager.SHIELD_DURATION * 2.0
+	assert_bool(ResourceManager.has_method("elapse_sponsor_shield")).is_true()
+	if not ResourceManager.has_method("elapse_sponsor_shield"):
+		return
+
+	ResourceManager.elapse_sponsor_shield(ResourceManager.SHIELD_DURATION + 45.0)
+
+	assert_float(ResourceManager.get_shield_remaining_seconds()).is_equal_approx(
+		ResourceManager.SHIELD_DURATION - 45.0,
+		0.0001
+	)

@@ -51,6 +51,13 @@ function simulate_offline(Δt_seconds, Cringe_fixed, H0, M0):
 5. The simulation result is applied to Resource System **once, after completion** (not stepped in real time) — the player sees the already-updated final state.
 6. **Within-step ordering is fixed**: each step updates `H` first, then computes `M_drain`/`M` from the *new* `H`, then computes `Mult(M)` from the *new* `M`, then accumulates `Z_step` using the *post-update* `H` and `M` — exactly the order shown in the pseudocode above. This is not ambiguous: H and M are always updated before being read for that same step's Z contribution.
 7. **Malformed `last_saved_at`** is handled upstream: Save/Persistence System treats any unparseable save data (including a malformed timestamp) as "file doesn't exist" and falls back to defaults — so this system never receives a malformed timestamp; it either gets a valid one or doesn't run at all (per Edge Cases).
+8. **Shared transition (2026-08-05):** each 60-second step delegates to the
+   same stateless H→M→Mult→Reach transition used by live play. Offline cadence,
+   cap, modifier snapshots, and worked-example outputs remain unchanged.
+9. **Sponsor Shield wall clock:** the simulation may use the shielded buffer for
+   the protected portion of its capped window, then `BootController` subtracts
+   the full actual offline elapsed duration from the persisted Shield timer.
+   The 24-hour cap limits economy accrual, not wall-clock expiry.
 
 ### States and Transitions
 
@@ -86,6 +93,11 @@ function simulate_offline(Δt_seconds, Cringe_fixed, H0, M0):
 | Total Zasięgi gained | total_Z_gained | float | ≥0 | Accumulated passive income across the simulation |
 
 **Step size:** 1-minute fixed steps (not coarser, not adaptive) — confirmed by `systems-designer`: computationally trivial (1440 iterations max, microseconds-to-low-ms in GDScript, no background thread needed) and guarantees offline math can never silently diverge from live-play formulas (Pillar 4).
+
+**Shared implementation:** cadence differs intentionally (offline 60 s, live
+1 s), but both call `ResourceSimulationStep.compute()` with explicit modifiers.
+Staff Assistant is supplied only by offline; Class Path ambient effects, Staff
+Troll, Sponsor Shield, and `META_HATERS_RESIST` apply in both contexts.
 
 **Worked example:** Cringe=50 (fixed), H0=5, M0=80%, Δt=24h (capped) → `H_rate = 0.02 + (0.5)^2.0×1.0 = 0.27/min` (constant) → **final_H ≈ 394**, **final_M ≈ 0%**, **total_Z_gained ≈ 28,000–29,000 Zasięgi**.
 

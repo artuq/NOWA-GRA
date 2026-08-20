@@ -38,6 +38,9 @@ consent (Pillar 2).
 ### 1. Trigger
 
 - A new Autoload `BurnoutSystem` tracks `_cringe_sustained_seconds: float` via `_process(delta)`.
+- `ActionScreen` explicitly enables the detector for its lifecycle and disables it on teardown.
+  Boot, Start, Offline Report, and Challenge Selection never enable it. Leaving active play pauses
+  the accumulated live-play time without resetting it or emitting a warning cancellation.
 - Each live-play frame: if Cringe ≥ 100.0 → `_cringe_sustained_seconds += delta`. If Cringe
   < 100.0 → `_cringe_sustained_seconds = 0.0`.
 - When `_cringe_sustained_seconds >= BURNOUT_THRESHOLD` **and** `_card_pending == false`:
@@ -129,11 +132,13 @@ All numeric values must live in `assets/data/balance.json` (or equivalent), not 
 | ActionSystem | Already suspends on `card_presented` — no change | No action |
 | HistoryFlagManager | `set_flag()` — already exists | No action |
 | SaveSystem | BurnoutSystem added to serialize/restore cycle | Add at implementation time |
+| ActionScreen | Owns the ephemeral live-play enable/disable boundary | Lifecycle calls only |
 | Prestige/Checkpoint System | **Designed around this spec** — defines META_BONUS content, flag classification (era-local vs meta-persistent), era-start default values | Full GDD required (Alpha) |
 
 ## Acceptance Criteria
 
 - [ ] `_cringe_sustained_seconds` increments only when Cringe = 100.0; resets to 0.0 when Cringe < 100.0
+- [ ] The timer is paused outside ActionScreen (including Start, Offline Report, and Challenge Selection) and resumes when live play returns
 - [ ] Burnout Card injected exactly once when timer reaches `BURNOUT_THRESHOLD`; not re-injected while `_card_pending`
 - [ ] Warning signal emitted when timer ≥ `BURNOUT_WARNING_THRESHOLD`; cancelled when Cringe drops below 100
 - [ ] Burnout Card cannot be dismissed without A or B; normal card pool suspended while card is active

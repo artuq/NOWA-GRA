@@ -13,6 +13,10 @@
 class_name BootController
 extends Node
 
+## Test seam: production keeps real deferred scene swaps enabled; focused flow
+## tests can observe route_requested without replacing the SceneTree root.
+var scene_changes_enabled: bool = true
+
 ## Emitted right before the routing change_scene_to_file call, carrying the
 ## target path -- a test seam so tests can assert routing decisions without
 ## depending on the target scene's load succeeding (same pattern as
@@ -58,12 +62,17 @@ static func has_progress(data: Dictionary) -> bool:
 	return data.has("resources")
 
 
-## Routing predicate for the start screen (BUG-005): show it only when there is
-## real progress to continue AND it hasn't already been offered this session.
+## Routing predicate for the start screen: show it once when there is progress
+## to continue OR the player has never explicitly chosen a language. A fresh
+## install therefore receives the language gate before entering gameplay.
 ## Static + argument-driven so tests can exercise the truth table without a
 ## real save file or scene swap.
 static func should_show_start_screen(data: Dictionary, already_shown: bool) -> bool:
-	return has_progress(data) and not already_shown
+	if already_shown:
+		return false
+	var settings: Dictionary = data.get("settings", {})
+	var language_confirmed: bool = bool(settings.get("language_choice_confirmed", false))
+	return has_progress(data) or not language_confirmed
 
 
 ## Computes offline elapsed seconds from the save Dictionary's "last_saved_at"
@@ -73,7 +82,7 @@ static func should_show_start_screen(data: Dictionary, already_shown: bool) -> b
 ## correct "nothing to report" case.
 static func compute_elapsed_seconds(data: Dictionary, now: float) -> int:
 	var last_saved_at: float = data.get("last_saved_at", now)
-	return int(now - last_saved_at)
+	return maxi(0, int(now - last_saved_at))
 
 
 ## Runs the full boot sequence against explicit inputs (see class doc for why).
@@ -91,10 +100,31 @@ func boot_with(data: Dictionary, elapsed_seconds: int) -> void:
 	ResourceManager.restore_state(data.get("resources", {}))
 	HistoryFlagManager.restore_state(data.get("history_flags", {}))
 	OnboardingGate.restore_state(data.get("onboarding", {}))
+	SponsorContractSystem.restore_state(data.get("sponsor_contract", {}))
+	SponsorContractSystem.process_offline_elapsed(elapsed_seconds)
 	ClassPathSystem.restore_state(data.get("class_path", {}))
 	SettingsSystem.restore_state(data.get("settings", {}))  # same idempotent re-restore as the other three
 	PrestigeSystem.restore_state(data.get("prestige", {}))  # same idempotent re-restore as the other three
 	StaffSystem.restore_state(data.get("staff", {}))  # same idempotent re-restore as the other three
+	AlgorithmContractSystem.restore_state(data.get("algorithm_contract", {}))
+
+	if AlgorithmContractSystem.state == AlgorithmContractSystem.State.ARMED \
+		and elapsed_seconds >= OfflineProgressSystem.MIN_REPORT_THRESHOLD_SECONDS:
+		var staged: Dictionary = AlgorithmContractSystem.stage_return(elapsed_seconds)
+		if not staged.is_empty():
+			var chosen: Dictionary = staged["chosen"]
+			OfflineProgressSystem.last_simulation_result = staged.duplicate(true)
+			OfflineProgressSystem.last_simulation_result["final_H"] = chosen["final_H"]
+			OfflineProgressSystem.last_simulation_result["final_M"] = chosen["final_M"]
+			OfflineProgressSystem.last_simulation_result["total_Z_gained"] = chosen["total_Z_gained"]
+			OfflineProgressSystem.last_simulation_result["h0"] = staged["start"]["Haters"]
+			OfflineProgressSystem.last_simulation_result["m0"] = staged["start"]["Morale"]
+			_route_to(OFFLINE_REPORT_SCENE)
+			return
+		# Invalid snapshots fail closed: preserve resources and contract rather
+		# than silently applying a result the player cannot verify.
+		_route_to(MAIN_SCENE)
+		return
 
 	# Baselines captured BEFORE the sim result is applied -- both for computing
 	# the deltas below (apply_delta is the only write ResourceManager exposes)
@@ -103,6 +133,11 @@ func boot_with(data: Dictionary, elapsed_seconds: int) -> void:
 	var m0: float = ResourceManager.get_resource(&"Morale")
 
 	var result: Dictionary = OfflineProgressSystem.simulate_offline(elapsed_seconds)
+	# Resource simulation is capped at 24h, but Sponsor Shield is a persisted
+	# wall-clock timer. The sim above consumes its protected segment; now remove
+	# the full real elapsed duration from the live timer before the result is
+	# saved, including time beyond the economy cap.
+	ResourceManager.elapse_sponsor_shield(float(maxi(0, elapsed_seconds)))
 	# Built as an explicitly-typed local (engine-specialist note, 2026-06-29) --
 	# a bare {} literal here would infer untyped, which apply_delta's
 	# Dictionary[StringName, float] signature accepts only via an implicit
@@ -120,11 +155,16 @@ func boot_with(data: Dictionary, elapsed_seconds: int) -> void:
 	OfflineProgressSystem.last_simulation_result["m0"] = m0
 
 	var target: String = OFFLINE_REPORT_SCENE if elapsed_seconds >= OfflineProgressSystem.MIN_REPORT_THRESHOLD_SECONDS else MAIN_SCENE
-	route_requested.emit(target)
+	_route_to(target)
 	# Deferred: calling change_scene_to_file synchronously from the Main Scene's
 	# own _ready() errors ("Parent node is busy adding/removing children") because
 	# the SceneTree is still mid-instantiation of the current scene root at that
 	# point. Deferring to the next idle frame avoids the race (discovered via a
 	# real headless cold-start run, not caught by scene_runner-based tests since
 	# scene_runner instances boot.tscn as a child, not as the tree's own root).
-	get_tree().change_scene_to_file.call_deferred(target)
+
+
+func _route_to(target: String) -> void:
+	route_requested.emit(target)
+	if scene_changes_enabled:
+		get_tree().change_scene_to_file.call_deferred(target)

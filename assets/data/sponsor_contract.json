@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "opening_card_id": "brand_deal_choice",
+  "campaign_actions_required": 4,
+  "fallout_cards": {
+    "a": "sponsor_contract_mega_fallout",
+    "b": "sponsor_contract_indie_fallout"
+  },
+  "recovery_actions_required": 2,
+  "finale_card_id": "sponsor_contract_finale",
+  "callback_offline_seconds_required": 300,
+  "callback_cards": {
+    "honest_report": "sponsor_contract_callback_honest",
+    "sell_legend": "sponsor_contract_callback_legend"
+  }
+}

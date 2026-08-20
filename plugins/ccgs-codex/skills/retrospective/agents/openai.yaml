@@ -1,0 +1,4 @@
+interface:
+  display_name: "Retrospective"
+  short_description: "Run the CCGS Retrospective workflow in Codex."
+  default_prompt: "Use $retrospective to handle this game-development task."

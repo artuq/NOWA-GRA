@@ -1,8 +1,7 @@
-## StartScreen (BUG-005): the Continue / New Game gate, shown at cold boot ONLY
-## when a save with real progress exists (BootController.has_progress()) -- a
-## fresh player never sees it and boots straight into the game, preserving the
-## first-card hook's instant time-to-gameplay (quick-spec 2026-07-06). Offered
-## at most once per app launch (BootController._start_screen_shown).
+## StartScreen owns the explicit first-launch language gate plus Continue/New
+## Game for existing careers. Automatic system-language detection may select
+## the initial copy, but gameplay cannot start until English or Polish is
+## deliberately chosen once.
 ##
 ## Both exits route back through boot.tscn so ADR-0003's boot sequence
 ## (restore -> offline sim -> routing) stays the single source of boot truth;
@@ -25,19 +24,79 @@ var boot_scene_path: String = "res://scenes/boot/boot.tscn"
 
 ## Single-fire guard: once a reboot is requested, further taps no-op.
 var _swap_done: bool = false
+var _has_progress: bool = false
+var _language_dirty: bool = false
 
 @onready var _confirm_panel: Control = %ConfirmPanel
 
 
 func _ready() -> void:
+	_has_progress = BootController.has_progress(SaveSystem.load_save())
+	# This screen may remain open if the system locale changes while suspended.
+	# Render formatted strings explicitly and opt them out of Godot's automatic
+	# second pass, matching the rest of the runtime-localized UI.
+	for control: Control in [
+		%ContinueButton,
+		%NewGameButton,
+		%LanguagePromptLabel,
+		%EnglishButton,
+		%PolishButton,
+		$ConfirmPanel/Panel/VBox/ConfirmTitleLabel,
+		$ConfirmPanel/Panel/VBox/ConfirmBodyLabel,
+		%ConfirmDeleteButton,
+		%ConfirmCancelButton,
+	]:
+		control.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	(%ContinueButton as Button).pressed.connect(_on_continue_pressed)
 	(%NewGameButton as Button).pressed.connect(_on_new_game_pressed)
+	(%EnglishButton as Button).pressed.connect(_on_language_pressed.bind(SettingsSystem.LANGUAGE_EN))
+	(%PolishButton as Button).pressed.connect(_on_language_pressed.bind(SettingsSystem.LANGUAGE_PL))
 	(%ConfirmDeleteButton as Button).pressed.connect(_on_confirm_delete_pressed)
 	(%ConfirmCancelButton as Button).pressed.connect(_on_confirm_cancel_pressed)
+	SettingsSystem.language_changed.connect(_on_language_changed)
+	_refresh_copy()
+	_refresh_language_choice()
 	_confirm_panel.visible = false
+	(%NewGameButton as Button).visible = _has_progress
+
+
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
+	_refresh_copy()
+	_refresh_language_choice()
+
+
+func _refresh_copy() -> void:
+	(%ContinueButton as Button).text = tr(&"UI_START_CONTINUE") if _has_progress else tr(&"UI_START_PLAY")
+	(%NewGameButton as Button).text = tr(&"UI_START_NEW_GAME")
+	(%LanguagePromptLabel as Label).text = tr(&"UI_START_LANGUAGE_PROMPT")
+	($ConfirmPanel/Panel/VBox/ConfirmTitleLabel as Label).text = tr(&"UI_START_DELETE_TITLE")
+	($ConfirmPanel/Panel/VBox/ConfirmBodyLabel as Label).text = tr(&"UI_START_DELETE_BODY")
+	(%ConfirmDeleteButton as Button).text = tr(&"UI_START_DELETE_CONFIRM")
+	(%ConfirmCancelButton as Button).text = tr(&"UI_COMMON_CANCEL")
+
+
+func _refresh_language_choice() -> void:
+	var confirmed: bool = SettingsSystem.language_choice_confirmed
+	var preference: StringName = SettingsSystem.language_preference
+	(%EnglishButton as Button).text = "✓ English" if confirmed and preference == SettingsSystem.LANGUAGE_EN else "English"
+	(%PolishButton as Button).text = "✓ Polski" if confirmed and preference == SettingsSystem.LANGUAGE_PL else "Polski"
+	(%ContinueButton as Button).disabled = not confirmed
+
+
+func _on_language_pressed(preference: StringName) -> void:
+	SettingsSystem.set_language_preference(preference)
+	_language_dirty = true
+	_refresh_language_choice()
 
 
 func _on_continue_pressed() -> void:
+	if not SettingsSystem.language_choice_confirmed:
+		return
+	# Persist the explicit choice before boot re-reads the save Dictionary.
+	if _has_progress and _language_dirty:
+		SaveSystem.save_now()
+	elif not _has_progress and not SaveSystem.save_settings_only():
+		return
 	_reboot()
 
 
@@ -51,7 +110,8 @@ func _on_confirm_cancel_pressed() -> void:
 
 func _on_confirm_delete_pressed() -> void:
 	if not SaveSystem.reset_save():
-		# Backup failed -- the save was left untouched (reset_save's contract).
+		# Backup or atomic fresh-save write failed -- the live career and its
+		# save were left untouched (reset_save's contract).
 		# Close the confirm rather than reboot into a game that would silently
 		# continue the old save the player just asked to delete.
 		_confirm_panel.visible = false

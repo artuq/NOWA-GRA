@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gate Check"
+  short_description: "Run the CCGS Gate Check workflow in Codex."
+  default_prompt: "Use $gate-check to handle this game-development task."

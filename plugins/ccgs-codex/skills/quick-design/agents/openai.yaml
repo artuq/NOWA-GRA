@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quick Design"
+  short_description: "Run the CCGS Quick Design workflow in Codex."
+  default_prompt: "Use $quick-design to handle this game-development task."

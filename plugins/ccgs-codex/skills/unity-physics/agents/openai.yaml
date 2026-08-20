@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Physics"
+  short_description: "Imported game-development capability: Unity Physics."
+  default_prompt: "Use $unity-physics for this game-development task."

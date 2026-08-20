@@ -24,14 +24,13 @@ const BurnoutSystemScript: GDScript = preload("res://src/core/burnout_system.gd"
 ## (300s) — the spec's fill_ratio denominator.
 const _WARNING_WINDOW: float = BurnoutSystemScript.BURNOUT_THRESHOLD - BurnoutSystemScript.BURNOUT_WARNING_THRESHOLD
 
-## Player-facing names for the 4 META_BONUS types (same humanization
-## direction as design/ux/meta-bonus-visibility.md's BonusLabel; English per
-## the UI-language decision 2026-06-25).
-const _BONUS_NOUNS: Dictionary[StringName, String] = {
-	&"META_REACH_MULT": "Reach",
-	&"META_SPONSOR_MULT": "Sponsor income",
-	&"META_HATERS_RESIST": "Haters resistance",
-	&"META_SPONSOR_FLOOR": "era-start Sponsors",
+## Localization keys for the 4 player-facing META_BONUS names (same
+## humanization direction as meta-bonus-visibility.md's BonusLabel).
+const _BONUS_NOUN_KEYS: Dictionary[StringName, StringName] = {
+	&"META_REACH_MULT": &"META_BURNOUT_NOUN_REACH",
+	&"META_SPONSOR_MULT": &"META_BURNOUT_NOUN_SPONSOR_INCOME",
+	&"META_HATERS_RESIST": &"META_BURNOUT_NOUN_HATERS_RESISTANCE",
+	&"META_SPONSOR_FLOOR": &"META_BURNOUT_NOUN_ERA_START_SPONSORS",
 }
 
 const _FADE_DURATION: float = 0.18
@@ -50,8 +49,11 @@ var _preview_key: Array = []
 func _ready() -> void:
 	visible = false
 	modulate.a = 0.0
+	_seconds_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	_bank_preview_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	BurnoutSystem.burnout_warning_changed.connect(_on_warning_changed)
 	DecisionCardSystem.card_presented.connect(_on_card_presented)
+	SettingsSystem.language_changed.connect(_on_language_changed)
 
 
 func _on_warning_changed(active: bool, seconds_remaining: float) -> void:
@@ -71,6 +73,12 @@ func _on_card_presented(_card: Dictionary) -> void:
 	_set_shown(false)
 
 
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
+	_preview_key = []
+	if visible:
+		_refresh_bank_preview()
+
+
 ## Rebuilds the telegraph line from the CURRENT projected grant
 ## (PrestigeSystem.compute_next_grant, ADR-0017's preview API — this is its
 ## first shipped consumer). Recomputed only when the active path/tier pair
@@ -87,14 +95,15 @@ func _refresh_bank_preview() -> void:
 
 func _bank_preview_text(path_id: StringName, tier: int) -> String:
 	if path_id == &"":
-		return "Burnout ahead — no active path, accepting banks nothing"
+		return tr("META_BURNOUT_NO_PATH")
 	var grant: Dictionary = PrestigeSystem.compute_next_grant(path_id, tier)
 	if not grant["granted"] or grant["amount"] <= 0.0:
-		return "Burnout ahead — bonus cap reached, accepting banks nothing new"
-	var noun: String = _BONUS_NOUNS.get(grant["type"], String(grant["type"]))
+		return tr("META_BURNOUT_CAP_REACHED")
+	var noun_key: StringName = _BONUS_NOUN_KEYS.get(grant["type"], &"")
+	var noun: String = tr(noun_key) if not noun_key.is_empty() else String(grant["type"])
 	if grant["type"] == &"META_SPONSOR_FLOOR":
-		return "Burnout ahead — accepting banks +%d %s, permanent" % [int(roundf(grant["amount"])), noun]
-	return "Burnout ahead — accepting banks +%s%% %s, permanent" % [_fmt_percent(grant["amount"]), noun]
+		return tr("META_BURNOUT_BANK_FLAT") % [int(roundf(grant["amount"])), noun]
+	return tr("META_BURNOUT_BANK_PERCENT") % [_fmt_percent(grant["amount"]), noun]
 
 
 ## 0.02 -> "2", 0.0107 -> "1.1" (percent, trailing zeros stripped).

@@ -92,7 +92,7 @@ theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 30
-text = "Class Path"
+text = "META_PATH_TITLE"
 
 [node name="TopBarSpacer" type="Control" parent="MainLayout/TopBar"]
 layout_mode = 2
@@ -103,7 +103,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(88, 44)
 layout_mode = 2
 size_flags_vertical = 4
-text = "Close"
+text = "META_COMMON_CLOSE"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MainLayout"]
 layout_mode = 2
@@ -194,7 +194,7 @@ theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
 theme_override_styles/disabled = SubResource("InvestButtonDisabled")
-text = "Invest"
+text = "META_PATH_INVEST"
 
 [node name="Row1InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row1/VBox"]
 unique_name_in_owner = true
@@ -286,7 +286,7 @@ theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
 theme_override_styles/disabled = SubResource("InvestButtonDisabled")
-text = "Invest"
+text = "META_PATH_INVEST"
 
 [node name="Row2InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row2/VBox"]
 unique_name_in_owner = true
@@ -378,7 +378,7 @@ theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
 theme_override_styles/disabled = SubResource("InvestButtonDisabled")
-text = "Invest"
+text = "META_PATH_INVEST"
 
 [node name="Row3InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row3/VBox"]
 unique_name_in_owner = true
@@ -470,7 +470,7 @@ theme_override_styles/normal = SubResource("InvestButtonNormal")
 theme_override_styles/hover = SubResource("InvestButtonNormal")
 theme_override_styles/pressed = SubResource("InvestButtonPressed")
 theme_override_styles/disabled = SubResource("InvestButtonDisabled")
-text = "Invest"
+text = "META_PATH_INVEST"
 
 [node name="Row4InvestExplanationLabel" type="Label" parent="MainLayout/ScrollContainer/PathList/Row4/VBox"]
 unique_name_in_owner = true

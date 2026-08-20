@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bevy Ecs"
+  short_description: "Imported game-development capability: Bevy Ecs."
+  default_prompt: "Use $bevy-ecs for this game-development task."

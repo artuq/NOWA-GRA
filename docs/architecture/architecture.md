@@ -1,11 +1,11 @@
 # Król Cringe'u — Master Architecture
 
 ## Document Status
-- Version: 2
-- Last Updated: 2026-07-22
+- Version: 2.1
+- Last Updated: 2026-08-05
 - Engine: Godot 4.6.3, GDScript
 - GDDs Covered: resource-system, history-flag-system, save-persistence-system, card-content-database, action-system, decision-card-system, offline-progress-system, action-ui, card-ui, offline-report-screen, onboarding-tutorial (11 MVP GDDs, unchanged from v1) + class-path-system, juice-feedback-system, prestige-checkpoint-system, main-navigation-screen-flow (In Review — see note below) — 15 GDDs total. Team/Staff Management, Staff/Sponsor UI, and Cosmetic Persona Customization remain Not Started (no GDD) and appear below only as placeholder layer assignments per `systems-index.md`.
-- ADRs Referenced: ADR-0001 through ADR-0013, all Accepted
+- ADRs Referenced: ADR-0001 through ADR-0020, all Accepted
 - Technical Director Sign-Off: 2026-07-22 — APPROVED
 - Lead Programmer Feasibility: skipped (Lean mode)
 
@@ -38,11 +38,11 @@ Class Path System, Prestige/Checkpoint System, Burnout System, and Challenge Sys
 
 | Module | Layer | Owns | Exposes | Consumes | Engine APIs (risk) |
 |---|---|---|---|---|---|
-| `ResourceManager` | Core | 5 currency values, Morale bands, sponsor shield state | `get_resource()`, `apply_delta()`, `activate_sponsor_shield()`, `get_active_sponsor_multiplier()`, signals `resource_changed`, `shield_changed` | — | Autoload (LOW) |
+| `ResourceManager` | Core | 5 currency values, Morale bands, sponsor shield state, synchronous ambient-mutation context | `get_resource()`, `apply_delta()`, `apply_ambient_delta()`, `is_applying_ambient_delta()`, `activate_sponsor_shield()`, `elapse_sponsor_shield()`, signals `resource_changed`, `shield_changed` | SaveSystem | Autoload (LOW) |
 | `HistoryFlagManager` | Core | flag log, pattern counters | `record_choice()`, `resolve_path()` | — | Autoload (LOW) |
-| `ActionSystem` | Core | active action state, timer | `start_action()`, signal `action_completed` | ResourceManager, ClassPathSystem (multiplier), ChallengeSystem (modifier) | `Timer` node (LOW) |
-| `OfflineProgressSystem` | Core | offline sim result | `simulate_offline()`, signal `offline_result_ready` | ResourceManager, SaveSystem | `Time.get_unix_time_from_system()` (LOW) |
-| `SaveSystem` | Foundation | save file I/O, debounce timer | `save_now()`, `load_save()`, signal `save_flushed` | all Core/Feature/Foundation modules (read state) | `FileAccess`, `Timer` (LOW) |
+| `ActionSystem` | Core | active action state, one Timer, bounded FIFO queue | `start_action()`, `get_progress()`, `get_current_duration()`, `get_queue_size()`, `get_queue_snapshot()`, `clear_queue()`, signals `action_started`/`action_completed`/`queue_changed` | ResourceManager, DecisionCardSystem (queue suspend), ClassPathSystem, ChallengeSystem, PrestigeSystem | `Timer` node (LOW) |
+| `OfflineProgressSystem` | Core | offline sim result, 60-second/capped orchestration | `simulate_offline()` | ResourceSimulationStep, ResourceManager, ClassPathSystem (ambient effects), PrestigeSystem (Haters resistance), StaffSystem (Troll/Assistant factors) | synchronous loop (LOW) |
+| `SaveSystem` | Foundation | save file I/O, 2s trailing debounce, 10s maximum dirty age | `mark_dirty()`, `save_now()`, `load_save()` | all Core/Feature/Foundation modules (read state) | `FileAccess`, two one-shot `Timer`s (LOW) |
 | `CardContentDatabase` | Foundation | static card resource table | `get_card(id)`, `get_all_cards()` | — | `Resource`/JSON (LOW) |
 | `DecisionCardSystem` | Feature | cooldown counter, weighting, presented card state, `State` enum (COOLDOWN/CHECKING/PRESENTING/RESOLVING) | `present_next_card()`, `inject_priority_card()`, `resolve_choice()`, signals `card_presented`, `card_resolved` | CardContentDatabase, HistoryFlagManager, ResourceManager | Autoload (LOW) |
 | `ActionUI` | Presentation | Action Grid scene | reads ActionSystem/ResourceManager signals | ActionSystem, ResourceManager | `Control`, `Button` (LOW; not `TouchScreenButton` — ADR-0007) |
@@ -61,8 +61,11 @@ Class Path System, Prestige/Checkpoint System, Burnout System, and Challenge Sys
 | `SettingsSystem` | Foundation | `reduce_motion: bool` | `set_reduce_motion()` (sole write path); field is read directly (established read-directly/write-through-method split) | — | Autoload (LOW) |
 | `SettingsScreen` | Presentation | settings modal scene | reads/writes via SettingsSystem | SettingsSystem | `Control` (LOW) |
 | `PrestigeSystem` | Feature | `era_count`, `meta_bonus_totals`, deferred-this-era flag, reset+grant sequence | `on_burnout_accepted()`, `on_burnout_deferred()`, `get_era_count()`, `get_meta_bonus_total()`, `has_deferred_this_era()`, signal `era_transitioned` (no args) | ResourceManager, ClassPathSystem (`reset_era_state()`), ChallengeSystem (`get_combined_meta_multiplier()`, `clear_active_challenges()`), SaveSystem | Autoload (LOW) |
-| `BurnoutSystem` | Feature | sustained-Cringe timer, warning countdown, forced-card-pending flag | signal `burnout_warning_changed(active, seconds_remaining)` | ResourceManager (Cringe reads), `DecisionCardSystem.inject_priority_card()`/`.card_resolved`, `PrestigeSystem.on_burnout_accepted()`/`.on_burnout_deferred()` | Autoload, registered strictly after DecisionCardSystem (LOW) |
+| `BurnoutSystem` | Feature | sustained-Cringe timer, warning countdown, forced-card-pending flag, ephemeral live-play gate | `set_live_play_active()`, `is_live_play_active()`, signal `burnout_warning_changed(active, seconds_remaining)` | ActionScreen (lifecycle owner), ResourceManager (Cringe reads), `DecisionCardSystem.inject_priority_card()`/`.card_resolved`, `PrestigeSystem.on_burnout_accepted()`/`.on_burnout_deferred()` | Autoload, registered strictly after DecisionCardSystem (LOW) |
 | `ChallengeSystem` | Feature | challenge catalogue, active-selection set, per-axis modifier storage | `get_challenge_data()`, `select_challenges()`, `get_active_challenge_ids()`, `clear_active_challenges()`, `get_modifier(action_id, axis)`, `get_combined_meta_multiplier()` | — (pull-model only; read by ActionSystem and PrestigeSystem) | Autoload (LOW) |
+| `ResourceSimulationStep` | Core (stateless) | none — pure H→M→Mult→Reach transition | `compute(...) -> {final_H, final_M, reach_gained}` | ResourceFormulas, PrestigeFormulas | none (LOW) |
+| `LiveResourceTicker` | Core (scene-scoped) | fractional live-time accumulator | fixed 1s `_process()` cadence | ResourceSimulationStep, ResourceManager, ClassPathSystem, StaffSystem, PrestigeSystem | `Node._process()` only while ActionScreen exists (LOW) |
+| `SponsorShieldControl` | Presentation | Shield status/countdown/affordability rendering | button forwards `activate_sponsor_shield()` | ResourceManager | `PanelContainer`, `Button` (LOW) |
 | `MainNavCoordinator` (planned, not yet implemented — ADR-0014 Accepted) | Presentation | which-panel-is-open state (`NO_OVERLAY`/`PANEL_OPEN`/`CARD_PRESENTED`) | closes its own four panels (`ClassPathPanel`/`SettingsScreen`/`BonusesPanel`/`StaffPanel`, added 2026-07-22/2026-07-23 per `meta-bonus-visibility.md`/`staff-sponsor-ui.md`) on card-interrupt; never writes `CardScreen.visible` (mirror-not-hub, per Architecture Principle 8) | `ClassPathPanel`/`SettingsScreen`/`BonusesPanel`/`StaffPanel` open/close signals, `DecisionCardSystem.card_presented`/`.card_resolved`, `CardScreen.visibility_changed` | `Control`, platform back-gesture APIs (Android: gated by `application/config/quit_on_go_back`; Web: `JavaScriptBridge` + `history.pushState()` pattern, unverified; iOS out of scope — 2026-07-22) |
 | `TeamStaffManagement`, `StaffSponsorUI`, `CosmeticPersonaCustomization` | Feature / Presentation / Presentation | — (Not Started, no GDD — placeholder layer assignment only, per `systems-index.md` rows 15/16/18) | — | — | — |
 
@@ -130,7 +133,7 @@ CardScreen swipe commit → DecisionCardSystem.resolve_choice(option)
 
 **5. Burnout/prestige transition path** (new — synchronous orchestration, zero await/deferred in the call graph):
 ```
-BurnoutSystem detects sustained Cringe=100 (_process accumulator) → emits burnout_warning_changed(true, countdown)
+ActionScreen._ready() enables BurnoutSystem (and _exit_tree() pauses it) → while enabled, sustained Cringe=100 advances the accumulator → emits burnout_warning_changed(true, countdown)
   countdown expires (still sustained) → DecisionCardSystem.inject_priority_card(BURNOUT_CARD_ID)
     guarded on: return value checked (no soft-lock), DecisionCardSystem.state == COOLDOWN (no clobbering an in-progress card)
   Player resolves Wypalenie card → BurnoutSystem routes to PrestigeSystem.on_burnout_accepted():
@@ -144,6 +147,16 @@ BurnoutSystem detects sustained Cringe=100 (_process accumulator) → emits burn
   (all steps 1–7 execute synchronously in one call stack — ADR-0012/ADR-0013's binding constraint)
   Post-era_transitioned (no longer under the zero-await constraint): ChallengeSystem's Challenge Selection screen
   presents 0–N modifier choices for the new era → select_challenges() stores the selection
+```
+
+**7. Live ambient resource path** (ADR-0020):
+```
+ActionScreen exists → LiveResourceTicker accumulates frame delta
+  → for each complete 1s: ResourceSimulationStep.compute(H→M→Mult→Reach)
+  → ResourceManager.apply_ambient_delta(one batch)
+      → ResourceHud updates text, skips ambient juice
+      → SaveSystem.mark_dirty(): restart 2s trailing timer, preserve first 10s deadline
+ActionScreen freed → ticker freed → no live accrual on non-gameplay scenes
 ```
 
 **6. Main Navigation coordination path** (new — GDD-complete, implementation pending Required ADR #1):
@@ -165,8 +178,8 @@ Back gesture (Android/Web only — iOS out of scope, 2026-07-22, redundant not p
 **3. Save/load path** (unchanged from v1, module list extended):
 ```
 On any Resource/History/Decision-cooldown/ClassPath/Prestige/Burnout/Challenge/Settings mutation →
-  SaveSystem.mark_dirty() (2s debounce Timer)
-Timer.timeout OR app NOTIFICATION_APPLICATION_PAUSED → SaveSystem.save_now()
+  SaveSystem.mark_dirty() (restart 2s trailing Timer; start 10s max-age Timer only if stopped)
+Either eligible timeout OR app NOTIFICATION_APPLICATION_PAUSED → SaveSystem.save_now() → stop both Timers
   → serializes: ResourceManager, HistoryFlagManager, DecisionCardSystem cooldown, OnboardingGate phase,
     ClassPathSystem.serialize_state(), PrestigeSystem.serialize_state(), BurnoutSystem.serialize_state(),
     ChallengeSystem.serialize_state(), SettingsSystem.serialize_state()

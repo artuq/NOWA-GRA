@@ -66,13 +66,41 @@ func test_start_action_from_idle_emits_action_started_with_correct_id() -> void:
 	_action_system.action_started.connect(on_started)
 
 	_action_system.start_action(&"nagraj_vloga")
+	_action_system.action_started.disconnect(on_started)
 
 	assert_array(emitted_ids).has_size(1)
 	assert_that(emitted_ids[0]).is_equal(&"nagraj_vloga")
 
 
-## Companion case: a rejected start (already running) must NOT emit
-## action_started.
+## Public timing contract: idle has no duration; once started, callers read
+## the exact effective duration captured by the Timer without private access.
+func test_get_current_duration_returns_zero_idle_and_timer_wait_time_running() -> void:
+	assert_float(_action_system.get_current_duration()).is_equal_approx(0.0, 0.0001)
+
+	_action_system.start_action(&"nagraj_vloga")
+
+	assert_float(_action_system.get_current_duration()).is_equal_approx(
+		_action_system._timer.wait_time, 0.0001
+	)
+
+
+## action_started is synchronous, so the effective duration must be armed
+## before listeners are notified; otherwise a UI listener observes stale data.
+func test_action_started_listener_observes_armed_effective_duration() -> void:
+	var duration_seen: Array[float] = []
+	var on_started: Callable = func(_action_id: StringName) -> void:
+		duration_seen.append(_action_system.get_current_duration())
+	_action_system.action_started.connect(on_started)
+
+	_action_system.start_action(&"zrob_drame")
+	_action_system.action_started.disconnect(on_started)
+
+	assert_array(duration_seen).has_size(1)
+	assert_float(duration_seen[0]).is_equal_approx(_action_system._timer.wait_time, 0.0001)
+
+
+## Companion case: accepting an action into the queue must NOT emit
+## action_started until that action is actually dequeued and starts.
 func test_start_action_while_running_does_not_emit_action_started() -> void:
 	_action_system.start_action(&"zrob_drame")
 	var emitted_ids: Array[StringName] = []
@@ -81,6 +109,7 @@ func test_start_action_while_running_does_not_emit_action_started() -> void:
 	_action_system.action_started.connect(on_started)
 
 	_action_system.start_action(&"przeprosiny")
+	_action_system.action_started.disconnect(on_started)
 
 	assert_array(emitted_ids).is_empty()
 
@@ -138,10 +167,13 @@ func test_action_timeout_resets_state_and_emits_completed_signal_exactly_once() 
 ## so count emissions directly via a connected counter callable instead.
 func test_action_timeout_emits_signal_exactly_once_not_zero_or_twice() -> void:
 	var emit_count: Array = [0]
-	_action_system.action_completed.connect(func(_id: StringName, _rewards: Dictionary) -> void: emit_count[0] += 1)
+	var on_completed: Callable = func(_id: StringName, _rewards: Dictionary) -> void:
+		emit_count[0] += 1
+	_action_system.action_completed.connect(on_completed)
 	_action_system.start_action(&"nagraj_vloga")
 
 	_action_system._on_action_timeout()
+	_action_system.action_completed.disconnect(on_completed)
 
 	assert_int(emit_count[0]).is_equal(1)
 

@@ -200,6 +200,18 @@ const _INVESTMENT_RATE_TABLE: Dictionary[StringName, float] = {
 	&"biznesmen_contentu": 0.02,
 }
 
+const _INVESTMENT_RESOURCE_TABLE: Dictionary[StringName, StringName] = {
+	&"pato_streamer": &"Cringe",
+	&"guru_celebryta": &"Sponsors",
+	&"ekspert_niszowy": &"Morale",
+	&"biznesmen_contentu": &"Reach",
+}
+
+## Investment can accelerate an established direction, but cannot replace
+## card-choice history. The usable investment ceiling grows one-for-one with
+## card contribution, from a 20-point base (GDD F3 / Algorithm Contract F6).
+const PATH_INVESTMENT_HISTORY_BASE: float = 20.0
+
 ## Path -> Tier-5 signature card id (GDD `design/gdd/class-path-system.md`
 ## Tier Bonuses by Path table: "Viral Moment" / "Brand Deal of the Century" /
 ## "Kult Niszowy" / "IPO Influencera"; card content lives in
@@ -310,7 +322,8 @@ func _recalculate_card_contribution(path_id: StringName) -> void:
 func _recalculate_total_affiliation(path_id: StringName) -> void:
 	var card: float = _card_contribution.get(path_id, 0.0)
 	var investment: float = _investment_contribution.get(path_id, 0.0)
-	_affiliation[path_id] = clampf(card + investment, 0.0, 100.0)
+	var usable_investment: float = minf(investment, get_investment_cap(path_id))
+	_affiliation[path_id] = clampf(card + usable_investment, 0.0, 100.0)
 	_check_tier_progression(path_id)
 	_update_active_path()
 
@@ -398,6 +411,19 @@ func get_tier(path_id: StringName) -> int:
 	return _current_tier.get(path_id, 0)
 
 
+## Highest tier ever reached on this path across all eras. Current state is
+## included so a freshly-earned tier counts before the next burnout persists
+## its milestone.
+func get_lifetime_best_tier(path_id: StringName) -> int:
+	var best: int = get_tier(path_id)
+	for tier: int in range(5, 0, -1):
+		var flag: StringName = StringName("class_path." + String(path_id) + ".best_tier." + str(tier))
+		if HistoryFlagManager.has_milestone(flag):
+			best = maxi(best, tier)
+			break
+	return clampi(best, 0, 5)
+
+
 ## Returns the active path id, or &"" if no path has reached Tier 1.
 func get_active_path() -> StringName:
 	return _active_path
@@ -414,9 +440,9 @@ func get_ambiguous_gap() -> float:
 
 
 ## Returns whether [param path_id] currently satisfies invest()'s Core Rule
-## 4a gate -- i.e. whether the player could successfully call invest() on
-## this path right now, resource affordability aside. Mirrors invest()'s own
-## gate check exactly (`_card_contribution.get(path_id, 0.0) > 0.0`). Added
+## 4a history gate. It intentionally does not include resource affordability
+## or the F6 headroom check; callers read get_investment_headroom() separately.
+## Mirrors invest()'s history check exactly. Added
 ## for Story class-path-full/005: no public query previously exposed this
 ## private _card_contribution term, and the Class Path Panel's Invest control
 ## needs it to render a visually-disabled state with an explanatory label
@@ -575,19 +601,35 @@ func get_tier_effect_data(path_id: StringName, tier: int) -> Dictionary:
 ## _affiliation via _recalculate_total_affiliation() (F3 clamp + tier
 ## progression + active-path update). Returns true on success.
 ##
-## Once a path's total affiliation has already reached the F3 clamp (100.0),
-## further investment still deducts the resource (Edge Case — defensive,
-## same "at-100 is not blocked" pattern as the gate check) but yields zero
-## marginal affiliation.
+## Investment is also rejected without deduction when the requested gain
+## exceeds the decision-backed headroom exposed by get_investment_headroom().
+## This prevents offline stockpiles from pre-buying future card-history tiers.
 ##
 ## Example:
 ##   var ok: bool = ClassPathSystem.invest(&"pato_streamer", &"Cringe", 200.0)
+func get_investment_cap(path_id: StringName) -> float:
+	var card: float = _card_contribution.get(path_id, 0.0)
+	return minf(100.0 - card, PATH_INVESTMENT_HISTORY_BASE + card)
+
+
+func get_investment_headroom(path_id: StringName) -> float:
+	return maxf(get_investment_cap(path_id) - _investment_contribution.get(path_id, 0.0), 0.0)
+
+
 func invest(path_id: StringName, resource_id: StringName, amount: float) -> bool:
 	if _card_contribution.get(path_id, 0.0) <= 0.0:  # gate — Core Rule 4a
 		return false
-	if ResourceManager.get_resource(resource_id) < amount:  # can't afford
+	if not is_finite(amount) or amount < 0.0 or _INVESTMENT_RESOURCE_TABLE.get(path_id, &"") != resource_id:
 		return false
 	var rate: float = _INVESTMENT_RATE_TABLE.get(path_id, 0.0)
+	var requested_gain: float = amount * rate
+	# Never deduct resources for progress that current card history cannot use.
+	# The UI invests in one-point steps, while this defensive check also keeps
+	# direct/system calls from pre-banking progress for future choices.
+	if not is_finite(requested_gain) or requested_gain > get_investment_headroom(path_id):
+		return false
+	if ResourceManager.get_resource(resource_id) < amount:  # can't afford
+		return false
 	var deltas: Dictionary[StringName, float] = {resource_id: -amount}
 	ResourceManager.apply_delta(deltas)
 	_investment_contribution[path_id] = _investment_contribution.get(path_id, 0.0) + amount * rate
@@ -622,6 +664,25 @@ func restore_state(data: Dictionary) -> void:
 	for key: String in tier_in:
 		_current_tier[StringName(key)] = int(tier_in[key])
 	_active_path = StringName(data.get("active_path", ""))
+	# F6 migration: older saves may contain affiliation/tier values bought
+	# before the decision-backed ceiling existed. Re-derive both canonical
+	# values without unlock signals; grandfathering them would preserve the
+	# exact offline-stockpile skip this rule closes.
+	for path_id: StringName in _card_contribution:
+		var card: float = _card_contribution.get(path_id, 0.0)
+		var usable_investment: float = minf(
+			_investment_contribution.get(path_id, 0.0), get_investment_cap(path_id)
+		)
+		var migrated_affiliation: float = clampf(card + usable_investment, 0.0, 100.0)
+		_affiliation[path_id] = migrated_affiliation
+		var migrated_tier: int = 0
+		for tier: int in range(1, TIER_THRESHOLDS.size()):
+			if migrated_affiliation >= TIER_THRESHOLDS[tier]:
+				migrated_tier = tier
+			else:
+				break
+		_current_tier[path_id] = migrated_tier
+	_update_active_path()
 	# Recompute _ambiguous_gap from the just-restored affiliation/tier data —
 	# without this, a save loaded mid-ambiguity would report get_ambiguous_gap()
 	# == -1.0 (field-initializer default) until the next card resolution or
@@ -662,6 +723,19 @@ func serialize_state() -> Dictionary:
 		"current_tier": tier_out,
 		"active_path": String(_active_path),
 	}
+
+
+## Clears both era-local and derived class-path state for New Game without
+## writing the permanent best-tier milestones created by an era prestige.
+func reset_for_new_game() -> void:
+	_affiliation.clear()
+	_card_contribution.clear()
+	_investment_contribution.clear()
+	_current_tier.clear()
+	_ambiguous_gap = -1.0
+	if _active_path != &"":
+		_active_path = &""
+		active_path_changed.emit(&"")
 
 
 ## Resets all era-local path state: affiliation, tiers, and the per-path

@@ -7,13 +7,17 @@ extends GdUnitTestSuite
 const PANEL_SCENE: String = "res://scenes/action_screen/class_path_panel.tscn"
 
 var _cps_snapshot: Dictionary = {}
+var _locale_snapshot: String = ""
 
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_cps_snapshot = ClassPathSystem.serialize_state()
 
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	ClassPathSystem.reset_era_state()
 	ClassPathSystem.restore_state(_cps_snapshot)
 	SaveSystem._debounce_timer.stop()

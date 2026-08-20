@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Physics"
+  short_description: "Imported game-development capability: Godot Physics."
+  default_prompt: "Use $godot-physics for this game-development task."

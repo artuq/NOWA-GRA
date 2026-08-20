@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Control Manifest"
+  short_description: "Run the CCGS Create Control Manifest workflow in Codex."
+  default_prompt: "Use $create-control-manifest to handle this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Onboard"
+  short_description: "Run the CCGS Onboard workflow in Codex."
+  default_prompt: "Use $onboard to handle this game-development task."

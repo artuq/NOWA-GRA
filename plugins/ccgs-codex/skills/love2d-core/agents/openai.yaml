@@ -1,0 +1,4 @@
+interface:
+  display_name: "Love2D Core"
+  short_description: "Imported game-development capability: Love2D Core."
+  default_prompt: "Use $love2d-core for this game-development task."

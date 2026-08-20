@@ -92,7 +92,7 @@ theme_override_colors/font_color = Color(0.96, 0.96, 0.97, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 30
-text = "Team"
+text = "META_STAFF_TITLE"
 
 [node name="TopBarSpacer" type="Control" parent="MainLayout/TopBar"]
 layout_mode = 2
@@ -103,7 +103,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(88, 44)
 layout_mode = 2
 size_flags_vertical = 4
-text = "Close"
+text = "META_COMMON_CLOSE"
 
 [node name="SponsorsLabel" type="Label" parent="MainLayout"]
 unique_name_in_owner = true
@@ -112,7 +112,7 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 24
-text = "Sponsors: 0"
+text = "META_STAFF_SPONSORS_PLACEHOLDER"
 
 [node name="StaffList" type="VBoxContainer" parent="MainLayout"]
 layout_mode = 2
@@ -152,7 +152,7 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 24
-text = "Hired: 0   Effect: x1"
+text = "META_STAFF_STATS_PLACEHOLDER"
 
 [node name="Row1HireButton" type="Button" parent="MainLayout/StaffList/Row1/VBox"]
 unique_name_in_owner = true
@@ -163,7 +163,7 @@ theme_override_styles/normal = SubResource("HireNormal")
 theme_override_styles/hover = SubResource("HireNormal")
 theme_override_styles/pressed = SubResource("HirePressed")
 theme_override_styles/disabled = SubResource("HireDisabled")
-text = "Hire"
+text = "META_STAFF_HIRE_PLACEHOLDER"
 
 [node name="Row1ExplanationLabel" type="Label" parent="MainLayout/StaffList/Row1/VBox"]
 unique_name_in_owner = true
@@ -210,7 +210,7 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 24
-text = "Hired: 0   Effect: x1"
+text = "META_STAFF_STATS_PLACEHOLDER"
 
 [node name="Row2HireButton" type="Button" parent="MainLayout/StaffList/Row2/VBox"]
 unique_name_in_owner = true
@@ -221,7 +221,7 @@ theme_override_styles/normal = SubResource("HireNormal")
 theme_override_styles/hover = SubResource("HireNormal")
 theme_override_styles/pressed = SubResource("HirePressed")
 theme_override_styles/disabled = SubResource("HireDisabled")
-text = "Hire"
+text = "META_STAFF_HIRE_PLACEHOLDER"
 
 [node name="Row2ExplanationLabel" type="Label" parent="MainLayout/StaffList/Row2/VBox"]
 unique_name_in_owner = true
@@ -268,7 +268,7 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 24
-text = "Hired: 0   Effect: x1"
+text = "META_STAFF_STATS_PLACEHOLDER"
 
 [node name="Row3HireButton" type="Button" parent="MainLayout/StaffList/Row3/VBox"]
 unique_name_in_owner = true
@@ -279,7 +279,7 @@ theme_override_styles/normal = SubResource("HireNormal")
 theme_override_styles/hover = SubResource("HireNormal")
 theme_override_styles/pressed = SubResource("HirePressed")
 theme_override_styles/disabled = SubResource("HireDisabled")
-text = "Hire"
+text = "META_STAFF_HIRE_PLACEHOLDER"
 
 [node name="Row3ExplanationLabel" type="Label" parent="MainLayout/StaffList/Row3/VBox"]
 unique_name_in_owner = true

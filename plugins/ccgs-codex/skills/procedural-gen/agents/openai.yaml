@@ -1,0 +1,4 @@
+interface:
+  display_name: "Procedural Gen"
+  short_description: "Imported game-development capability: Procedural Gen."
+  default_prompt: "Use $procedural-gen for this game-development task."

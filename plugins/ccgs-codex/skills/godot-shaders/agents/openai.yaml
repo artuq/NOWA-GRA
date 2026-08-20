@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Shaders"
+  short_description: "Imported game-development capability: Godot Shaders."
+  default_prompt: "Use $godot-shaders for this game-development task."

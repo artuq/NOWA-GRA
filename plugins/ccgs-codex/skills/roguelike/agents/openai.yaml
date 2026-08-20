@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roguelike"
+  short_description: "Imported game-development capability: Roguelike."
+  default_prompt: "Use $roguelike for this game-development task."

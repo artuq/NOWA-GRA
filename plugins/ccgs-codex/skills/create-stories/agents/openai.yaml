@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Stories"
+  short_description: "Run the CCGS Create Stories workflow in Codex."
+  default_prompt: "Use $create-stories to handle this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Tilemap 2D"
+  short_description: "Imported game-development capability: Unity Tilemap 2D."
+  default_prompt: "Use $unity-tilemap-2d for this game-development task."

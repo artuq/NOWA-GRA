@@ -20,8 +20,9 @@
 ## Pull model throughout (ADR-0010's established direction): this module never
 ## calls into its consumers. DecisionCardSystem reads
 ## get_sponsor_multiplier() at card resolution, OfflineProgressSystem reads
-## get_offline_rate_multiplier()/get_haters_multiplier() inside
-## simulate_offline(), PrestigeSystem calls reset_era_state() during its
+## get_offline_rate_multiplier() inside simulate_offline(), and both
+## OfflineProgressSystem and LiveResourceTicker read get_haters_multiplier().
+## PrestigeSystem calls reset_era_state() during its
 ## era sweep.
 ##
 ## Usage example:
@@ -142,9 +143,8 @@ func hire(role: StringName) -> bool:
 
 ## Troll multiplier for the Haters growth rate (F3:
 ## `H_rate_final = H_rate(C) * staff_multiplier(troll, n) * (1 - META_HATERS_RESIST)`).
-## Consumed by OfflineProgressSystem; the live-play call site for that whole
-## pipe does not exist yet (a pre-existing gap this GDD explicitly does not
-## close — Core Rule 5), so this getter currently only takes effect offline.
+## Consumed by both OfflineProgressSystem and LiveResourceTicker so the Troll
+## affects ambient Haters growth consistently online and offline.
 func get_haters_multiplier() -> float:
 	return staff_multiplier(&"troll", get_staff_count(&"troll"))
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Content Audit"
+  short_description: "Run the CCGS Content Audit workflow in Codex."
+  default_prompt: "Use $content-audit to handle this game-development task."

@@ -16,10 +16,12 @@
 ##
 ## Story 002 (TR-save-001's debounce/coalescing extension): `mark_dirty()`
 ## starts/restarts a 2s trailing-edge debounce `Timer`; when it fires,
-## `save_now()` runs. A mobile lifecycle signal (`NOTIFICATION_APPLICATION_PAUSED`)
-## bypasses the remaining debounce window and calls `save_now()` immediately
-## if a save is pending — never lose progress to a routine backgrounding
-## event. `decision_card_state` is written as a fixed empty placeholder —
+## `save_now()` runs. A second, non-restarting 10s dirty-age Timer guarantees
+## that continuous one-second ambient resource ticks cannot postpone that
+## trailing edge forever. A mobile lifecycle signal
+## (`NOTIFICATION_APPLICATION_PAUSED`) bypasses either remaining window and
+## calls `save_now()` immediately if a save is pending. `decision_card_state`
+## is written as a fixed empty placeholder —
 ## Decision Card System doesn't exist yet, so that round-trip is not
 ## implemented or tested here.
 ##
@@ -78,6 +80,12 @@ func _init() -> void:
 ## many seconds with no further calls.
 const _DEBOUNCE_INTERVAL_SEC: float = 2.0
 
+## Maximum age of continuously dirty state. The first mark_dirty() starts this
+## one-shot deadline; later calls restart only the trailing debounce. Ten
+## seconds bounds progress at risk without turning a one-second live ticker
+## into one filesystem write per tick.
+const _MAX_DIRTY_AGE_SEC: float = 10.0
+
 ## State machine per the GDD: `UNINITIALIZED` only at construction, before
 ## `_ready()` runs `load_save()` + `restore_state()` on every peer module and
 ## moves to `READY`. `SAVING` is held only for the duration of `save_now()`'s
@@ -91,6 +99,7 @@ enum State { UNINITIALIZED, LOADING, READY, SAVING }
 var state: State = State.UNINITIALIZED
 
 var _debounce_timer: Timer
+var _max_dirty_timer: Timer
 
 ## Autosave suppression window (ADR-0002 §"Autosave suppression window",
 ## added 2026-07-13 for Prestige/Checkpoint System's era-transition atomicity
@@ -101,6 +110,7 @@ var _debounce_timer: Timer
 ## an OS-initiated background-kill risk always takes priority over an
 ## in-progress logical transition.
 var _autosave_suppressed: bool = false
+var _last_saved_at_floor: float = 0.0
 
 
 func _ready() -> void:
@@ -109,6 +119,7 @@ func _ready() -> void:
 	ResourceManager.restore_state(data.get("resources", {}))
 	HistoryFlagManager.restore_state(data.get("history_flags", {}))
 	OnboardingGate.restore_state(data.get("onboarding", {}))
+	SponsorContractSystem.restore_state(data.get("sponsor_contract", {}))
 	ClassPathSystem.restore_state(data.get("class_path", {}))
 	SettingsSystem.restore_state(data.get("settings", {}))
 	PrestigeSystem.restore_state(data.get("prestige", {}))
@@ -120,6 +131,12 @@ func _ready() -> void:
 	_debounce_timer.wait_time = _DEBOUNCE_INTERVAL_SEC
 	_debounce_timer.timeout.connect(_on_debounce_timeout)
 	add_child(_debounce_timer)
+
+	_max_dirty_timer = Timer.new()
+	_max_dirty_timer.one_shot = true
+	_max_dirty_timer.wait_time = _MAX_DIRTY_AGE_SEC
+	_max_dirty_timer.timeout.connect(_on_max_dirty_timeout)
+	add_child(_max_dirty_timer)
 
 
 ## Marks game state dirty, starting (or restarting) the [constant
@@ -134,6 +151,8 @@ func _ready() -> void:
 func mark_dirty() -> void:
 	_debounce_timer.stop()
 	_debounce_timer.start()
+	if _max_dirty_timer.is_stopped():
+		_max_dirty_timer.start()
 
 
 ## Debounce Timer's `timeout` handler. No-ops if autosave is currently
@@ -141,6 +160,15 @@ func mark_dirty() -> void:
 ## as the old direct `timeout.connect(save_now)` wiring did.
 func _on_debounce_timeout() -> void:
 	if _autosave_suppressed:
+		return
+	save_now()
+
+
+## Hard dirty-age deadline. In production a pending dirty window always has a
+## running trailing timer; the stopped guard also respects deterministic test
+## cleanup that explicitly cancels that timer without writing a file.
+func _on_max_dirty_timeout() -> void:
+	if _autosave_suppressed or _debounce_timer.is_stopped():
 		return
 	save_now()
 
@@ -179,8 +207,13 @@ func resume_autosave() -> void:
 ## — never triggers a spurious write.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED:
-		if _debounce_timer != null and not _debounce_timer.is_stopped():
-			_debounce_timer.stop()
+		var debounce_pending: bool = (
+			_debounce_timer != null and not _debounce_timer.is_stopped()
+		)
+		var max_age_pending: bool = (
+			_max_dirty_timer != null and not _max_dirty_timer.is_stopped()
+		)
+		if debounce_pending or max_age_pending:
 			save_now()
 
 
@@ -192,38 +225,71 @@ func _notification(what: int) -> void:
 ##
 ## Example:
 ##   SaveSystem.save_now()
-func save_now() -> void:
+func save_now() -> bool:
+	if _debounce_timer != null:
+		_debounce_timer.stop()
+	if _max_dirty_timer != null:
+		_max_dirty_timer.stop()
 	state = State.SAVING
 	var data: Dictionary = {
 		"schema_version": SCHEMA_VERSION,
-		"last_saved_at": Time.get_unix_time_from_system(),
+		"last_saved_at": maxf(Time.get_unix_time_from_system(), _last_saved_at_floor),
 		"resources": ResourceManager.serialize_state(),
 		"history_flags": HistoryFlagManager.serialize_state(),
 		"decision_card_state": {"cooldown_actions_remaining": 0, "resolved_milestone_cards": []},
 		"onboarding": OnboardingGate.serialize_state(),
+		"sponsor_contract": SponsorContractSystem.serialize_state(),
 		"class_path": ClassPathSystem.serialize_state(),
 		"settings": SettingsSystem.serialize_state(),
 		"prestige": PrestigeSystem.serialize_state(),
 		"staff": StaffSystem.serialize_state(),
+		"algorithm_contract": AlgorithmContractSystem.serialize_state(),
 	}
-	_write_atomic(data)
+	var success: bool = _write_atomic(data)
+	if success:
+		_last_saved_at_floor = float(data["last_saved_at"])
 	state = State.READY
+	return success
+
+
+## Persists player preferences before a first career exists. Unlike
+## [method save_now], this intentionally omits every progression block, so
+## choosing a language on the first-launch gate cannot make
+## BootController.has_progress() report a career that has not started yet.
+func save_settings_only() -> bool:
+	if _debounce_timer != null:
+		_debounce_timer.stop()
+	if _max_dirty_timer != null:
+		_max_dirty_timer.stop()
+	state = State.SAVING
+	var data: Dictionary = {
+		"schema_version": SCHEMA_VERSION,
+		"last_saved_at": maxf(Time.get_unix_time_from_system(), _last_saved_at_floor),
+		"settings": SettingsSystem.serialize_state(),
+	}
+	var success: bool = _write_atomic(data)
+	if success:
+		_last_saved_at_floor = float(data["last_saved_at"])
+	state = State.READY
+	return success
 
 
 ## The shared atomic-write tail of [method save_now] and [method reset_save]:
 ## JSON to [constant TEMP_PATH], then rename onto [constant SAVE_PATH]. Failure
 ## modes and logging unchanged from the original save_now() body -- a failed
 ## rename retains the `.tmp` for retry, never silently discards.
-func _write_atomic(data: Dictionary) -> void:
+func _write_atomic(data: Dictionary) -> bool:
 	var file: FileAccess = FileAccess.open(TEMP_PATH, FileAccess.WRITE)
 	if file == null:
 		push_error("Save write failed: could not open %s (%s)" % [TEMP_PATH, FileAccess.get_open_error()])
-		return
+		return false
 	file.store_string(JSON.stringify(data))
 	file.close()
 	var err: Error = DirAccess.rename_absolute(TEMP_PATH, SAVE_PATH)
 	if err != OK:
 		push_error("Save rename failed: %s — .tmp file retained for retry" % err)
+		return false
+	return true
 
 
 ## New Game (BUG-005): backs up the current save to [constant BACKUP_PATH]
@@ -235,27 +301,82 @@ func _write_atomic(data: Dictionary) -> void:
 ## goes straight into the fresh game, no start screen.
 ##
 ## Returns false AND leaves the existing save untouched if the backup copy
-## fails -- never deletes the only copy of a player's progression. Also stops
-## any pending debounced autosave so pre-reset in-memory state can't be
-## re-persisted after the wipe.
+## fails -- never deletes the only copy of a player's progression. Pending
+## autosave windows are stopped before the attempt: a successful reset leaves
+## them stopped, while a failed reset restarts them for the preserved career.
 ##
 ## Example:
 ##   if SaveSystem.reset_save():
 ##       get_tree().change_scene_to_file("res://scenes/boot/boot.tscn")
 func reset_save() -> bool:
+	var debounce_was_pending: bool = (
+		_debounce_timer != null and not _debounce_timer.is_stopped()
+	)
+	var max_dirty_was_pending: bool = (
+		_max_dirty_timer != null and not _max_dirty_timer.is_stopped()
+	)
 	if _debounce_timer != null:
 		_debounce_timer.stop()
+	if _max_dirty_timer != null:
+		_max_dirty_timer.stop()
 	if FileAccess.file_exists(SAVE_PATH):
 		var err: Error = DirAccess.copy_absolute(SAVE_PATH, BACKUP_PATH)
 		if err != OK:
 			push_error("New Game aborted: backup copy to %s failed (%s) — save left untouched" % [BACKUP_PATH, err])
+			_restore_autosave_after_failed_reset(
+				debounce_was_pending,
+				max_dirty_was_pending,
+			)
 			return false
-	_write_atomic({
+	var fresh_data: Dictionary = {
 		"schema_version": SCHEMA_VERSION,
-		"last_saved_at": Time.get_unix_time_from_system(),
+		"last_saved_at": maxf(Time.get_unix_time_from_system(), _last_saved_at_floor),
 		"settings": SettingsSystem.serialize_state(),
-	})
+	}
+	if not _write_atomic(fresh_data):
+		_restore_autosave_after_failed_reset(
+			debounce_was_pending,
+			max_dirty_was_pending,
+		)
+		return false
+	_last_saved_at_floor = float(fresh_data["last_saved_at"])
+	_reset_runtime_for_new_game()
 	return true
+
+
+## A failed destructive reset leaves the current career live. Restart every
+## pending autosave window using its production wait_time so preserving runtime
+## state cannot silently make its unsaved portion volatile. Calling start()
+## without an override is intentional: Timer.start(time_left) would permanently
+## replace wait_time and shorten every later autosave window.
+func _restore_autosave_after_failed_reset(
+	debounce_was_pending: bool,
+	max_dirty_was_pending: bool,
+) -> void:
+	if debounce_was_pending and _debounce_timer != null:
+		_debounce_timer.start()
+	if max_dirty_was_pending and _max_dirty_timer != null:
+		_max_dirty_timer.start()
+
+
+## Autoloads survive the StartScreen -> Boot scene change. After the fresh
+## snapshot is safely written, reset every live owner so old resources, unlock
+## flags, timers, queues, or pending cards cannot leak into the new career.
+func _reset_runtime_for_new_game() -> void:
+	_autosave_suppressed = false
+	ActionSystem.reset_for_new_game()
+	DecisionCardSystem.reset_for_new_game()
+	SponsorContractSystem.reset_for_new_game()
+	BurnoutSystem.reset_for_new_game()
+	ChallengeSystem.restore_state({})
+	ClassPathSystem.reset_for_new_game()
+	HistoryFlagManager.reset_for_new_game()
+	ResourceManager.reset_for_new_game()
+	PrestigeSystem.reset_for_new_game()
+	StaffSystem.restore_state({})
+	AlgorithmContractSystem.reset_for_new_game()
+	OfflineProgressSystem.last_simulation_result.clear()
+	OnboardingGate.restore_state({})
 
 
 ## Reads and parses [constant SAVE_PATH]. Returns `{}` (triggering
@@ -279,4 +400,5 @@ func load_save() -> Dictionary:
 	file.close()
 	if parsed == null or typeof(parsed) != TYPE_DICTIONARY or parsed.get("schema_version") != SCHEMA_VERSION:
 		return {}
+	_last_saved_at_floor = maxf(_last_saved_at_floor, float(parsed.get("last_saved_at", 0.0)))
 	return parsed

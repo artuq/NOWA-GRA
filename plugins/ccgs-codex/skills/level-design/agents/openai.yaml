@@ -1,0 +1,4 @@
+interface:
+  display_name: "Level Design"
+  short_description: "Imported game-development capability: Level Design."
+  default_prompt: "Use $level-design for this game-development task."

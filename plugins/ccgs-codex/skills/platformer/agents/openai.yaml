@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platformer"
+  short_description: "Imported game-development capability: Platformer."
+  default_prompt: "Use $platformer for this game-development task."

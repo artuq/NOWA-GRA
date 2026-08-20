@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ux Review"
+  short_description: "Run the CCGS Ux Review workflow in Codex."
+  default_prompt: "Use $ux-review to handle this game-development task."

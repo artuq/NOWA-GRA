@@ -1,0 +1,4 @@
+interface:
+  display_name: "Milestone Review"
+  short_description: "Run the CCGS Milestone Review workflow in Codex."
+  default_prompt: "Use $milestone-review to handle this game-development task."
