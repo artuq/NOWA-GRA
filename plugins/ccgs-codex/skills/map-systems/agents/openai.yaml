@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map Systems"
+  short_description: "Run the CCGS Map Systems workflow in Codex."
+  default_prompt: "Use $map-systems to handle this game-development task."

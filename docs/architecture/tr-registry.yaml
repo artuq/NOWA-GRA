@@ -1,8 +1,8 @@
 # Technical Requirements Registry
 # Stable IDs for GDD technical requirements, persisted across architecture-review runs.
 # Never renumber or delete entries — mark status: deprecated if a requirement is removed.
-last_updated: 2026-07-06
-version: 6
+last_updated: 2026-08-11
+version: 10
 
 requirements:
   - id: TR-res-001
@@ -140,25 +140,49 @@ requirements:
     system: class-path-system
     gdd: design/quick-specs/class-path-system-2026-07-01.md
     requirement: reset_era_state resets era-local affiliation/tier/counters, preserves meta milestone flags
-    adr: [ADR-0010]
-    status: partial
-    note: ADR-0010 defines the reset_era_state API contract; BurnoutSystem era_transitioned wiring deferred to Alpha BurnoutSystem ADR.
+    adr: [ADR-0010, ADR-0012]
+    status: covered
+    note: Upgraded partial->covered 2026-07-17 (/architecture-review). ADR-0010 defines the reset_era_state API contract; ADR-0012 (shipped) owns the era-transition reset sweep and calls ClassPathSystem.reset_era_state() from PrestigeSystem. ADR-0013 confirms BurnoutSystem only routes into it, does not own the wiring. Prior "deferred to BurnoutSystem ADR" note was stale.
 
   - id: TR-cps-006
     system: class-path-system
-    gdd: design/quick-specs/class-path-system-2026-07-01.md
+    gdd: design/gdd/class-path-system.md
     requirement: Tier-5 signature card add/remove to DecisionCardSystem pool (signature_card_unlocked/removed signals)
-    adr: []
-    status: gap
-    note: Alpha scope. Signals named in quick-spec Affected Systems but not specified in ADR-0010 interface. Needs a follow-up ADR when Tier 5 / signature cards are implemented.
+    adr: [ADR-0010]
+    status: covered
+    note: Was gap — resolved 2026-07-13 by ADR-0010 §10 (pull-model trigger_condition grammar entry "class_path_tier:{path_id}:{min_tier}", no pool-mutation API needed; signals stay UI-only notifications).
+
+  - id: TR-cps-008
+    system: class-path-system
+    gdd: design/gdd/class-path-system.md
+    requirement: F2 Investment Contribution — invest() gated on prior card-choice history per Core Rule 4a
+    adr: [ADR-0010]
+    status: covered
+    note: Registered 2026-07-13 (VS/Alpha delta). ADR-0010 §8 — requires _recalculate_affiliation() split into tracked F1/F2 terms (structural refactor of existing MVP code, flagged MEDIUM risk).
+
+  - id: TR-cps-009
+    system: class-path-system
+    gdd: design/gdd/class-path-system.md
+    requirement: F5 Active Path Resolution and Tie-Break — BUG-003 regression fix (margin-based ambiguity, not silent iteration-order winner)
+    adr: [ADR-0010]
+    status: covered
+    note: Registered 2026-07-13. ADR-0010 §9. BUG-003 (production/qa/bugs/BUG-003-class-path-no-tiebreak-logic.md) closes on this story.
+
+  - id: TR-cps-010
+    system: class-path-system
+    gdd: design/gdd/class-path-system.md
+    requirement: 4-path registration and Tiers 3-5 bonus table (vs. MVP's 2 paths, Tiers 1-2)
+    adr: [ADR-0010]
+    status: covered
+    note: Registered 2026-07-13. ADR-0010 §11 — pure data expansion of existing _MULTIPLIER_TABLE structure, no new API surface.
 
   - id: TR-cps-007
     system: class-path-system
-    gdd: design/quick-specs/class-path-system-2026-07-01.md
-    requirement: Path multipliers excluded from offline progress by default (Pillar 4); PATH_MULTIPLIER_OFFLINE flag off by default
-    adr: [ADR-0006, ADR-0010]
-    status: partial
-    note: Behaviour correct — ADR-0006 offline loop owns its formula and never calls get_active_multiplier. ADR-0010 does not state the exclusion explicitly; recommend a one-line clarification before acceptance.
+    gdd: design/gdd/class-path-system.md
+    requirement: Named ambient path effects apply identically online and offline; action reward and speed modifiers remain active-session only
+    adr: [ADR-0006, ADR-0010, ADR-0020]
+    status: covered
+    note: Superseded 2026-08-05. ResourceSimulationStep shares ambient Haters/Morale effects across live and offline simulation; action modifiers are still excluded from offline progress.
 
   - id: TR-juice-001
     system: juice-feedback-system
@@ -213,3 +237,150 @@ requirements:
     adr: [ADR-0011]
     status: covered
     note: GDD Dependencies flagged this as a schema extension; ADR-0011 codebase check confirms the field already exists with authored content on every option of all 12 cards. Empty-field fallback retained for future cards.
+
+  - id: TR-pcs-001
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: PrestigeSystem (new Autoload) orchestrates era transition via a single synchronous entry point, no signals/await in the read-then-reset chain
+    adr: [ADR-0012]
+    status: covered
+    note: Registered 2026-07-13. ADR-0012 Accepted 2026-07-14 (/architecture-review) — PrestigeSystem stories now unblocked.
+
+  - id: TR-pcs-002
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: F1/F1b/F2/F3a-d META_BONUS formulas, independently unit-testable
+    adr: [ADR-0012]
+    status: covered
+    note: PrestigeFormulas stateless static methods, same precedent as ResourceFormulas (ADR-0006) / FeedbackMath (ADR-0011).
+
+  - id: TR-pcs-003
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: DecisionCardSystem.inject_priority_card() — general-purpose forced-card injection (Core Rule 6)
+    adr: [ADR-0012]
+    status: covered
+
+  - id: TR-pcs-004
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: Flag classification sweep — era-local vs meta-persistent (Core Rule 7)
+    adr: [ADR-0012]
+    status: covered
+
+  - id: TR-pcs-005
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: Save/restore of era_count, per-type META_BONUS totals, meta-persistent flags via restore_state()
+    adr: [ADR-0012]
+    status: covered
+
+  - id: TR-pcs-006
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: Autosave suppressed for the full era-transitioning window (steps 1-5), resumed before era_transitioned fires
+    adr: [ADR-0002, ADR-0012]
+    status: covered
+    note: suppress_autosave()/resume_autosave() added to ADR-0002 2026-07-13 (/propagate-design-change); ADR-0012 §2 wires the call sites.
+
+  - id: TR-pcs-007
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md
+    requirement: BurnoutSystem and ChallengeSystem mechanics (locked in their own quick-specs, restated only in summary here)
+    adr: [ADR-0013]
+    status: covered
+    note: ADR-0013 Accepted 2026-07-17 (independent /architecture-review, verdict CONCERNS overall but no conflicts against this ADR) — resolves the ownership drift the 2026-07-14 ruling deferred (quick-specs predate ADR-0012, assumed BurnoutSystem owned era_count/resets/grants). BurnoutSystem/ChallengeSystem have zero code yet — ready for /create-epics + /create-stories.
+
+  - id: TR-nav-001
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: coordination_state single source of truth, at most one panel visible, panel visible is an effect of state not independently set
+    adr: [ADR-0014]
+    status: covered
+
+  - id: TR-nav-002
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: Card-interrupt priority (card_presented > back-gesture > panel-tap) resolved via one synchronous resolver
+    adr: [ADR-0014]
+    status: covered
+
+  - id: TR-nav-003
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: Android (NOTIFICATION_WM_GO_BACK_REQUEST + quit_on_go_back=false) and Web (JavaScriptBridge/pushState) back gesture; iOS explicitly out of scope
+    adr: [ADR-0014]
+    status: covered
+
+  - id: TR-nav-004
+    system: main-navigation-screen-flow
+    gdd: design/gdd/main-navigation-screen-flow.md
+    requirement: Close-button rewire via close_requested signal on ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel, no self-managed visible=false bypass
+    adr: [ADR-0014]
+    status: covered
+    note: Panel list extended to StaffPanel (4th coordinated panel) by ADR-0014 revision 2026-07-23; resolver architecture unchanged.
+
+  - id: TR-set-001
+    system: settings-system
+    gdd: design/art/art-bible.md (§7 — no dedicated GDD)
+    requirement: SettingsSystem Autoload, reduce_motion sole-write-path via set_reduce_motion(), persisted via restore_state()
+    adr: [ADR-0015]
+    status: covered
+    note: retrofit ADR — documents already-shipped code, no design change.
+
+  - id: TR-dcs-003
+    system: decision-card-system
+    gdd: design/gdd/decision-card-system.md
+    requirement: inject_priority_card() internal state==COOLDOWN reentrancy guard, self-contained (not caller-enforced)
+    adr: [ADR-0016]
+    status: covered
+
+  - id: TR-pcs-008
+    system: prestige-checkpoint-system
+    gdd: design/gdd/prestige-checkpoint-system.md, design/ux/wypalenie-card-modal.md, design/ux/challenge-selection-screen.md
+    requirement: Unified compute_next_grant() preview + get_last_grant() query, single formula shared pre/post-commit, persisted _last_grant
+    adr: [ADR-0017]
+    status: covered
+
+  - id: TR-nav-005
+    system: main-navigation-screen-flow
+    gdd: design/ux/challenge-selection-screen.md
+    requirement: era_transitioned drives synchronous scene swap main.tscn<->challenge_selection.tscn; Confirm sole exit (back-gesture/Esc no-op Android+Web); screen reads get_last_grant()/get_challenge_data() via pull-model, no signal payload on era_transitioned
+    adr: [ADR-0018]
+    status: covered
+    note: Registered 2026-07-24 (/architecture-review). ADR-0018 Proposed but design already shipped (commit 05d74f5, story 12-2) and verified accurate against action_screen.gd + challenge_selection.gd. Scene swap sits outside coordination_state (ADR-0014) by construction. Ready Proposed->Accepted.
+
+  - id: TR-acr-001
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Dedicated AlgorithmContractSystem owns armed plan, fixed-point remainder, credits, ladder rung, and staged transaction
+    adr: [ADR-0021]
+    status: covered
+
+  - id: TR-acr-002
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Boot stages chosen and neutral return results without mutating resources or progression
+    adr: [ADR-0003, ADR-0006, ADR-0021]
+    status: covered
+
+  - id: TR-acr-003
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Confirm applies return effects exactly once and exposes atomic save failure as retryable COMMITTING state
+    adr: [ADR-0002, ADR-0021]
+    status: covered
+
+  - id: TR-acr-004
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Burnout clears era-local contract state; New Game clears all contract state; neutral boot flow remains compatible
+    adr: [ADR-0013, ADR-0021]
+    status: covered
+
+  - id: TR-acr-005
+    system: algorithm-contract-return-loop
+    gdd: design/gdd/algorithm-contract-return-loop.md
+    requirement: Offline resources cannot advance irreversible Class Path progress without decision history; F6 rejects pre-banking
+    adr: [ADR-0010, ADR-0021]
+    status: covered

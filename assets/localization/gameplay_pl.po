@@ -1,0 +1,108 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: King of Cringe\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n == 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2);\n"
+
+# Nazwy akcji. Klucze zawierają stałe action_id; tekst nigdy nie steruje logiką.
+msgid "ACTION_NAGRAJ_VLOGA_LABEL"
+msgstr "Nagraj vloga"
+
+msgid "ACTION_ZROB_DRAME_LABEL"
+msgstr "Zrób dramę"
+
+msgid "ACTION_PRZEPROSINY_LABEL"
+msgstr "Przeproś w sieci"
+
+msgid "ACTION_NAGRAJ_KOLABA_LABEL"
+msgstr "Nagraj collab"
+
+msgid "ACTION_UDZIEL_WYWIADU_LABEL"
+msgstr "Udziel wywiadu"
+
+msgid "ACTION_WYDAJ_KURS_LABEL"
+msgstr "Wydaj kurs"
+
+# Siatka akcji i nakładka trwającej akcji.
+msgid "ACTION_STATS_FORMAT"
+msgstr "%ds — %sZ, %sC, %sM"
+
+msgid "ACTION_REMAINING_SECONDS"
+msgstr "%ds"
+
+msgid "ACTION_UNLOCK_STORY_MOMENT"
+msgstr "Odkryj ważny moment"
+
+msgid "ACTION_UNLOCK_TOAST_STORY"
+msgstr "Odblokujesz w ważnym momencie fabuły"
+
+msgid "ACTION_QUEUE_CLEAR"
+msgstr "Wyczyść kolejkę"
+
+msgid "ACTION_QUEUE_FULL"
+msgstr "Kolejka pełna"
+
+msgid "ACTION_UNLOCK_CHOICE_COUNT_ONE"
+msgid_plural "ACTION_UNLOCK_CHOICE_COUNT_MANY"
+msgstr[0] "{current} / {required} wybór"
+msgstr[1] "{current} / {required} wybory"
+msgstr[2] "{current} / {required} wyborów"
+
+msgid "ACTION_UNLOCK_REMAINING_ONE"
+msgid_plural "ACTION_UNLOCK_REMAINING_MANY"
+msgstr[0] "Podejmij jeszcze {count} decyzję"
+msgstr[1] "Podejmij jeszcze {count} decyzje"
+msgstr[2] "Podejmij jeszcze {count} decyzji"
+
+# Raport offline: krótko i czytelnie na ekranie 9:16.
+msgid "UI_OFFLINE_HEADLINE"
+msgstr "Twoje imperium pracowało bez ciebie."
+
+msgid "UI_OFFLINE_REACH_EARNED"
+msgstr "Zasięg zdobyty pod twoją nieobecność"
+
+msgid "UI_OFFLINE_CAP_NOTE"
+msgstr "Nie było cię ponad 24 godziny — naliczyliśmy tylko pierwsze 24."
+
+msgid "UI_OFFLINE_CONTINUE"
+msgstr "Odbieram!"
+
+msgid "OFFLINE_HATERS_DELTA"
+msgstr "Hejterzy: %+d"
+
+msgid "OFFLINE_MORALE"
+msgstr "Morale: %s"
+
+msgid "OFFLINE_MORALE_CHANGED"
+msgstr "Morale: %s (wcześniej %s)"
+
+msgid "OFFLINE_AWAY_DURATION"
+msgstr "Nie było cię przez %s."
+
+msgid "OFFLINE_DURATION_MINUTE_ONE"
+msgid_plural "OFFLINE_DURATION_MINUTE_MANY"
+msgstr[0] "{count} minutę"
+msgstr[1] "{count} minuty"
+msgstr[2] "{count} minut"
+
+msgid "OFFLINE_DURATION_HOUR_ONE"
+msgid_plural "OFFLINE_DURATION_HOUR_MANY"
+msgstr[0] "{count} godzinę"
+msgstr[1] "{count} godziny"
+msgstr[2] "{count} godzin"
+
+# Kompaktowy pasek kontraktu sponsorskiego.
+msgid "SPONSOR_CONTRACT_TITLE_STAGE"
+msgstr "KONTRAKT SPONSORSKI • ETAP %d/%d"
+
+msgid "SPONSOR_CONTRACT_CAMPAIGN_PROGRESS"
+msgstr "Akcje kampanii: %d / %d"
+
+msgid "SPONSOR_CONTRACT_RECOVERY_PROGRESS"
+msgstr "Akcje ratunkowe: %d / %d"
+
+msgid "SPONSOR_CONTRACT_DECISION_READY"
+msgstr "Decyzja gotowa — następna karta"

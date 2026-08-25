@@ -73,16 +73,16 @@ kolejkę w dowolnym momencie.
 
 ## Acceptance Criteria
 
-- [ ] Zakolejkowana akcja startuje automatycznie po zakończeniu
+- [x] Zakolejkowana akcja startuje automatycznie po zakończeniu
   bieżącej, bez interakcji gracza
-- [ ] Queue cap = 10; powyżej przyciski akcji są wyłączone
-- [ ] Pojawienie się karty decyzyjnej zawiesza kolejkę (bieżąca
+- [x] Queue cap = 10; powyżej przyciski akcji są wyłączone
+- [x] Pojawienie się karty decyzyjnej zawiesza kolejkę (bieżąca
   dobiega, następna nie startuje)
-- [ ] Morale ≤ Critical zawiesza kolejkę tak samo
-- [ ] Clear Queue czyści tablicę; bieżąca akcja dobija do końca
-- [ ] UI pasek ikon odzwierciedla stan kolejki w czasie rzeczywistym
-- [ ] Kolejka nie jest persystowana — reset przy każdym starcie gry
-- [ ] Brak regresji: pojedyncze akcje (bez kolejkowania) działają
+- [x] Morale ≤ Critical zawiesza kolejkę tak samo
+- [x] Clear Queue czyści tablicę; bieżąca akcja dobija do końca
+- [x] UI pasek ikon odzwierciedla stan kolejki w czasie rzeczywistym
+- [x] Kolejka nie jest persystowana — reset przy każdym starcie gry
+- [x] Brak regresji: pojedyncze akcje (bez kolejkowania) działają
   identycznie jak przed zmianą
 
 ## GDD Update Required?

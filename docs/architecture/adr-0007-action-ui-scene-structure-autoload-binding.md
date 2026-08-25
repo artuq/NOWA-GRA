@@ -1,7 +1,7 @@
 # ADR-0007: Action UI Scene Structure and Autoload Binding Pattern
 
 ## Status
-Accepted (2026-06-24, following independent `/architecture-review` — verdict CONCERNS overall, no conflicts or blockers against this ADR specifically; both dependencies, ADR-0001 and ADR-0004, already Accepted)
+Accepted (2026-06-24; queue/effective-duration consumption synced 2026-08-05)
 
 ## Date
 2026-06-24
@@ -47,8 +47,8 @@ Accepted (2026-06-24, following independent `/architecture-review` — verdict C
 **Alternative B — separate script per zone, no internal signal bus, no mediating layer.** Three sibling Control nodes under a single root `ActionScreen` (`res://scenes/action_screen/action_screen.tscn`), each with its own script, each calling Autoloads directly:
 
 - `ResourceHud` (`resource_hud.gd`): connects to `ResourceManager.resource_changed` in `_ready()`, updates only the changed resource's label on each signal — never polls, never reads all 5 resources on every frame.
-- `ActionGrid` (`action_grid.gd`): each of the 6 slot buttons' `pressed` signal connects directly to a handler that calls `ActionSystem.start_action(action_id)`. Connects to `ActionSystem.action_completed` to re-enable buttons and hide the overlay reference it holds (see below). Locked-slot buttons are `disabled = true` set once at `_ready()` (or on a future milestone-unlock event — out of scope until that event exists), never polled.
-- `RunningActionOverlay` (`running_action_overlay.gd`): the only zone using `_process()`, and only while `ActionSystem.current_action_id != &""` (matching ADR-0004's existing "guards divide-by-zero when idle" contract on `get_progress()` — this ADR extends that same idle-guard idea to the UI's per-frame work, not just the formula). `_process()` is enabled/disabled via `set_process(bool)` toggled by the same `action_completed` signal `ActionGrid` already connects to (each zone owns its own connection — no relay between zones). **Control nodes process by default** — `_ready()` must explicitly call `set_process(not ActionSystem.current_action_id.is_empty())` once, checking the actual state at scene load, not just assuming idle. Without this, the overlay would poll needlessly every frame from scene entry until the first `action_completed` signal ever fires.
+- `ActionGrid` (`action_grid.gd`): live slot handlers call `ActionSystem.start_action(action_id)` directly. `queue_changed` rebuilds the queue strip and disables live choices only at `QUEUE_CAP`; locked previews remain enabled for their unlock-requirement toast and never call `start_action()`. `_ready()` also consumes `get_queue_snapshot()` once because signals do not replay mutations that happened before the grid existed.
+- `RunningActionOverlay` (`running_action_overlay.gd`): the only original three-zone view using `_process()`, and only while `ActionSystem.current_action_id != &""`. It reads `get_progress()` plus `get_current_duration()` so Class Path speed bonuses affect both fill and remaining time. `_process()` is enabled/disabled via `set_process(bool)` and explicitly initialized from current state in `_ready()`. The later Sponsor Shield child refreshes only its active countdown (see amendment below).
 
 No zone calls another zone's methods or emits signals to another zone. Each zone is independently testable/replaceable; the *only* shared contract between zones is that they all read the same Autoloads, which is already locked by ADR-0001.
 
@@ -59,14 +59,14 @@ ActionScreen (Control, root)
   │     └── connects: ResourceManager.resource_changed -> update one label
   ├── ActionGrid (Control)
   │     ├── 6x slot Button -> pressed -> ActionSystem.start_action(id)
-  │     └── connects: ActionSystem.action_completed -> re-enable buttons
+  │     └── connects: ActionSystem.queue_changed -> queue strip + cap-only disable
   └── RunningActionOverlay (Control)
         ├── connects: ActionSystem.action_completed -> set_process(false), hide()
-        └── _process(): ActionSystem.get_progress() -> update bar fill (only while visible/processing)
+        └── _process(): get_progress() + get_current_duration() -> fill + remaining time
 ```
 
 ### Key Interfaces
-No new Autoload-level interfaces — this ADR only fixes how existing interfaces (`ResourceManager.get_resource()`/`resource_changed`, `ActionSystem.start_action()`/`get_progress()`/`action_completed`) are consumed from the Control-node side. New scene-local methods (e.g., `ResourceHud._on_resource_changed()`) are implementation detail, not part of any cross-system contract, and not registered in `docs/registry/architecture.yaml`.
+The queue addition contributes `queue_changed`, `queue_suspended_changed`, `get_queue_size()`, `get_queue_snapshot()`, and `clear_queue()`; the effective-time correction contributes `get_current_duration()`. UI consumes these directly without a presenter or cross-zone relay. `get_queue_snapshot()` is a typed duplicate, so presentation can initialize after scene recreation without mutating owned queue state. Scene-local handlers remain implementation details.
 
 ## Alternatives Considered
 
@@ -107,7 +107,7 @@ No new Autoload-level interfaces — this ADR only fixes how existing interfaces
 | action-system.md (TR-aui-001) | `get_progress()` polled every frame by Action UI (already locked by ADR-0004) | `RunningActionOverlay` is the sole caller, confirming and scoping that contract to exactly one zone |
 
 ## Performance Implications
-- **CPU**: `_process()` work is isolated to `RunningActionOverlay` and only while an action is active — zero per-frame UI cost while idle. `ResourceHud`'s signal-driven updates are O(1) per resource change, not per frame.
+- **CPU**: action-progress `_process()` work is isolated to `RunningActionOverlay` while an action is active. `ResourceHud` resource labels remain signal-driven O(1); the later Sponsor Shield child performs a small countdown refresh while active.
 - **Memory**: Negligible — 3 small Control scripts, no new data structures.
 - **Load Time**: Negligible — standard scene instantiation.
 - **Network**: N/A.
@@ -117,7 +117,7 @@ N/A — first implementation, no prior Action UI code exists to migrate.
 
 ## Validation Criteria
 - Confirm `RunningActionOverlay._process()` does not run (verify via a breakpoint or counter) while `ActionSystem.current_action_id == &""`, **including in the first frames immediately after scene load** (not just after the first `action_completed` signal) — `_ready()` must set the correct initial `set_process()` state explicitly, since Control nodes process by default
-- Confirm tapping a locked slot button produces no Autoload call (no `start_action()` invocation) — `disabled = true` is sufficient, no additional guard needed in the handler
+- Confirm tapping a locked preview produces no `start_action()` call and shows its requirement, while live choices enqueue during `running` and disable only at queue cap.
 - Confirm `ResourceHud` does not call `ResourceManager.get_resource()` for all 5 keys on every `resource_changed` emission — only the changed key's label updates
 - Confirm each of `ActionGrid`'s 6 slot buttons' `custom_minimum_size` meets a minimum touch-target size (commonly ~48x48dp-equivalent) per `technical-preferences.md`'s "large, touch-friendly" requirement — `Button` (not `TouchScreenButton`) is the correct node per engine specialist review (plain `Button` already receives synthesized touch events project-wide; `TouchScreenButton` is a legacy `Node2D`-based control that doesn't integrate with `Control` layout/theming), but target *size* is a real risk that must be verified, not assumed
 
@@ -125,3 +125,13 @@ N/A — first implementation, no prior Action UI code exists to migrate.
 - ADR-0001 (Autoload singleton architecture) — this ADR applies its direct-call/signal split at the Presentation layer for the first time
 - ADR-0004 (Action System timer/concurrency) — `get_progress()`'s polling contract, scoped here to exactly one consuming zone
 - `design/gdd/action-ui.md` — source GDD, including the 3-zone layout this ADR's scene structure mirrors exactly
+
+## Implementation Amendment (2026-08-05): Live Child and Shield Control
+
+`ActionScreen` now also owns a non-visual `LiveResourceTicker` child; scene
+lifetime is its gameplay-only process gate (ADR-0020). `ResourceHud` contains a
+compact `SponsorShieldControl` that binds directly to ResourceManager using the
+same per-zone rule as the original HUD. Ambient resource notifications refresh
+labels without juice. `RunningActionOverlay` and every Control in its subtree
+use `MOUSE_FILTER_IGNORE`, preserving queue and Shield touch input while its
+full-screen presentation is visible.

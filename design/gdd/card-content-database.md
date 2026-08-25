@@ -88,7 +88,7 @@ option:
 | `burnout_warning` | A (push through, one big action) | +130 | — | — | — |
 | `burnout_warning` | B (spread into small actions) | — | — | +10 | — |
 
-**Resolved open question (from Resource System GDD): "qualifying card" for Sponsorzy.** Only `sponsor_offer_shady` and `brand_deal_choice` qualify — the only 2 of 12 cards whose premise is directly a sponsor/brand offer. Rule for future cards: "qualifying" = the card's premise is a sponsor/brand/monetization offer, not just "any risky choice."
+**Resolved open question (from Resource System GDD): "qualifying card" for Sponsorzy.** `sponsor_offer_shady`, `brand_deal_choice`, and the three Sponsor Career Contract follow-ups qualify because their premise is directly a sponsor/brand offer. Rule for future cards: "qualifying" = the card's premise is a sponsor/brand/monetization offer, not just "any risky choice."
 
 **Resolution reactions (`resolution_reaction` field, added by `juice-feedback-system.md`) — authored for ALL 12 cards (2026-06-26, shipped with the Card UI resolving beat). The 3 below are the original vertical-slice reactions; the other 9 follow the same dry, fact/number, no-judgment tone and live in `src/core/card_content_database.gd`.**
 
@@ -151,7 +151,7 @@ This GDD has no formulas — it is content data, not a simulation system. Each c
 | Per-card Zasięgi delta | 40–220 (see table) | 30–300 | Too low: cards feel weaker than actions, defeats "narrative beat" purpose. Too high: a single card decision dwarfs minutes of active play |
 | Per-card Cringe delta | -18 to +35 (see table) | -40 to +40 | Too high: a single card can swing Cringe across multiple Resource System bands at once, undermining "fair core" legibility |
 | Risky:Safe Zasięgi ratio per card | 1.4x–1.8x | 1.3x–2.0x | Must stay consistent with the ratio already locked in Resource System's cross-reference note for Action System — diverging here creates an inconsistent risk/reward feel between actions and cards |
-| Sponsorzy per qualifying card | 1–3 (sponsor_offer_shady, brand_deal_choice only) | 1–5 | Expanding which cards "qualify" without updating the rule in Core Rules would silently break the resolved Open Question from Resource System |
+| Sponsorzy per qualifying card | 1–3 (sponsor/brand cards listed in Core Rules) | 1–5 | Expanding which cards "qualify" without updating the rule in Core Rules would silently break the resolved Open Question from Resource System |
 | Number of MVP cards | 12 | 10–20 | Fewer than 10: card pool feels repetitive quickly. More than 20 for MVP: scope risk flagged in `game-concept.md`'s MVP definition (10-15 cards) |
 
 **Knob interaction:** the Risky:Safe ratio knob here must stay synchronized with Resource System's Action System cross-reference note — if one changes, the other should be revisited to keep the "fair core, unfair world" feel consistent across both actions and cards.
@@ -231,6 +231,13 @@ Cards are the only modal screen in MVP besides the HUD — warrants a dedicated 
 - Runtime application of `resource_deltas` to a player's actual resource pool — this GDD defines the data contract on the card, not the mutation logic; testing "Sponsorzy actually increases by X after this card" belongs to Resource System's runtime, not here.
 
 ## Open Questions
+
+> **Content amendment (2026-08-13):** the implemented catalogue contains 32
+> cards, including two Skill Challenge cards and the locale-specific cultural
+> showcase `polish_export_disaster`. Its mechanics are locale-independent;
+> Polish and English differ only in presentation copy. First-career ordering is
+> owned by Onboarding Tutorial and the quick spec
+> `early-sponsor-and-polish-humor-showcase-2026-08-13.md`.
 
 - **Should Zasięgi/Sponsorzy have a floor (0)?** — gap between this GDD and Resource System; cards with costs (`brand_deal_choice` A: -40 Zasięgi, `fan_in_trouble`: -1 Sponsorzy) assume sufficient resources. *Owner: Resource System GDD (revision). Target: before Decision Card System.*
 - **Technical validation of the swipe gesture before full MVP** — higher risk than tap, a quick technical spike is recommended. *Owner: `/prototype` or a mid-production spike. Target: before `/vertical-slice`.*

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Day One Patch"
+  short_description: "Run the CCGS Day One Patch workflow in Codex."
+  default_prompt: "Use $day-one-patch to handle this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Build Pipeline"
+  short_description: "Imported game-development capability: Unity Build Pipeline."
+  default_prompt: "Use $unity-build-pipeline for this game-development task."

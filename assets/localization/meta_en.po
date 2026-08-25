@@ -1,0 +1,451 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: King of Cringe\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Shared meta-screen copy.
+msgid "META_COMMON_CLOSE"
+msgstr "Close"
+
+msgid "META_RESOURCE_REACH"
+msgstr "Reach"
+
+msgid "META_RESOURCE_CRINGE"
+msgstr "Cringe"
+
+msgid "META_RESOURCE_HATERS"
+msgstr "Haters"
+
+msgid "META_RESOURCE_MORALE"
+msgstr "Morale"
+
+msgid "META_RESOURCE_SPONSORS"
+msgstr "Sponsors"
+
+# Class Path panel and HUD.
+msgid "META_PATH_TITLE"
+msgstr "Class Path"
+
+msgid "META_PATH_PATO_STREAMER"
+msgstr "Trash Streamer"
+
+msgid "META_PATH_GURU_CELEBRYTA"
+msgstr "Guru Celeb"
+
+msgid "META_PATH_EKSPERT_NISZOWY"
+msgstr "Niche Expert"
+
+msgid "META_PATH_BIZNESMEN_CONTENTU"
+msgstr "Content Mogul"
+
+msgid "META_PATH_HUD_PLACEHOLDER"
+msgstr "Trash Streamer T1"
+
+msgid "META_PATH_STATUS_AMBIGUOUS"
+msgstr "Ambiguous — keep investing to commit. (gap: %.1f)"
+
+msgid "META_PATH_STATUS_ACTIVE"
+msgstr "Active — Tier %d bonus in effect"
+
+msgid "META_PATH_STATUS_SECONDARY"
+msgstr "Tier %d (secondary — bonus inactive while another path is active)"
+
+msgid "META_PATH_INVEST"
+msgstr "Invest"
+
+msgid "META_PATH_INVEST_CHOICE_FIRST"
+msgstr "Make a %s choice first"
+
+msgid "META_PATH_INVEST_FULL"
+msgstr "Fully invested this era"
+
+msgid "META_PATH_INVEST_RAISE_LIMIT"
+msgstr "Make more %s choices to raise the investment limit"
+
+msgid "META_PATH_INVEST_FORMAT"
+msgstr "Invest %d %s (+%.1f affiliation)"
+
+msgid "META_PATH_TIER_BONUS"
+msgstr "T%d: %s"
+
+msgid "META_PATH_NEXT_TIER"
+msgstr "Next T%d: %s"
+
+msgid "META_PATH_EFFECT_ACTION_REACH"
+msgstr "%s Reach ×%s"
+
+msgid "META_PATH_EFFECT_SECONDARY_YIELD"
+msgstr "%s also +%d %s"
+
+msgid "META_PATH_ALL_ACTIONS"
+msgstr "All actions"
+
+msgid "META_PATH_EFFECT_DURATION"
+msgstr "%s duration ×%s"
+
+msgid "META_PATH_EFFECT_ALL_REACH"
+msgstr "All actions Reach ×%s"
+
+msgid "META_PATH_EFFECT_CRINGE_GAIN"
+msgstr "Cringe gain ×%s"
+
+msgid "META_PATH_EFFECT_SPONSOR_INCOME"
+msgstr "Sponsor income ×%s"
+
+msgid "META_PATH_EFFECT_MORALE_COST"
+msgstr "Action Morale costs ×%s"
+
+msgid "META_PATH_EFFECT_MORALE_DRAIN"
+msgstr "Offline Morale drain ×%s"
+
+msgid "META_PATH_EFFECT_HATERS_GROWTH"
+msgstr "Haters growth ×%s"
+
+msgid "META_PATH_EFFECT_MORALE_FLOOR"
+msgstr "Offline Morale floor %d"
+
+msgid "META_PATH_SIGNATURE_CARD"
+msgstr "signature card"
+
+# Team / Staff panel.
+msgid "META_STAFF_TITLE"
+msgstr "Team"
+
+msgid "META_STAFF_SPONSORS"
+msgstr "Sponsors: %d"
+
+msgid "META_STAFF_SPONSORS_PLACEHOLDER"
+msgstr "Sponsors: 0"
+
+msgid "META_STAFF_TROLL_NAME"
+msgstr "Trolls"
+
+msgid "META_STAFF_TROLL_EFFECT"
+msgstr "Multiplies how fast Haters grow"
+
+msgid "META_STAFF_ASSISTANT_NAME"
+msgstr "Assistants"
+
+msgid "META_STAFF_ASSISTANT_EFFECT"
+msgstr "Multiplies offline progress (offline only)"
+
+msgid "META_STAFF_SPONSOR_MANAGER_NAME"
+msgstr "Sponsor Managers"
+
+msgid "META_STAFF_SPONSOR_MANAGER_EFFECT"
+msgstr "Multiplies Sponsors paid by sponsor cards"
+
+msgid "META_STAFF_STATS"
+msgstr "Hired: %d   Effect: ×%s"
+
+msgid "META_STAFF_STATS_PLACEHOLDER"
+msgstr "Hired: 0   Effect: x1"
+
+msgid "META_STAFF_HIRE"
+msgstr "Hire — %d Sponsors"
+
+msgid "META_STAFF_HIRE_PLACEHOLDER"
+msgstr "Hire"
+
+msgid "META_STAFF_SHORTFALL"
+msgstr "Need %d more Sponsors"
+
+# Permanent Bonuses panel.
+msgid "META_BONUSES_TITLE"
+msgstr "Permanent Bonuses"
+
+msgid "META_BONUSES_ERA_COUNT"
+msgstr "Eras completed: %d"
+
+msgid "META_BONUSES_ERA_COUNT_PLACEHOLDER"
+msgstr "Eras completed: 0"
+
+msgid "META_BONUSES_MAX"
+msgstr "MAX"
+
+msgid "META_BONUS_REACH_NAME"
+msgstr "Permanent Reach"
+
+msgid "META_BONUS_REACH_ORIGIN"
+msgstr "from Trash Streamer eras"
+
+msgid "META_BONUS_SPONSOR_NAME"
+msgstr "Sponsor income"
+
+msgid "META_BONUS_SPONSOR_ORIGIN"
+msgstr "from Guru Celeb eras"
+
+msgid "META_BONUS_HATERS_NAME"
+msgstr "Haters resistance"
+
+msgid "META_BONUS_HATERS_ORIGIN"
+msgstr "from Niche Expert eras"
+
+msgid "META_BONUS_FLOOR_NAME"
+msgstr "Sponsor floor"
+
+msgid "META_BONUS_FLOOR_ORIGIN"
+msgstr "from Content Mogul eras"
+
+# Challenge Selection screen.
+msgid "META_CHALLENGE_ERA_STARTED"
+msgstr "Era %d started."
+
+msgid "META_CHALLENGE_ERA_PLACEHOLDER"
+msgstr "Era 1 started."
+
+msgid "META_CHALLENGE_NO_BONUS"
+msgstr "No bonus this era."
+
+msgid "META_CHALLENGE_BONUS_GAINED"
+msgstr "Permanent bonus gained: +%s%% %s"
+
+msgid "META_CHALLENGE_BONUS_REACH"
+msgstr "Reach"
+
+msgid "META_CHALLENGE_BONUS_SPONSORS"
+msgstr "Sponsors"
+
+msgid "META_CHALLENGE_BONUS_HATERS_RESIST"
+msgstr "Haters Resist"
+
+msgid "META_CHALLENGE_BONUS_SPONSOR_FLOOR"
+msgstr "Sponsors Floor"
+
+msgid "META_CHALLENGE_BRAK_DUSZY_NAME"
+msgstr "Soulless Influencer"
+
+msgid "META_CHALLENGE_DRAMA_BEZ_GRANIC_NAME"
+msgstr "Drama Queen, No Limits"
+
+msgid "META_CHALLENGE_PRZEPROS_NA_NIBY_NAME"
+msgstr "Apologize, But Barely"
+
+msgid "META_CHALLENGE_BEZ_TLUMU_NAME"
+msgstr "No Crowd, No Show"
+
+msgid "META_CHALLENGE_WYPALONY_ALE_CORE_NAME"
+msgstr "Burned Out But Core"
+
+msgid "META_CHALLENGE_AXIS_REACH"
+msgstr "Reach"
+
+msgid "META_CHALLENGE_AXIS_CRINGE"
+msgstr "Cringe"
+
+msgid "META_CHALLENGE_AXIS_MORALE"
+msgstr "Morale"
+
+msgid "META_CHALLENGE_CARD_FORMAT"
+msgstr "%s %s\n%s\n×%s meta-bonus"
+
+msgid "META_CHALLENGE_CARD_PLACEHOLDER"
+msgstr "☐ Challenge"
+
+msgid "META_CHALLENGE_MODIFIER_FORMAT"
+msgstr "%s× %s"
+
+msgid "META_CHALLENGE_AT_CAP"
+msgstr "You can only select %d Challenges this era."
+
+msgid "META_CHALLENGE_COMBINED_MULTIPLIER"
+msgstr "Combined multiplier: ×%s"
+
+msgid "META_CHALLENGE_COMBINED_PLACEHOLDER"
+msgstr "Combined multiplier: ×1.0"
+
+msgid "META_CHALLENGE_CONFIRM"
+msgstr "CONFIRM"
+
+# Sponsor Shield control.
+msgid "META_SHIELD_COST"
+msgstr "Cost: %d Sponsors"
+
+msgid "META_SHIELD_COST_PLACEHOLDER"
+msgstr "Cost: 5 Sponsors"
+
+msgid "META_SHIELD_ACTIVE"
+msgstr "Shield active — %s"
+
+msgid "META_SHIELD_INACTIVE"
+msgstr "Shield inactive — Morale buffer: 3 to 8 Haters"
+
+msgid "META_SHIELD_ADD"
+msgstr "Add +5:00"
+
+msgid "META_SHIELD_ACTIVATE"
+msgstr "Activate 5:00"
+
+msgid "META_SHIELD_SHORTFALL"
+msgstr "Need %d more Sponsors"
+
+msgid "META_SHIELD_SHORTFALL_PLACEHOLDER"
+msgstr "Need 5 more Sponsors"
+
+# Burnout warning indicator.
+msgid "META_BURNOUT_IDENTITY"
+msgstr "Burnout"
+
+msgid "META_BURNOUT_NO_PATH"
+msgstr "Burnout ahead — no active path, accepting banks nothing"
+
+msgid "META_BURNOUT_CAP_REACHED"
+msgstr "Burnout ahead — bonus cap reached, accepting banks nothing new"
+
+msgid "META_BURNOUT_BANK_FLAT"
+msgstr "Burnout ahead — accepting banks +%d %s, permanent"
+
+msgid "META_BURNOUT_BANK_PERCENT"
+msgstr "Burnout ahead — accepting banks +%s%% %s, permanent"
+
+msgid "META_BURNOUT_NOUN_REACH"
+msgstr "Reach"
+
+msgid "META_BURNOUT_NOUN_SPONSOR_INCOME"
+msgstr "Sponsor income"
+
+msgid "META_BURNOUT_NOUN_HATERS_RESISTANCE"
+msgstr "Haters resistance"
+
+msgid "META_BURNOUT_NOUN_ERA_START_SPONSORS"
+msgstr "era-start Sponsors"
+
+# Algorithm Contract Return Loop.
+msgid "ALGORITHM_PLAN_TITLE"
+msgstr "AWAY PLAN"
+
+msgid "ALGORITHM_PLAN_INTRO"
+msgstr "Optional: choose what the algorithm does while you are away. Doing nothing keeps normal offline progress unchanged."
+
+msgid "ALGORITHM_PLAN_NEUTRAL_NAME"
+msgstr "Neutral"
+
+msgid "ALGORITHM_PLAN_NEUTRAL_DESC"
+msgstr "Normal offline Reach, Haters and Morale simulation. No contract credit."
+
+msgid "ALGORITHM_CONTRACT_DRAMA_NAME"
+msgstr "Drama"
+
+msgid "ALGORITHM_CONTRACT_DRAMA_DESC"
+msgstr "Haters grow at ×1.50. Everything else follows normal offline rules; Reach changes only through the extra Haters."
+
+msgid "ALGORITHM_CONTRACT_BUSINESS_NAME"
+msgstr "Business"
+
+msgid "ALGORITHM_CONTRACT_BUSINESS_DESC"
+msgstr "Reach and Haters growth pause. Existing Haters still drain Morale. Earn 1.5 Sponsors/hour, modified by Path and Prestige (not Staff)."
+
+msgid "ALGORITHM_CONTRACT_DETOX_NAME"
+msgstr "Detox"
+
+msgid "ALGORITHM_CONTRACT_DETOX_DESC"
+msgstr "No Reach or Sponsors. Remove 10 Haters/hour and restore 12 Morale/hour, up to normal limits."
+
+msgid "ALGORITHM_PLAN_CAP"
+msgstr "Contract economy counts up to 24 hours. A break under 5 minutes keeps the plan armed."
+
+msgid "ALGORITHM_PLAN_PREVIEW"
+msgstr "1-hour preview now: Reach %s • Haters %s • Morale %s • Sponsors %s\nReach versus Neutral: %s"
+
+msgid "ALGORITHM_PLAN_ARM"
+msgstr "ARM PLAN"
+
+msgid "ALGORITHM_PLAN_REPLACE"
+msgstr "REPLACE PLAN"
+
+msgid "ALGORITHM_PLAN_CONTINUE_NEUTRAL"
+msgstr "CONTINUE NEUTRAL"
+
+msgid "ALGORITHM_PLAN_SET"
+msgstr "Set plan"
+
+msgid "ALGORITHM_PLAN_CHANGE"
+msgstr "Change plan"
+
+msgid "ALGORITHM_PLAN_CANCEL"
+msgstr "Cancel plan"
+
+msgid "ALGORITHM_PLAN_NEUTRAL"
+msgstr "Away Plan: Neutral"
+
+msgid "ALGORITHM_PLAN_ACTIVE"
+msgstr "Away Plan: %s armed"
+
+msgid "ALGORITHM_EMPIRE_CURRENT"
+msgstr "Creator Empire %d — %s"
+
+msgid "ALGORITHM_EMPIRE_NEXT"
+msgstr "Next: %s  •  Eras %d/%d  •  Mastery %d/%d  •  Contracts %d/%d"
+
+msgid "ALGORITHM_EMPIRE_COMPLETE"
+msgstr "Empire complete — every Creator Empire title unlocked."
+
+msgid "CREATOR_EMPIRE_RUNG_1"
+msgstr "Bedroom Broadcaster"
+
+msgid "CREATOR_EMPIRE_RUNG_2"
+msgstr "Algorithm Tenant"
+
+msgid "CREATOR_EMPIRE_RUNG_3"
+msgstr "Feed Foreman"
+
+msgid "CREATOR_EMPIRE_RUNG_4"
+msgstr "Attention Executive"
+
+msgid "CREATOR_EMPIRE_RUNG_5"
+msgstr "Platform Baron"
+
+msgid "CREATOR_EMPIRE_RUNG_6"
+msgstr "Culture Monopoly"
+
+msgid "CREATOR_EMPIRE_RUNG_7"
+msgstr "Ultimate Influencer"
+
+msgid "ALGORITHM_REPORT_CONTRACT"
+msgstr "CONTRACT COMPLETED: %s"
+
+msgid "ALGORITHM_REPORT_TOTAL"
+msgstr "TOTAL WHILE AWAY\nReach %s  •  Haters %s  •  Morale %s  •  Sponsors %s"
+
+msgid "ALGORITHM_REPORT_ATTRIBUTION"
+msgstr "BECAUSE OF YOUR PLAN (vs Neutral)\nReach %s  •  Haters %s  •  Morale %s  •  Sponsors %s"
+
+msgid "ALGORITHM_REPORT_EMPIRE"
+msgstr "Contract credits %d → %d  •  Creator Empire %d → %d"
+
+msgid "ALGORITHM_REPORT_CARRY"
+msgstr "Business carry: %d/1000 Sponsor"
+
+msgid "ALGORITHM_REPORT_DURATION"
+msgstr "Away: %s  •  Counted by contract: %s"
+
+msgid "ALGORITHM_REPORT_TITLES"
+msgstr "New titles: %s"
+
+msgid "ALGORITHM_REPORT_CONFIRM"
+msgstr "CONFIRM RESULT"
+
+msgid "ALGORITHM_REPORT_SAVING"
+msgstr "Saving result..."
+
+msgid "ALGORITHM_REPORT_SAVED"
+msgstr "Result saved. What should the algorithm do next?"
+
+msgid "ALGORITHM_REPORT_SAVE_FAILED"
+msgstr "Save failed. The result remains here and will not be counted twice."
+
+msgid "ALGORITHM_REPORT_RETRY"
+msgstr "RETRY SAVE"
+
+msgid "ALGORITHM_REPORT_REPEAT"
+msgstr "Repeat %s"
+
+msgid "ALGORITHM_REPORT_CHOOSE"
+msgstr "Choose another plan"
+
+msgid "ALGORITHM_REPORT_NEUTRAL"
+msgstr "Continue neutral"

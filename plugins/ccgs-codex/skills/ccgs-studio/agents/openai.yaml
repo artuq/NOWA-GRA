@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCGS Studio"
+  short_description: "Route game-development work through the CCGS studio."
+  default_prompt: "Use $ccgs-studio to route this game-development task."

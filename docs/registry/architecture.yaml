@@ -51,6 +51,30 @@ state_ownership:
     source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
     referenced_by: []
 
+  - state: "era_count (int), meta_bonus_totals (Dictionary[StringName, float] per bonus type)"
+    owner: PrestigeSystem
+    interface: "on_burnout_accepted(), on_burnout_deferred(morale_cost), get_meta_bonus_total(bonus_type), get_era_count(), restore_state(data), serialize_state()"
+    source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
+    referenced_by: [docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md]
+
+  - state: "_cringe_sustained_seconds (float, not persisted), _card_pending (bool, persisted)"
+    owner: BurnoutSystem
+    interface: "restore_state(data), serialize_state()"
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
+    referenced_by: []
+
+  - state: "_active_challenge_ids (Array[StringName], era-local)"
+    owner: ChallengeSystem
+    interface: "get_combined_meta_multiplier(), get_modifier(action_id, axis), restore_state(data), serialize_state()"
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
+    referenced_by: []
+
+  - state: "coordination_state (CoordinationState enum: NO_OVERLAY/PANEL_OPEN/CARD_PRESENTED) — which of ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel is open, if any (BonusesPanel added 2026-07-22, StaffPanel added 2026-07-23, both ADR-0014 revisions)"
+    owner: MainNavCoordinator (action_screen.gd — not a new Autoload, scene-owned script per ADR-0007 precedent)
+    interface: "no public setter — changes exclusively through 6 entry-point wrappers funneling into private _apply_state_change()"
+    source: docs/architecture/adr-0014-main-navigation-coordinator.md
+    referenced_by: []
+
 interfaces:
   - name: force_cooldown_zero
     signature: "force_cooldown_zero() -> void"
@@ -127,6 +151,79 @@ interfaces:
     owner: ClassPathSystem
     note: "Called by ActionSystem at reward resolution. Returns 1.0 if no active path or action not modified by current path tier. O(1) Dictionary lookup. ActionSystem must NOT import ClassPathSystem — uses the global Autoload name only."
     source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: invest
+    signature: "invest(path_id: StringName, resource_id: StringName, amount: float) -> bool"
+    type: method
+    owner: ClassPathSystem
+    note: "Gated on card_contribution[path] > 0 (Core Rule 4a) — returns false and applies no state change if the gate fails or the resource can't be afforded. Was a permanent MVP stub (always false); now a live command per ADR-0010 §8."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: get_ambiguous_gap
+    signature: "get_ambiguous_gap() -> float"
+    type: method
+    owner: ClassPathSystem
+    note: "Returns best_affiliation - second_affiliation when the active path is ambiguous (tie-break margin triggered, GDD F5 / BUG-003 fix), -1.0 otherwise. UI reads this to show the numeric gap remaining to resolve ambiguity."
+    source: docs/architecture/adr-0010-class-path-system-autoload-signal-multiplier.md
+    referenced_by: []
+
+  - name: on_burnout_accepted
+    signature: "on_burnout_accepted() -> void"
+    type: method
+    owner: PrestigeSystem
+    note: "Single entry point BurnoutSystem's Choice A handler calls. Synchronous call chain only — no await/CONNECT_DEFERRED anywhere in its call graph (binding constraint, ADR-0012 §2). Reads ClassPathSystem state before reset_era_state() clears it."
+    source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
+    referenced_by: []
+
+  - name: inject_priority_card
+    signature: "inject_priority_card(card_id: StringName) -> bool"
+    type: method
+    owner: DecisionCardSystem
+    note: "Bypasses normal card pool/weighting/cooldown. General-purpose forced-card injection — BurnoutSystem's Wypalenie card is the first caller, not the only intended one. Blocks normal presentation until resolved; cooldown counter keeps accumulating underneath. Returns false (no-op) if a priority card is already pending, OR card_id doesn't resolve in CardContentDatabase (2026-07-14 code-review fix), OR state != COOLDOWN (2026-07-22, ADR-0016 — self-contained guard, no longer relies on callers replicating BurnoutSystem's external state check) — callers must check the return value, not assume success. Signature corrected 2026-07-17 (ADR-0013 validation) from ADR-0012's original -> void pseudocode."
+    source: docs/architecture/adr-0012-prestige-checkpoint-system-autoload-orchestration.md
+    referenced_by: [docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md, docs/architecture/adr-0016-decision-card-reentrancy-guard.md]
+
+  - name: get_combined_meta_multiplier
+    signature: "get_combined_meta_multiplier() -> float"
+    type: method
+    owner: ChallengeSystem
+    note: "Pull-model read, same shape as ClassPathSystem.get_active_sponsor_multiplier() (ADR-0010 §5a). Called synchronously by PrestigeSystem.on_burnout_accepted() to replace the Story 003-era challenge_mult=1.0 stub. Returns 1.0 (safe default) if no challenges are active."
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
+    referenced_by: []
+
+  - name: get_modifier
+    signature: "get_modifier(action_id: StringName, axis: StringName) -> float"
+    type: method
+    owner: ChallengeSystem
+    note: "Pull-model read consumed by ActionSystem at reward resolution, after the Morale multiplier (Formula C). Returns 1.0 (no-op) if the axis/action isn't targeted by any active challenge. Clamped to CHALLENGE_MODIFIER_FLOOR (0.05) as a hard safety rail."
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
+    referenced_by: []
+
+  - name: close_requested
+    signature: "close_requested()"
+    type: signal
+    emitter: ClassPathPanel, SettingsScreen, BonusesPanel, StaffPanel (identical pattern on all four; BonusesPanel added 2026-07-22, StaffPanel added 2026-07-23)
+    subscribers: [MainNavCoordinator (action_screen.gd)]
+    note: "Replaces the previous self-managed visible=false in each panel's Close handler. Peer/notification signal per Architecture Principle 2 — panel does not hold a reference to the coordinator, stays testable in isolation."
+    source: docs/architecture/adr-0014-main-navigation-coordinator.md
+    referenced_by: []
+
+  - name: compute_next_grant
+    signature: "compute_next_grant(path_id: StringName, tier: int) -> Dictionary{granted: bool, type: StringName, amount: float}"
+    type: method
+    owner: PrestigeSystem
+    note: "Pure given explicit path_id/tier params (NOT fetched internally — ClassPathSystem.reset_era_state() clears that state before the real grant runs inside on_burnout_accepted(), so an internal fetch would silently break). amount is the post-F2-cap/4b-i-ceiling applied delta, not the raw grant_magnitude() output. Single implementation shared by pre-commit preview (Wypalenie card) and the real grant — guarantees the two never diverge."
+    source: docs/architecture/adr-0017-prestige-grant-preview-api.md
+    referenced_by: []
+
+  - name: get_last_grant
+    signature: "get_last_grant() -> Dictionary{granted: bool, type: StringName, amount: float}"
+    type: method
+    owner: PrestigeSystem
+    note: "Returns the cached result of the most recent real grant, set inside on_burnout_accepted() via compute_next_grant(). Persisted (serialize_state()/restore_state()) so it survives a restart between era_transitioned firing and Challenge Selection confirming. {granted:false,...} before any burnout ever accepted."
+    source: docs/architecture/adr-0017-prestige-grant-preview-api.md
     referenced_by: []
 
 api_decisions:
@@ -223,6 +320,26 @@ api_decisions:
   - decision: "Juice/Feedback has NO Autoload and NO new signal: FeedbackMath (res://src/ui/feedback_math.gd, class_name FeedbackMath, stateless static — magnitude(deltas), pulse_scale(m), shake_amplitude_px(m), shake_duration_sec(m), stinger_params(m)) + additive effect code inside ResourceHud (action channel: count-up + self_modulate pill flash) and CardScreen (card channel: scale-pulse + shake + stinger) (ADR-0011)"
     rationale: "System owns zero state (no restore_state by GDD design) so an Autoload contradicts ADR-0001's rationale; a conductor node would violate ADR-0007 zone ownership; deltas are already in hand at both call sites (action_completed payload, presented card's option), so local computation needs no signal changes"
     source: docs/architecture/adr-0011-juice-feedback-stateless-math-ui-effects.md
+    referenced_by: []
+
+  - decision: "BurnoutSystem is a thin trigger-detector only (Cringe-sustained timer, warning countdown, forced card injection via inject_priority_card()); ChallengeSystem is a thin selection/modifier-storage system. Neither owns era_count, resource resets, or the META_BONUS grant — that state stays on PrestigeSystem (ADR-0012), which they call into synchronously from a card_resolved signal handler (BurnoutSystem) or get pulled from directly (ChallengeSystem's get_combined_meta_multiplier()) (ADR-0013)"
+    rationale: "The 2026-07-01 quick-specs predate PrestigeSystem and assumed BurnoutSystem owned the reset+grant sequence; ADR-0012 shipped with that ownership on PrestigeSystem instead (9 stories, 80 tests, epic closed 2026-07-15) — this decision ratifies the shipped reality rather than reopening a closed epic to match stale quick-specs. Signal-listener pattern (not a direct DecisionCardSystem->BurnoutSystem coupling) matches the existing card_resolved additive-signal precedent (ADR-0008/ADR-0010)"
+    source: docs/architecture/adr-0013-burnout-challenge-system-trigger-and-selection.md
+    referenced_by: []
+
+  - decision: "MainNavCoordinator is the existing action_screen.gd script extended, not a new Autoload — 10 real entry points (PathButton/SettingsButton/BonusesButton/StaffButton press, ClassPathPanel/SettingsScreen/BonusesPanel/StaffPanel close_requested, back-gesture, DecisionCardSystem/CardScreen read-only pair; BonusesButton/BonusesPanel added 2026-07-22, StaffButton/StaffPanel added 2026-07-23) are thin wrappers funneling into one private synchronous resolver, _apply_state_change(). Extraction to a separate helper class explicitly considered and deferred at 4 panels (YAGNI, no concrete pain yet — revisit at 6+ panels or a real readability finding). Never writes CardScreen.visible (mirror not hub, ADR-0008 precedent). Android back-gesture via NOTIFICATION_WM_GO_BACK_REQUEST + project.godot's quit_on_go_back=false; Web via JavaScriptBridge.eval()/.create_callback() + preventive history.pushState() (ADR-0014)"
+    rationale: "coordination_state is scene-scoped, not global game state — an Autoload would need to guard against being meaningless outside action_screen.tscn and would lose @onready's direct sibling references. Extends the already-shipped 'scene-owned script coordinates scene-owned siblings' pattern (ADR-0007) instead of introducing a new architectural shape. Central event bus alternative rejected as an existing forbidden pattern."
+    source: docs/architecture/adr-0014-main-navigation-coordinator.md
+    referenced_by: []
+
+  - decision: "SettingsSystem is a plain Autoload singleton, same shape as OnboardingGate — one field (reduce_motion: bool, default false), sole write path set_reduce_motion() which marks SaveSystem dirty, reads go directly to the public field with no wrapper method (retrofit — documents already-shipped code, ADR-0015)"
+    rationale: "Closes a real traceability gap (SettingsSystem shipped with zero ADR coverage); one-field shape matches current requirement exactly, no speculative multi-setting generality (YAGNI)"
+    source: docs/architecture/adr-0015-settings-system-retrofit.md
+    referenced_by: []
+
+  - decision: "action_screen.gd (the existing MainNavCoordinator script, ADR-0014) listens directly for PrestigeSystem.era_transitioned and drives the round-trip scene swap main.tscn -> challenge_selection.tscn -> main.tscn on Confirm — no new Autoload/controller class, no payload added to era_transitioned. ChallengeSelectionScreen reads everything via existing pull-model getters (PrestigeSystem.get_last_grant() per ADR-0017, ChallengeSystem.get_challenge_data()). Back-gesture/Esc suppressed on the new scene by reusing ADR-0014's exact NOTIFICATION_WM_GO_BACK_REQUEST no-op + JavaScriptBridge pushState/popstate mechanism verbatim (ADR-0018)"
+    rationale: "One connect() call does not justify a BootController-style dedicated controller (YAGNI, same threshold ADR-0014 already set for panel extraction); every value the new screen needs is already queryable, so no transient-field hand-off (ADR-0009's pattern) is needed either"
+    source: docs/architecture/adr-0018-era-transition-scene-swap.md
     referenced_by: []
 
 forbidden_patterns:

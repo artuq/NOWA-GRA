@@ -25,11 +25,18 @@ extends Node
 ## English keys are the binding decision for production code — design/gdd and
 ## design/registry/entities.yaml still show stale Polish-key examples
 ## (Zasięgi, Hatersi, Sponsorzy) pending a separate doc-sync task.
+## Morale starts FULL (2026-07-28 fix): it is an effectiveness modifier, and
+## 0.0 put a brand-new player in the Critical band from the first frame —
+## 0.5x rewards plus a queue suspended by ActionSystem's Morale guard, on a
+## save with nothing to recover from. resource-system.md calls the zero-Haters
+## opening "the game's fully fair starting state"; a half-effectiveness start
+## is the opposite. Every other resource legitimately starts at zero.
+## Existing saves are unaffected — restore_state() overwrites this default.
 var _resources: Dictionary[StringName, float] = {
 	&"Reach": 0.0,
 	&"Cringe": 0.0,
 	&"Haters": 0.0,
-	&"Morale": 0.0,
+	&"Morale": 100.0,
 	&"Sponsors": 0.0,
 }
 
@@ -53,43 +60,57 @@ const SHIELD_BUFFER_BONUS: int = 5
 ## Notification only — never the write mechanism itself (ADR-0001).
 signal resource_changed(name: StringName, new_value: float, old_value: float)
 
-## Emitted when the shield activates (is_active=true) and when it expires
-## (is_active=false). remaining_seconds is the timer value at emission.
-## HUD wires to this for the countdown indicator (separate UI story).
+## Emitted after every successful shield purchase/extension (is_active=true)
+## and when it expires (is_active=false). remaining_seconds is the timer value
+## at emission, allowing reactive UI to refresh additive stacking immediately.
 signal shield_changed(is_active: bool, remaining_seconds: float)
 
 ## Seconds remaining on the active shield. 0.0 = inactive. Ticked down in
 ## _process(); never goes negative. Persisted via serialize_state().
 var _shield_remaining_seconds: float = 0.0
 
+## Depth flag held only while an ambient batch emits its synchronous
+## resource_changed notifications. ResourceHud reads this context to refresh
+## labels without starting one-second-cadence juice; ordinary mutations remain
+## visually unchanged. Depth rather than bool keeps nested callbacks safe.
+var _ambient_delta_depth: int = 0
+
 ## Ticks the shield timer down by [param delta] seconds. Emits
 ## shield_changed(false, 0.0) exactly once on the frame the timer hits 0.
 func _process(delta: float) -> void:
-	if _shield_remaining_seconds <= 0.0:
-		return
-	_shield_remaining_seconds = maxf(0.0, _shield_remaining_seconds - delta)
-	if _shield_remaining_seconds == 0.0:
-		shield_changed.emit(false, 0.0)
+	elapse_sponsor_shield(delta)
 
 
 ## Spends SHIELD_COST Sponsors to add SHIELD_DURATION seconds to the shield
 ## timer. Returns true if the cost was paid; false if Sponsors < SHIELD_COST
 ## (no mutation on rejection). If the shield was already inactive and this
-## activation succeeds, emits shield_changed(true, new_remaining). If already
-## active, stacks duration (no signal — caller can read _shield_remaining_seconds
-## directly for display).
+## activation succeeds, emits shield_changed(true, new_remaining). An active
+## shield stacks duration and emits the same refreshed-state notification.
 ##
 ## Example:
 ##   var ok: bool = ResourceManager.activate_sponsor_shield()
 func activate_sponsor_shield() -> bool:
 	if _resources.get(&"Sponsors", 0.0) < float(SHIELD_COST):
 		return false
-	var was_inactive: bool = _shield_remaining_seconds <= 0.0
 	apply_delta({&"Sponsors": -float(SHIELD_COST)})
 	_shield_remaining_seconds += SHIELD_DURATION
-	if was_inactive:
-		shield_changed.emit(true, _shield_remaining_seconds)
+	shield_changed.emit(true, _shield_remaining_seconds)
 	return true
+
+
+## Advances the Sponsor Shield by wall-clock [param elapsed_seconds], clamped
+## at zero. Partial consumption is silent; the active-to-inactive transition
+## emits exactly one expiry notification. BootController uses this seam after
+## offline simulation so the real elapsed duration consumes the timer even
+## when resource accrual itself is capped at 24 hours.
+func elapse_sponsor_shield(elapsed_seconds: float) -> void:
+	if elapsed_seconds <= 0.0 or _shield_remaining_seconds <= 0.0:
+		return
+	_shield_remaining_seconds = maxf(
+		0.0, _shield_remaining_seconds - elapsed_seconds
+	)
+	if _shield_remaining_seconds == 0.0:
+		shield_changed.emit(false, 0.0)
 
 
 ## Returns the effective N_buffer for Formula B (morale_drain_rate()). While
@@ -113,6 +134,14 @@ func get_shield_remaining_seconds() -> float:
 	return _shield_remaining_seconds
 
 
+## True only during synchronous resource_changed emissions produced by
+## [method apply_ambient_delta]. It returns false before and immediately after
+## that call, so presentation can distinguish passive ticks without muting
+## ordinary action/card feedback.
+func is_applying_ambient_delta() -> bool:
+	return _ambient_delta_depth > 0
+
+
 ## Returns the current value of [param name], or 0.0 if the key is unknown.
 ##
 ## Example:
@@ -125,11 +154,40 @@ func get_resource(name: StringName) -> float:
 ##
 ## For each key in [param deltas]: new_value = old_value + deltas[key].
 ## Cringe and Morale are clamped to [0, 100]; all other keys are unbounded.
+## NOTE (tier-fill 2026-07-28): ekspert T5's Morale floor deliberately does
+## NOT hook this clamp — a live-path floor here would make any Morale spend
+## (ekspert's own invest() resource!) free once at the floor: deduct, clamp
+## back up, affiliation still gained. The floor is an AMBIENT-drain shield
+## ("cult immune to hate") and belongs in ResourceSimulationStep, used by
+## both OfflineProgressSystem and LiveResourceTicker for ambient drain.
 ## Emits resource_changed once per key, after that key's value is committed.
 ##
 ## Example:
 ##   ResourceManager.apply_delta({&"Reach": 25.0, &"Cringe": -10.0, &"Morale": 5.0})
 func apply_delta(deltas: Dictionary[StringName, float]) -> void:
+	_commit_deltas(deltas)
+	if not deltas.is_empty():
+		SaveSystem.mark_dirty()
+
+
+## Applies a time-based resource batch through the same mutation/clamping
+## funnel as [method apply_delta], while exposing ambient context for the
+## duration of its synchronous notifications. LiveResourceTicker is the only
+## gameplay caller; persistence still routes through SaveSystem.mark_dirty().
+func apply_ambient_delta(deltas: Dictionary) -> void:
+	# Accept an untyped Dictionary at this UI/test-facing seam, then normalize
+	# once before entering the same strictly typed mutation funnel.
+	var typed_deltas: Dictionary[StringName, float] = {}
+	for raw_key: Variant in deltas:
+		typed_deltas[StringName(raw_key)] = float(deltas[raw_key])
+	_ambient_delta_depth += 1
+	_commit_deltas(typed_deltas)
+	_ambient_delta_depth -= 1
+	if not typed_deltas.is_empty():
+		SaveSystem.mark_dirty()
+
+
+func _commit_deltas(deltas: Dictionary[StringName, float]) -> void:
 	for key in deltas:
 		var old_value: float = _resources.get(key, 0.0)
 		var new_value: float = old_value + deltas[key]
@@ -137,8 +195,6 @@ func apply_delta(deltas: Dictionary[StringName, float]) -> void:
 			new_value = clamp(new_value, 0.0, 100.0)
 		_resources[key] = new_value
 		resource_changed.emit(key, new_value, old_value)
-	if not deltas.is_empty():
-		SaveSystem.mark_dirty()
 
 
 ## Returns this module's persisted state as a JSON-serializable `Dictionary`
@@ -169,3 +225,24 @@ func restore_state(data: Dictionary) -> void:
 			_shield_remaining_seconds = float(data[key])
 			continue
 		_resources[StringName(key)] = float(data[key])
+
+
+## Clears all live progression for the destructive New Game flow. Autoloads
+## survive scene changes, so deleting the save file alone cannot produce a
+## fresh career inside the same process.
+func reset_for_new_game() -> void:
+	_ambient_delta_depth = 0
+	var defaults: Dictionary[StringName, float] = {
+		&"Reach": 0.0,
+		&"Cringe": 0.0,
+		&"Haters": 0.0,
+		&"Morale": 100.0,
+		&"Sponsors": 0.0,
+	}
+	for key: StringName in defaults:
+		var old_value: float = _resources.get(key, defaults[key])
+		_resources[key] = defaults[key]
+		if old_value != defaults[key]:
+			resource_changed.emit(key, defaults[key], old_value)
+	_shield_remaining_seconds = 0.0
+	shield_changed.emit(false, 0.0)

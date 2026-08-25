@@ -117,6 +117,43 @@ body { background: radial-gradient(circle at 50% 30%, #1a1a24 0%, #0d0d14 70%); 
 	window.addEventListener('load', fit);
 	document.addEventListener('DOMContentLoaded', fit);
 })();
+// CrazyGames SDK v3 (portal requirement — task 2026-07-28). Loaded async from
+// the portal CDN; EVERY call below no-ops cleanly when the SDK is absent
+// (local server, cloudflared tunnel, any non-CrazyGames host) — the game
+// must behave identically with and without the portal.
+(function () {
+	window.kocSDK = {
+		ready: false,
+		_playing: false,
+		_readyPending: false,
+		gameReady: function () {
+			// The engine reaches its first real screen well before the async
+			// SDK finishes init(), so a call arriving early is REMEMBERED and
+			// replayed by init()'s completion handler below. Dropping it (the
+			// original behavior) left the portal on its loading screen forever.
+			if (!this.ready) { this._readyPending = true; return; }
+			try {
+				CrazyGames.SDK.game.loadingStop();
+				if (!this._playing) { CrazyGames.SDK.game.gameplayStart(); this._playing = true; }
+			} catch (e) {}
+		},
+		happytime: function () {
+			try { if (this.ready) CrazyGames.SDK.game.happytime(); } catch (e) {}
+		}
+	};
+	var s = document.createElement('script');
+	s.src = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
+	s.onload = async function () {
+		try {
+			await window.CrazyGames.SDK.init();
+			window.kocSDK.ready = true;
+			CrazyGames.SDK.game.loadingStart();
+			if (window.kocSDK._readyPending) { window.kocSDK.gameReady(); }
+		} catch (e) { /* init failed -> stay in no-op mode */ }
+	};
+	s.onerror = function () { /* not on the portal -> no-op mode */ };
+	document.head.appendChild(s);
+})();
 </script>
 	</head>
 	<body>
@@ -136,7 +173,7 @@ body { background: radial-gradient(circle at 50% 30%, #1a1a24 0%, #0d0d14 70%); 
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":373476,"index.wasm":37695054},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":776336,"index.wasm":37695054},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 

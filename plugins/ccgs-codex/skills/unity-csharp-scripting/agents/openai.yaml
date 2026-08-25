@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Csharp Scripting"
+  short_description: "Imported game-development capability: Unity Csharp Scripting."
+  default_prompt: "Use $unity-csharp-scripting for this game-development task."

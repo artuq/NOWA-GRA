@@ -1,0 +1,4 @@
+interface:
+  display_name: "Card Game"
+  short_description: "Imported game-development capability: Card Game."
+  default_prompt: "Use $card-game for this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Improve"
+  short_description: "Run the CCGS Skill Improve workflow in Codex."
+  default_prompt: "Use $skill-improve to handle this game-development task."

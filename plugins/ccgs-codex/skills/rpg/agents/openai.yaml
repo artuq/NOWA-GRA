@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rpg"
+  short_description: "Imported game-development capability: Rpg."
+  default_prompt: "Use $rpg for this game-development task."

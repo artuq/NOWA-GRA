@@ -68,12 +68,31 @@ If the process is killed between steps 1-3, `save.json` (the previous save) is u
                   DirAccess.rename_absolute(save.tmp -> save.json)   [atomic swap]
 ```
 
+### Autosave suppression window *(added 2026-07-13, `/propagate-design-change` on `prestige-checkpoint-system.md`'s `/design-review`)*
+
+`save-persistence-system.md` triggers autosave on card-resolution events via `mark_dirty()`'s 2s debounce (Architecture Diagram above). Prestige/Checkpoint System's era-transition sequence needs a bounded window where that trigger is inert — Choice A's resolution IS a card resolution, so an unmodified autosave could fire mid-sequence (after meta-bonus grant, before the flag sweep completes) and persist a half-transitioned state. This is a new capability layered on top of the existing debounce/`save_now()` flow, not a change to it:
+
+```gdscript
+func suppress_autosave() -> void:
+    _autosave_suppressed = true
+    # any pending debounce Timer is NOT cancelled — only prevented from
+    # firing save_now() while suppressed; it re-arms normally on resume
+
+func resume_autosave() -> void:
+    _autosave_suppressed = false
+```
+
+`mark_dirty()`'s debounce Timer callback checks `_autosave_suppressed` before calling `save_now()` and no-ops (re-checking on the timer's next natural fire, not queuing a catch-up call) if suppressed. Lifecycle-pause-triggered saves (app backgrounding) are **not** subject to this flag — an OS-initiated background-kill risk always takes priority over an in-progress logical transition; the suppression only governs the routine 2s-debounce path. Callers MUST pair every `suppress_autosave()` with a `resume_autosave()` in the same synchronous call chain (no `await` between them, same constraint as `prestige-checkpoint-system.md`'s call-contract lock) — an unpaired suppression would silently disable autosave indefinitely.
+
 ### Key Interfaces
 ```gdscript
 # SaveSystem (Autoload) — interface locked by ADR-0001, implementation defined here
 const SAVE_PATH = "user://save.json"
 const TEMP_PATH = "user://save.tmp"
 const SCHEMA_VERSION = 1
+
+func suppress_autosave() -> void  # added 2026-07-13, see Autosave suppression window above
+func resume_autosave() -> void    # added 2026-07-13, see Autosave suppression window above
 
 func save_now() -> void:
     var data := _gather_state()  # Dictionary, includes "schema_version": SCHEMA_VERSION
@@ -158,3 +177,38 @@ N/A — first save format for this project.
 - ADR-0001 (Autoload singleton architecture) — defines the `SaveSystem` interface this ADR implements
 - ADR-0003 (Scene management/boot order) — consumes `load_save()`'s return value as the first boot step
 - `design/gdd/save-persistence-system.md` — source GDD this ADR implements
+
+## Implementation Amendment (2026-08-05): Maximum Dirty Age
+
+`mark_dirty()` still restarts the 2-second trailing debounce. It now also starts
+a separate one-shot `MAX_DIRTY_AGE_SEC = 10` Timer only when that Timer is not
+already running. Repeated live-resource ticks therefore cannot defer a save
+past ten seconds from the first unsaved mutation. Any `save_now()`, reset, or
+application-pause flush stops both Timers, preventing a duplicate trailing
+write. Autosave suppression gates both routine timeout handlers; an OS pause
+still takes priority and flushes either pending schedule.
+
+## Implementation Amendment (2026-08-25): CrazyGames Data Module Backend
+
+The Web/CrazyGames port keeps the existing JSON schema and `SaveSystem` public
+API, but changes the persistence backend after the CrazyGames SDK initializes:
+
+1. `BootController` waits for `SaveSystem.prepare_web_data()` before restoring
+   progression or reporting `loadingStop`.
+2. On an initialized CrazyGames host, `CrazyGames.SDK.data` is authoritative.
+   Its single `king_of_cringe_save_v1` value stores the same complete JSON
+   snapshot used by the native file backend.
+3. A successful Data Module write is followed by a best-effort local atomic
+   write. That local file is only a cache; it is never used instead of an
+   available account-aware Data Module snapshot.
+4. If the SDK is disabled, unavailable, or times out, standalone Web retains
+   the original local `user://save.json` behavior.
+5. Android never enters this path (`OS.has_feature("web")` gate) and continues
+   to use the original temp-file-then-rename implementation unchanged.
+
+The cloud value is loaded before offline elapsed time is calculated, preventing
+the temporary local Autoload state from generating rewards against the wrong
+account snapshot. No migration from a browser-local Web save is performed for
+this first public CrazyGames release because no previous public CrazyGames save
+population exists; avoiding migration also prevents one browser user's cache
+from being copied into another CrazyGames account.

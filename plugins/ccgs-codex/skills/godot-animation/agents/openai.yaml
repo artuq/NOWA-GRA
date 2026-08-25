@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Animation"
+  short_description: "Imported game-development capability: Godot Animation."
+  default_prompt: "Use $godot-animation for this game-development task."

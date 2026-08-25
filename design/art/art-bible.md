@@ -96,7 +96,7 @@ There are no characters in the traditional sense — the dashboard IS the world.
 
 ## Section 7: UI/HUD Visual Direction
 
-**Icon style spec (32×32 native)**: filled solid silhouettes (not outline — outlines lose legibility at touch scale and read "line-art app icon," not dashboard). Max **3 flat colors per icon** (1 base fill, 1 accent, transparent ground), 1–2 interior cutouts max, zero gradients, zero anti-aliasing.
+**Icon style spec (32×32 native, REVISED 2026-07-11, highlight dropped same day)**: bold dark outline + flat fill, pixel-art register — **supersedes the earlier no-outline rule**. User-confirmed reference set (thick-outline retro game-icon style) read more distinctive and legible at chip scale than the flat no-outline pass; the original "outline reads as line-art app icon" risk did not materialize. **No white highlight/sheen** — tested, but a glossy highlight patch reads as toy/candy-bright and conflicts with the Section 1 anchor ("deadpan... never adopts a good/bad visual register") and the Section 9 Balatro caution (avoid saturated candy-bright joy palette). 2-tone budget per icon: 1 dark outline (near-black/deep shade of the icon's hue family), 1 base fill — transparent ground stays outside the count. Zero gradients, zero anti-aliasing — outline edges stay pixel-hard, not soft AA. 1–2 interior cutouts still allowed where the concept needs one (e.g. padlock shackle gap).
 
 **Semantic map** (one concept per icon — the systematic fix for "icons don't match their actions", 2026-07-06):
 
@@ -104,15 +104,15 @@ There are no characters in the traditional sense — the dashboard IS the world.
 |---|---|
 | Record a Vlog | webcam circle with a solid red rec-dot |
 | Make Drama | megaphone with a jagged crack through the bell |
-| Apologize Online | hand holding a folded note/scroll |
-| Record a Collab | two overlapping webcam circles |
-| Give an Interview | microphone with a small waveform notch |
-| Launch a Course | stacked rectangles (book) with a play-triangle badge |
-| Reach | eye inside a signal-bars arc |
+| Apologize Online | two hands pressed together, praying/pleading gesture (REVISED 2026-07-11, was hand+note) |
+| Record a Collab | handshake — two hands clasped together (REVISED 2026-07-11, was two overlapping webcam circles) |
+| Give an Interview | hand gripping a microphone with cable (REVISED 2026-07-11, was bare mic with waveform notch) |
+| Launch a Course | browser window with an open book overlapping its corner (REVISED 2026-07-11, was stacked books+play; flagged as highest-complexity icon in the set — recheck at chip scale) |
+| Reach | hub-and-spoke network glyph — person-in-circle with 6 radiating satellite nodes (REVISED 2026-07-11, was eye+signal-arc) |
 | Cringe | cracked speech-bubble shard |
-| Haters | clenched fist silhouette (thumb-down implied by angle only) |
-| Morale | battery glyph (no numeric fill inside the icon) |
-| Sponsors | handshake reduced to two overlapping chevrons |
+| Haters | speech bubble with censored profanity symbols (REVISED 2026-07-11, was clenched fist) — pairs with Cringe as a communication-metric icon family |
+| Morale | single static flame (REVISED 2026-07-11, was battery) — one size/color only, never a scale or intensity variant (would re-introduce the banned "shows a level" pattern) |
+| Sponsors | handshake with a dollar-coin above it (REVISED 2026-07-11, was chevrons — gen'd as an unreadable star/pinwheel). Accepted risk: shares a base silhouette with Record a Collab (also a handshake), differentiated by coin accent + color family only |
 | Card-category | stacked-card corner-fold glyph |
 | Locked | padlock, closed shackle only (no keyhole — 1 cutout rule) |
 | Settings | single gear, 6 teeth max |
@@ -145,13 +145,24 @@ There are no characters in the traditional sense — the dashboard IS the world.
 - **`.import` files**: always committed together with their source PNG. Renaming/moving a source changes its `res://` path + UID and breaks scene references — the naming convention above is locked for this reason.
 - **No atlas**: 20–30 individual small PNGs are nowhere near the ≤100 draw-call budget under Godot's 2D batcher. Revisit only if a future profiling pass shows draw-call pressure.
 
-**Audio standards (future stinger set)**: **Ogg Vorbis, mono, 44.1 kHz** (q4–5). A 1–2 s stinger ≈ 15–30 KB; even 20 stingers < 0.6 MB — comfortably inside the ~3 MB web headroom. WAV rejected (≈176 KB/s stereo would burn the budget; wasm decode cost for short one-shots is negligible).
+**Audio — CUT (2026-07-12, permanent design decision)**: this game ships with no sound effects or music,
+ever. Precedent: Reigns (Day-1 comparable title, `game-concept.md`) — "no audio cues are necessary to play
+the game well"; Melvor Idle ships near-silent by design. This project cuts audio entirely rather than making
+it optional. The format standard that lived here (Ogg Vorbis, mono, 44.1 kHz, q4–5, ~15–30 KB/stinger) is
+preserved in `design/assets/specs/audio-wave-1-assets.md` as a historical record — 2 of 6 assets were produced
+and verified before the cut. Not implemented, no `assets/audio/` folder is wired into any scene.
 
 **Source-file discipline**: `.ase` sources live in `assets/_source/icons/`, mirroring `ui/icons/` 1:1 — exports only ever land in `assets/ui/icons/`, never the reverse.
 
-**Nano Banana prompt block (verbatim in every generation prompt — consistency depends on this never drifting)**:
-> *"32×32 pixel grid, flat vector icon, single bold silhouette, maximum 3 flat colors, no gradient, no anti-aliasing, no outline stroke, pixel-perfect edges, transparent background, dark-mode analytics-dashboard icon style"*
-> + the specific palette hex token(s) from Section 4 for that asset.
+**Nano Banana prompt block (REVISED 2026-07-11, highlight dropped same day — verbatim in every generation prompt, consistency depends on this never drifting)**:
+
+Two family variants — pick by icon category (Section 7 style spec: outline + flat fill, NO highlight):
+
+> **Actions** (neutral/control icons): *"A 2D video game UI icon of a [SUBJECT], low-resolution 32×32 pixel art style, retro 8-bit game asset. Monochromatic pale lavender-blue color palette with thick dark indigo bold outlines. Flat solid color fill, no shading, no highlights, no gloss. Isolated on a solid flat magenta (#FF00FF) background, minimalist design, highly readable for mobile games."*
+
+> **Resources** (metric icons): *"A 2D video game UI icon of a [SUBJECT], low-resolution 32×32 pixel art style, retro 8-bit game asset. Vibrant [HUE NAME derived from Section 4 token] color palette with thick dark [deep shade of same hue] bold outlines. Flat solid color fill, no shading, no highlights, no gloss. Isolated on a solid flat magenta (#FF00FF) background, minimalist design, highly readable for mobile games."*
+
+Generation background stays **magenta (#FF00FF)**, not white — keys out cleanly in the Aseprite cleanup pass (Section 8 production checklist) and never appears elsewhere in the palette; never shipped magenta.
 
 ---
 
@@ -159,8 +170,17 @@ There are no characters in the traditional sense — the dashboard IS the world.
 
 | Reference | Take | Avoid |
 |---|---|---|
+> **Provenance (corrected 2026-07-12)**: this table must trace back to `design/gdd/game-concept.md`'s Day-1
+> (2026-06-19) "Comparable Titles" list — Beggar's Life, Melvor Idle, Idle Research: Endless Tycoon — plus
+> Reigns (cited separately in the same doc for the card-decision mechanic). **Balatro** and **YouTube Studio /
+> TikTok Analytics** were added unilaterally during the 2026-07-07 `/art-bible` session without going through
+> `AskUserQuestion` approval like the rest of that session's decisions did — user did not plan or approve
+> either and removed both 2026-07-12. Lesson: reference-direction entries are a real design decision, not a
+> drafting-judgment-call — they need the same Question→Options→Decision→Approval loop as everything else.
+
+| Reference | Take | Avoid |
+|---|---|---|
 | **Reigns** | Card-as-sole-hero staging — full-viewport card, everything else dimmed/paused during a decision | Its expressive character portraits with emotional facial read — a valence signal we've ruled out (Section 5) |
-| **YouTube Studio / TikTok Analytics (dark dashboards)** | Chrome language — top-anchored stat row, card/pill grouping, dark-mode dashboard framing | Their multi-graph density — real analytics tools cram far more than our near-zero decoration rule allows |
 | **Melvor Idle** | Nothing visually — cited as the density warning | Its tabbed, panel-heavy UI; confirms our 3-action sparse screen is the right contrast, not a compromise |
 | **Beggar's Life** | The *feeling* of watching things degrade — conveyed through our numbers/palette shifts, never scenery | Its overloaded, exhausting UI and illustrated scene art — directly the failure mode Section 6 is designed against |
-| **Balatro** | Bold, high-contrast single-silhouette icon design readable at small chip/card scale | Its saturated candy-bright joy palette — ours stays muted/desaturated per Section 4's semantic (not celebratory) roles |
+| **Idle Research: Endless Tycoon** | The idle/active hybrid depth — passive number-watching AND active resource-allocation choices, matching this project's own Core Fantasy ("optimizer satisfaction" + weighty decisions, `game-concept.md`) | Its sheer system breadth (18 research items, 70 skills, 12 potions, 62 accelerators simultaneously) — same density warning as Melvor; we stay sparse by design, not by budget constraint |

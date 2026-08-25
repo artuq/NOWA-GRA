@@ -1,0 +1,4 @@
+interface:
+  display_name: "Phaser Core"
+  short_description: "Imported game-development capability: Phaser Core."
+  default_prompt: "Use $phaser-core for this game-development task."

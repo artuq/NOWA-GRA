@@ -163,6 +163,22 @@ func test_suspend_clears_on_card_resolved() -> void:
 	assert_int(_action_system._queue.size()).is_equal(0)
 
 
+## Regression: lifting card suspension while the current action is still
+## running must not pop and re-enqueue the queue head. That would silently
+## rotate FIFO order (B,C -> C,B) now that the UI permits normal queue input.
+func test_card_resolved_before_active_action_finishes_preserves_fifo_order() -> void:
+	_set_resource(&"Morale", 100.0)
+	_action_system.start_action(&"nagraj_vloga")
+	_action_system.start_action(&"zrob_drame")
+	_action_system.start_action(&"przeprosiny")
+	DecisionCardSystem.card_presented.emit({})
+
+	DecisionCardSystem.card_resolved.emit(&"", &"", &"")
+
+	assert_that(_action_system.current_action_id).is_equal(&"nagraj_vloga")
+	assert_array(_action_system._queue).is_equal([&"zrob_drame", &"przeprosiny"])
+
+
 ## AC-5: when Morale is in the Critical band (< E_LOW_THRESHOLD = 15.0),
 ## the queue is suspended and the next queued action does not auto-start
 ## when the running action resolves.
@@ -233,6 +249,20 @@ func test_clear_queue_empties_array() -> void:
 	assert_int(_action_system._queue.size()).is_equal(0)
 	# The running action is unaffected.
 	assert_that(_action_system.current_action_id).is_equal(&"nagraj_vloga")
+
+
+## Public queue reads return a typed copy so recreated presentation can rebuild
+## itself without gaining mutation access to ActionSystem's owned array.
+func test_queue_snapshot_is_a_copy_and_cannot_mutate_owned_queue() -> void:
+	_action_system.start_action(&"nagraj_vloga")
+	_action_system.start_action(&"zrob_drame")
+	_action_system.start_action(&"przeprosiny")
+
+	var snapshot: Array[StringName] = _action_system.get_queue_snapshot()
+	snapshot.clear()
+
+	assert_int(_action_system.get_queue_size()).is_equal(2)
+	assert_array(_action_system._queue).is_equal([&"zrob_drame", &"przeprosiny"])
 
 
 ## AC-7 regression: single-action tap while idle must start the action

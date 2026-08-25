@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Ui Control"
+  short_description: "Imported game-development capability: Godot Ui Control."
+  default_prompt: "Use $godot-ui-control for this game-development task."

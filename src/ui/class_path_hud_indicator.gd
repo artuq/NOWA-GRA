@@ -13,15 +13,13 @@
 class_name ClassPathHudIndicator
 extends PanelContainer
 
-## English, non-judgmental display names for known path ids. Unregistered
-## path ids fall back to str(path_id) in _get_display_name() -- see Story
-## 8-3 AC "no Polish path names / no moral framing in label text."
-## "Trash Streamer" chosen over a literal "Pato-Streamer" (user decision,
-## 2026-07-05): "patostream" is a Polish-only term with no meaning to the
-## game's English-speaking audience. Internal path ids stay as-is.
-const _DISPLAY_NAMES: Dictionary[StringName, String] = {
-	&"pato_streamer": "Trash Streamer",
-	&"guru_celebryta": "Guru Celeb",
+## Stable localization keys for known path ids. Unregistered ids fall back
+## to str(path_id), while internal ids remain unchanged gameplay contracts.
+const _DISPLAY_NAME_KEYS: Dictionary[StringName, StringName] = {
+	&"pato_streamer": &"META_PATH_PATO_STREAMER",
+	&"guru_celebryta": &"META_PATH_GURU_CELEBRYTA",
+	&"ekspert_niszowy": &"META_PATH_EKSPERT_NISZOWY",
+	&"biznesmen_contentu": &"META_PATH_BIZNESMEN_CONTENTU",
 }
 
 @onready var _label: Label = %ClassPathLabel
@@ -29,8 +27,10 @@ const _DISPLAY_NAMES: Dictionary[StringName, String] = {
 
 func _ready() -> void:
 	hide()
+	_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	ClassPathSystem.active_path_changed.connect(_on_active_path_changed)
 	ClassPathSystem.tier_unlocked.connect(_on_tier_unlocked)
+	SettingsSystem.language_changed.connect(_on_language_changed)
 	# restore_state() (boot/load) does not re-emit active_path_changed, so a
 	# returning player with a persisted active path needs an explicit sync
 	# once this node and its @onready refs are ready (ADR-0010 Story 8-3 Step 5).
@@ -60,6 +60,11 @@ func _on_tier_unlocked(_path_id: StringName, _tier: int) -> void:
 		_refresh_label()
 
 
+func _on_language_changed(_preference: StringName, _locale: StringName) -> void:
+	if visible:
+		_refresh_label()
+
+
 ## Rebuilds the label text from ClassPathSystem's current active path + tier.
 ## Format: "[DisplayName] T[tier]", e.g. "Trash Streamer T1".
 func _refresh_label() -> void:
@@ -69,7 +74,8 @@ func _refresh_label() -> void:
 
 
 ## Maps a path id to its English, moral-framing-free display name. Falls
-## back to the raw id (stringified) for any path not yet in _DISPLAY_NAMES,
+## back to the raw id (stringified) for any path not yet in the key map,
 ## so future paths do not silently break the HUD.
 func _get_display_name(path_id: StringName) -> String:
-	return _DISPLAY_NAMES.get(path_id, str(path_id))
+	var key: StringName = _DISPLAY_NAME_KEYS.get(path_id, &"")
+	return tr(key) if not key.is_empty() else str(path_id)

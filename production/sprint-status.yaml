@@ -53,14 +53,187 @@
 # done in ONE day, including Should Have and Nice to Have. S1 data-loss bug
 # (tests deleting real player save) found and fixed same-session.
 
-sprint: 10
-goal: "Prove web viability (fail-fast on the 10 MB / load-time gate) + pay the twice-carried performance debt — measurably good in browser at 9:16 and on device."
-start: "2026-07-07"
-end: "2026-07-13"
-generated: "2026-07-06"
-updated: "2026-07-06"
+sprint: 12
+goal: "Close the gap between shipped code and tracked status, finish card wave 2 and challenge-selection UI (never completed in Sprint 11), get a green test run and a documented playtest of the full era loop."
+start: "2026-07-24"
+end: "2026-07-30"
+generated: "2026-07-23"
+updated: "2026-07-23"
 
 stories:
+  - id: "12-1"
+    name: "Run full test suite headless, fix any red"
+    file: "production/qa/smoke-2026-07-24-sprint12.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 0.5
+    blocker: ""
+    completed: "2026-07-24"  # 660 test cases, 657 deterministically green. Found+fixed 2 real bugs exposed by this sprint's own work (weighted_selection_test.gd's hardcoded card-count constants, a GDScript lambda-capture bug in challenge_selection_screen_test.gd). 1 pre-existing flaky test filed as BUG-004, not fixed (out of scope, unrelated system).
+
+  - id: "12-2"
+    name: "Era-start/challenge-selection screen implementation (carried from 11-5, per design/ux/challenge-selection-screen.md)"
+    file: "src/ui/challenge_selection.gd"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: "2026-07-24"  # Confirmed green by real test execution (12-1), not just file presence. ADR-0018 Accepted.
+
+  - id: "12-3"
+    name: "Playtest the full era loop (burnout -> reset -> meta-bonus -> challenge selection)"
+    file: ""
+    priority: must-have
+    status: ready-for-dev
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: ""
+
+  - id: "12-4"
+    name: "Retroactive QA plan + sign-off, Sprint 10 and Sprint 11"
+    file: "production/qa/qa-signoff-sprint-10-2026-07-24.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: "2026-07-24"  # Condition (12-1's real test execution) now satisfied -- 11-2/11-4's test files confirmed passing for real, not just structurally present.
+
+  - id: "12-5"
+    name: "Sync sprint-status.yaml + story files to actual shipped state"
+    file: ""
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 0.3
+    blocker: ""
+    completed: "2026-07-24"
+
+  - id: "12-6"
+    name: "Card wave 2 — new decision cards toward doubled pool (carried from 11-3, unstarted)"
+    file: "src/core/card_content_database.gd"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: "2026-07-24"  # Re-scoped to 4 cards (2x ekspert_niszowy, 2x biznesmen_contentu). Confirmed green by real test execution.
+
+  - id: "12-7"
+    name: "Retro, Sprint 10+11 combined"
+    file: "production/retrospectives/retro-sprint-10-11-2026-07-24.md"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 0.3
+    blocker: ""
+    completed: "2026-07-24"
+
+  - id: "12-8"
+    name: "Stand up production/risk-register/"
+    file: "production/risk-register/risks.md"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 0.2
+    blocker: ""
+    completed: "2026-07-24"
+
+  - id: "12-9"
+    name: "10-3 perf pass + memory ceiling (if Android device available)"
+    file: ""
+    priority: nice-to-have
+    status: blocked
+    owner: ""
+    estimate_days: 0.5
+    blocker: "No physical Android device available (carried 3rd time)"
+    completed: ""
+
+# Sprint 11 (Era loop: Burnout + Prestige + Challenge) is PARTIALLY closed —
+# record preserved in production/sprints/sprint-11.md. Ledger was stale
+# (last touched 2026-07-12, never updated as work landed) — corrected 2026-07-23
+# against actual shipped code: 11-1/11-2/11-4 done and test-covered
+# (burnout_system.gd, challenge_system.gd + unit/integration tests all
+# confirmed present by technical-director review). 11-3 (card wave 2, 12 new
+# cards) was NEVER STARTED despite being marked ready-for-dev — card DB has
+# 17 entries (12 original + 4 Sprint-8 signature cards + final_burnout), zero
+# wave-2 content added. 11-5 (era-start/challenge-selection screens) backend
+# shipped but UI was NEVER BUILT — no src/ui file references ChallengeSystem
+# at all; UX spec only authored 2026-07-22, separately from this sprint.
+# 11-6 (post-MVP action expansion, design-only) not done — quick-spec doc
+# itself still says "Backlog — NOT scheduled" as of 2026-07-11.
+# Production -> Polish gate-check re-ran 2026-07-23: verdict FAIL again (CD +
+# PR both NOT READY — zero playtests, same blocker as the 2026-06-24 FAIL,
+# four weeks unresolved; QA/retro cadence lapsed after Sprint 9). Sprint 12
+# is the close-out sprint addressing this.
+_sprint_11_archive:
+  - id: "11-1"
+    name: "Prestige/Checkpoint + Burnout design day (GDD + ADR + epic + stories)"
+    file: "design/quick-specs/final-burnout-2026-07-01.md"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: "2026-07-12"  # GDD approved, ADR-0012/0013 Accepted, epics prestige-checkpoint + burnout-challenge-system created
+
+  - id: "11-2"
+    name: "BurnoutSystem core — trigger, forced card, era transition + reset + meta-bonus"
+    file: "src/core/burnout_system.gd"
+    priority: must-have
+    status: done
+    owner: ""
+    estimate_days: 1.5
+    blocker: ""
+    completed: "2026-07-13"  # confirmed by TD phase-gate review 2026-07-23: burnout_trigger_timer_test, burnout_persistence_test (unit) + burnout_card_injection_test, burnout_choice_routing_test (integration) all present and exercising the era-reset-preserves-meta-bonus AC against real SaveSystem/HistoryFlagManager, not mocks
+
+  - id: "11-3"
+    name: "Card wave 2 — 12 new decision cards (resolution_reaction + path_tags, EN)"
+    file: ""
+    priority: must-have
+    status: backlog
+    owner: ""
+    estimate_days: 1
+    blocker: "Never started — carried to Sprint 12 as 12-6 (re-scoped Should Have)"
+    completed: ""
+
+  - id: "11-4"
+    name: "Challenge Era Runs implementation"
+    file: "src/core/challenge_system.gd"
+    priority: should-have
+    status: done
+    owner: ""
+    estimate_days: 1
+    blocker: ""
+    completed: "2026-07-17"  # ADR-0013 Accepted 2026-07-17; challenge_meta_multiplier_test, challenge_selection_storage_test (unit) + challenge_modifier_resolution_test (integration) all present
+
+  - id: "11-5"
+    name: "Era-start/era-end screens (transition wipe + challenge selection)"
+    file: ""
+    priority: should-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: "Backend (11-4) shipped, UI never built — carried to Sprint 12 as 12-2 (promoted to Must Have, blocks playtest)"
+    completed: ""
+
+  - id: "11-6"
+    name: "Post-MVP action expansion — economy pass (design only)"
+    file: "design/quick-specs/post-mvp-action-expansion-2026-07-11.md"
+    priority: nice-to-have
+    status: backlog
+    owner: ""
+    estimate_days: 0.5
+    blocker: "Not started, no urgency — not carried into Sprint 12"
+    completed: ""
+
+# Sprint 10 (Web viability + performance debt) is closed at 6/7 — record preserved in
+# production/sprints/sprint-10.md. 10-3 (device perf pass) carried into Sprint 11's
+# risk register, still blocked on physical Android access; not re-listed as an active
+# story since there's no new work to schedule until the device is available.
+_sprint_10_archive:
   - id: "10-1"
     name: "Web-export spike — Compatibility renderer + size/load measurement (GO/NO-GO)"
     file: "docs/spikes/web-export-spike-2026-07-06.md"
@@ -85,10 +258,10 @@ stories:
     name: "Performance pass on device + memory ceiling + AC-6 recheck (carried x2, escalated)"
     file: ""
     priority: must-have
-    status: ready-for-dev
+    status: blocked
     owner: ""
     estimate_days: 0.5
-    blocker: ""
+    blocker: "No physical Android device available; carried into Sprint 11 risk register"
     completed: ""
 
   - id: "10-4"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bug Report"
+  short_description: "Run the CCGS Bug Report workflow in Codex."
+  default_prompt: "Use $bug-report to handle this game-development task."

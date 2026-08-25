@@ -1,0 +1,4 @@
+interface:
+  display_name: "Localize"
+  short_description: "Run the CCGS Localize workflow in Codex."
+  default_prompt: "Use $localize to handle this game-development task."

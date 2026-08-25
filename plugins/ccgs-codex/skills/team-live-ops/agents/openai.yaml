@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Live Ops"
+  short_description: "Run the CCGS Team Live Ops workflow in Codex."
+  default_prompt: "Use $team-live-ops to handle this game-development task."

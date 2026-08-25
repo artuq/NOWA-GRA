@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Audio"
+  short_description: "Run the CCGS Team Audio workflow in Codex."
+  default_prompt: "Use $team-audio to handle this game-development task."

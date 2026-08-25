@@ -145,7 +145,11 @@ Mult(M) = 1.00  if 70 ≤ M ≤ 100
 **Output Range:** ≥0, unbounded upward (intended long-term growth engine).
 **Example:** Z_per_hater=0.2, N=10, M=80%→Mult=1.0, Δt=600s → 10×0.2×1.0×10 = 20 Zasięgi/10min.
 
-> **Open Question for Offline Progress System:** if N or M change mid-interval during a long offline gap, this formula requires the Offline Progress System to subdivide Δt into smaller steps (recommend 1-minute steps) and re-evaluate N/M each step — otherwise late-arriving Hatersi are mis-credited. Flagged here as a constraint on that system's design, to resolve when `/design-system Offline Progress System` runs.
+**Resolved cadence (2026-08-05):** both active and offline play execute one
+shared H→M→Mult→Reach transition. Active play uses complete 1-second logical
+steps only while `ActionScreen` exists; offline play retains 60-second steps and
+the 24-hour cap. State remains float in both paths; only Formula B's existing
+`int(H)` conversion is intentional.
 
 ---
 
@@ -227,6 +231,11 @@ Resource System is pure infrastructure — it has no screen of its own. Requirem
 - HUD must display all 5 resources in real time (Zasięgi, Cringe, Hatersi, Morale, Sponsorzy), consistent with the v1/v2 prototypes.
 - The Morale indicator must clearly communicate the current band (High/Normal/Low/Critical), not just the raw % — the player needs to know "what state am I in," not just "what number is this."
 - The Cringe indicator should eventually (once Decision Card System exists) signal that it affects the card pool — at this GDD's level, it's sufficient that the value is visible and live-updating.
+- Sponsor Shield must remain visible beside the Resource HUD: exact 5-Sponsor
+  cost, inactive 3-to-8 Haters buffer explanation, active countdown, additive
+  five-minute extension, and an explicit shortfall while disabled.
+- Ambient one-second changes update displayed values but do not trigger the
+  action/card pop, count-up, or flash feedback channels.
 
 > 📌 **UX Flag — Resource System**: This system has UI requirements. In Phase 4 (Pre-Production), run `/ux-design` for the HUD screen before writing epics. Stories referencing UI should cite `design/ux/hud.md`, not this GDD directly.
 
@@ -240,10 +249,10 @@ Resource System is pure infrastructure — it has no screen of its own. Requirem
 - **GIVEN** Morale=35% (Low band, 15-39%), **WHEN** the player completes an action with a 25 Zasięgi base reward, **THEN** effective reward = 25×0.75=18.75 → round-half-up → 19 Zasięgi.
 - **GIVEN** Hatersi=10, Morale=80% (Mult=1.0), **WHEN** 10 minutes elapse with no player action, **THEN** Zasięgi increases by exactly `10×0.2×1.0×10=20` (Formula D).
 - **GIVEN** Cringe=95, **WHEN** an action with nominal ΔCringe=+20 completes, **THEN** actual increase = `clamp(115,0,100)-95=5`, not 20 (natural clamp behavior, not a separate curve).
-- **GIVEN** a Decision Card flagged "qualifying" for Sponsorzy *(qualification rule owned by Decision Card System — see Open Questions)*, **WHEN** the player resolves it, **THEN** Sponsorzy increases by a random integer in [1,3], with no consumption mechanism anywhere.
+- **GIVEN** a Decision Card flagged "qualifying" for Sponsorzy, **WHEN** the player resolves it, **THEN** Sponsorzy increases by a random integer in [1,3] and may subsequently be spent on Sponsor Shield, Staff, or eligible path investment.
 - **GIVEN** Morale=0 and a drain tick is due, **WHEN** drain is computed, **THEN** Morale remains at 0 (never negative), and the effectiveness multiplier used is exactly 0.5x.
 - **GIVEN** Cringe=0, **WHEN** the player completes a safe action (ΔCringe≤0), **THEN** Cringe remains at 0 — no negative value is ever stored.
-- **GIVEN** an action is currently "running", **WHEN** the player attempts to start a second action, **THEN** the request is rejected — only one action's deltas can ever be applied at a time.
+- **GIVEN** an action is currently "running", **WHEN** the player selects another available action, **THEN** it is appended to the bounded FIFO queue; only the active action's deltas resolve at a time.
 - **GIVEN** Hatersi=0, **WHEN** any duration elapses with no player action, **THEN** passive Zasięgi = 0 and Morale drain = 0 for the entire duration.
 - **GIVEN** Cringe held at 100 for 50+ minutes, **WHEN** Hatersi growth is evaluated each minute, **THEN** the rate stays at `H_base+H_max_add=1.02/min` with no hard cap on Hatersi count.
 - **GIVEN** the player takes only Cringe-reducing actions continuously, **WHEN** this pattern is sustained across a session, **THEN** no penalty, soft-lock, or forced escalation is triggered at this system's level as a consequence.
@@ -251,5 +260,6 @@ Resource System is pure infrastructure — it has no screen of its own. Requirem
 ## Open Questions
 
 - ~~**"Qualifying card" definition for Sponsorzy rewards** — owned by Decision Card System; resolve when that GDD is authored.~~ **RESOLVED** in `design/gdd/card-content-database.md`: only `sponsor_offer_shady` and `brand_deal_choice` qualify (cards whose premise is a sponsor/brand/monetization offer).
-- **Continuous delta-time vs. discrete ticks** — this GDD assumes continuous Δt (seconds), not fixed ticks, but Offline Progress System may need to subdivide into steps (see Formula D's note). *Owner: Offline Progress System GDD. Target: before that GDD is approved.*
+- ~~**Continuous delta-time vs. discrete ticks**~~ — **RESOLVED 2026-08-05**:
+  shared transition, 1-second active cadence, 60-second offline cadence.
 - **Should the "clean path" (Cringe=0 forever) carry any systemic trade-off?** — Deferred to Decision Card / Class Path System. *Owner: Decision Card System / Class Path System. Target: before those GDDs are approved.*

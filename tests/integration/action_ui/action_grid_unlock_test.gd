@@ -16,14 +16,18 @@ extends GdUnitTestSuite
 
 var _risky_snapshot: int
 var _safe_snapshot: int
+var _locale_snapshot: String
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	ActionSystem.current_action_id = &""
 	_risky_snapshot = HistoryFlagManager.get_counter(&"risky_choices_count")
 	_safe_snapshot = HistoryFlagManager.get_counter(&"safe_choices_count")
 	_set_counters(0, 0)
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	ActionSystem.current_action_id = &""
 	_set_counters(_risky_snapshot, _safe_snapshot)
 

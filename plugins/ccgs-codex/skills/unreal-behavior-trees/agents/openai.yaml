@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unreal Behavior Trees"
+  short_description: "Imported game-development capability: Unreal Behavior Trees."
+  default_prompt: "Use $unreal-behavior-trees for this game-development task."

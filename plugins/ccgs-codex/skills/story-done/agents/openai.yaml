@@ -1,0 +1,4 @@
+interface:
+  display_name: "Story Done"
+  short_description: "Run the CCGS Story Done workflow in Codex."
+  default_prompt: "Use $story-done to handle this game-development task."

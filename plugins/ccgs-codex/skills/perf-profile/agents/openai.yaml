@@ -1,0 +1,4 @@
+interface:
+  display_name: "Perf Profile"
+  short_description: "Run the CCGS Perf Profile workflow in Codex."
+  default_prompt: "Use $perf-profile to handle this game-development task."

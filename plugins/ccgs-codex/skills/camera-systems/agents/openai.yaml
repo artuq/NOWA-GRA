@@ -1,0 +1,4 @@
+interface:
+  display_name: "Camera Systems"
+  short_description: "Imported game-development capability: Camera Systems."
+  default_prompt: "Use $camera-systems for this game-development task."

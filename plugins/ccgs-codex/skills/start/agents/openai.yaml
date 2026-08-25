@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start"
+  short_description: "Run the CCGS Start workflow in Codex."
+  default_prompt: "Use $start to handle this game-development task."

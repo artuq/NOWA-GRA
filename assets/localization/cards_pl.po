@@ -1,0 +1,598 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: King of Cringe\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+#. Karta: prywatne zwierzenie staje się potencjalnym contentem.
+msgid "cards.exposed_friend.body"
+msgstr "Najlepsza psiara wylała ci serce na rozmowie. Złoto na content... i zdrada w pakiecie."
+
+msgid "cards.exposed_friend.options.a.label"
+msgstr "Wrzuć screeny"
+
+msgid "cards.exposed_friend.options.a.reaction"
+msgstr "Screeny poleciały. 12 000 udostępnień. Przyjaciółka od tamtej pory nie odpisuje."
+
+msgid "cards.exposed_friend.options.b.label"
+msgstr "Zachowaj to dla siebie"
+
+msgid "cards.exposed_friend.options.b.reaction"
+msgstr "Nic nie wrzucasz. Ta rozmowa zostaje między wami."
+
+#. Karta: podejrzana współpraca z marką wellness.
+msgid "cards.sponsor_offer_shady.body"
+msgstr "Marka „wellness” płaci za żelki, które podobno „leczą lęk”. Wyniki badań: nie dodano załącznika."
+
+msgid "cards.sponsor_offer_shady.options.a.label"
+msgstr "Bierz przelew"
+
+msgid "cards.sponsor_offer_shady.options.a.reaction"
+msgstr "Współpraca oznaczona. 3 osoby spytały, czy to działa. Odpowiedzi: 0."
+
+msgid "cards.sponsor_offer_shady.options.b.label"
+msgstr "Grzecznie odmów"
+
+msgid "cards.sponsor_offer_shady.options.b.reaction"
+msgstr "Oferta odrzucona. Algorytm przyjął to do wiadomości i poszedł dalej."
+
+#. Karta: hejter publikuje oskarżycielski wątek.
+msgid "cards.hater_callout.body"
+msgstr "Hejter odpalił 12-postowy wątek o tym, że jesteś oszustem. Zaczyna nieść."
+
+msgid "cards.hater_callout.options.a.label"
+msgstr "Odpal kontrę"
+
+msgid "cards.hater_callout.options.a.reaction"
+msgstr "Odpowiedź wrzucona. Zasięg rośnie. Wątek też."
+
+msgid "cards.hater_callout.options.b.label"
+msgstr "Nie karm hejtera"
+
+msgid "cards.hater_callout.options.b.reaction"
+msgstr "Nie chce mi się z tobą gadać."
+
+#. Karta: manager proponuje ustawkę z innym twórcą.
+msgid "cards.staged_drama.body"
+msgstr "Manager proponuje udawaną spinę z innym twórcą. Drama równa się wyświetlenia."
+
+msgid "cards.staged_drama.options.a.label"
+msgstr "Wyreżyseruj spinę"
+
+msgid "cards.staged_drama.options.a.reaction"
+msgstr "Wojna ruszyła. Oba fandomy walczą. Żaden nie wie, że scenariusz ma trzy strony."
+
+msgid "cards.staged_drama.options.b.label"
+msgstr "Odrzuć scenariusz"
+
+msgid "cards.staged_drama.options.b.reaction"
+msgstr "Spiny nie będzie. Prezentacja wraca do szuflady managera."
+
+#. Karta: łatwy zasięg przez dołączenie do nagonki.
+msgid "cards.competitor_drama.body"
+msgstr "Konkurencyjnego twórcę właśnie grilluje internet. Wystarczy się dorzucić, a zasięg zrobi się sam."
+
+msgid "cards.competitor_drama.options.a.label"
+msgstr "Dorzucić swoje"
+
+msgid "cards.competitor_drama.options.a.reaction"
+msgstr "Cytat poleciał. Już nie oglądasz dramy. Właśnie w niej grasz."
+
+msgid "cards.competitor_drama.options.b.label"
+msgstr "Trzymaj się z boku"
+
+msgid "cards.competitor_drama.options.b.reaction"
+msgstr "Nic nie mówisz. Nagonka świetnie radzi sobie bez ciebie."
+
+#. Karta: wyciek prywatnych wiadomości celebryty.
+msgid "cards.leaked_dm.body"
+msgstr "Ktoś podesłał ci pikantne wiadomości celebryty. Jeden klik i internet przestaje dziś pracować."
+
+msgid "cards.leaked_dm.options.a.label"
+msgstr "Wrzuć wszystko"
+
+msgid "cards.leaked_dm.options.a.reaction"
+msgstr "Wiadomości opublikowane. 80 000 osób czyta rozmowę, której nie miało zobaczyć."
+
+msgid "cards.leaked_dm.options.b.label"
+msgstr "Usuń i zapomnij"
+
+msgid "cards.leaked_dm.options.b.reaction"
+msgstr "Wiadomości usunięte. Przynajmniej na twoim telefonie już ich nie ma."
+
+#. Karta: stary klip rozpętuje trend anulowania twórcy.
+msgid "cards.cancel_threat.body"
+msgstr "Internet odkopał twój stary, bardzo niefortunny klip. #KoniecKariery zaczyna trendować."
+
+msgid "cards.cancel_threat.options.a.label"
+msgstr "Idź w zaparte"
+
+msgid "cards.cancel_threat.options.a.reaction"
+msgstr "Oświadczenie wrzucone. Hasztag dalej trenduje. Ty również."
+
+msgid "cards.cancel_threat.options.b.label"
+msgstr "Wrzuć przeprosiny"
+
+msgid "cards.cancel_threat.options.b.reaction"
+msgstr "Przeprosiny są. Komentarze podzielone. Stary klip nadal krąży."
+
+#. Karta: wybór poziomu szczerości w filmie z przeprosinami.
+msgid "cards.apology_tour.body"
+msgstr "Czas nagrać przeprosiny. Ring zapalony. Pozostaje ustalić poziom... szczerości."
+
+msgid "cards.apology_tour.options.a.label"
+msgstr "Płacz do obiektywu"
+
+msgid "cards.apology_tour.options.a.reaction"
+msgstr "Przeprosiny mają 2,1 mln wyświetleń. Top komentarz liczy twoje łzy."
+
+msgid "cards.apology_tour.options.b.label"
+msgstr "Powiedz to serio"
+
+msgid "cards.apology_tour.options.b.reaction"
+msgstr "Bez cięć, bez muzyki. Mniej wyświetleń. Mniej filmów z odpowiedzią."
+
+#. Karta: młody fan prosi o pomoc w prawdziwym kryzysie.
+msgid "cards.fan_in_trouble.body"
+msgstr "Młody fan pisze do ciebie w prawdziwym kryzysie. Prosi o pomoc, nie o zasięgi."
+
+msgid "cards.fan_in_trouble.options.a.label"
+msgstr "Zrób z tego „ważny temat”"
+
+msgid "cards.fan_in_trouble.options.a.reaction"
+msgstr "Klip wrzucony. 40 000 osób obejrzało, jak prywatna chwila staje się publiczna."
+
+msgid "cards.fan_in_trouble.options.b.label"
+msgstr "Pomóż po cichu"
+
+msgid "cards.fan_in_trouble.options.b.reaction"
+msgstr "Wiadomość wysłana. Nikt poza wami nie dowie się, że to się wydarzyło."
+
+#. Karta: wybór między wielką nieetyczną marką a małą etyczną.
+msgid "cards.brand_deal_choice.body"
+msgstr "Dwie oferty: obciachowa sieciówka fast fashion albo mała etyczna marka, która płaci mniej."
+
+msgid "cards.brand_deal_choice.options.a.label"
+msgstr "Sprzedaj się z rozmachem"
+
+msgid "cards.brand_deal_choice.options.a.reaction"
+msgstr "Umowa podpisana. Logo sieciówki właśnie zamieszkało w twoim bio."
+
+msgid "cards.brand_deal_choice.options.b.label"
+msgstr "Wesprzyj małą markę"
+
+msgid "cards.brand_deal_choice.options.b.reaction"
+msgstr "Mniejsza umowa podpisana. Marka udostępniła twój post z trzema serduszkami."
+
+#. Karta: zakup podejrzanej dziury w algorytmie.
+msgid "cards.algorithm_hack.body"
+msgstr "Guru wzrostu sprzedaje „dziurę w algorytmie”, która zaleje feed twoimi klipami."
+
+msgid "cards.algorithm_hack.options.a.label"
+msgstr "Kup exploit"
+
+msgid "cards.algorithm_hack.options.a.reaction"
+msgstr "Exploit kupiony. Twoje klipy są wszędzie. Nie wiesz tylko, kto je ogląda."
+
+msgid "cards.algorithm_hack.options.b.label"
+msgstr "Rośnij uczciwie"
+
+msgid "cards.algorithm_hack.options.b.reaction"
+msgstr "Bez sztuczki. Wzrost jest wolniejszy, ale liczby naprawdę są twoje."
+
+#. Karta: pierwsze ostrzeżenie przed wypaleniem.
+msgid "cards.burnout_warning.body"
+msgstr "40 godzin bez snu. Grind działa, tylko ręce zaczynają ci się trząść."
+
+msgid "cards.burnout_warning.options.a.label"
+msgstr "Ciśnij dalej"
+
+msgid "cards.burnout_warning.options.a.reaction"
+msgstr "Jestem skrajnie wyczerpany, a przecież jest rano…"
+
+msgid "cards.burnout_warning.options.b.label"
+msgstr "Zrób dzień wolnego"
+
+msgid "cards.burnout_warning.options.b.reaction"
+msgstr "Telefon wyłączony na dzień. Nic nie wrzucono. Niczego nie przegapiono."
+
+#. Karta: zamiana małej lojalnej społeczności na zasięg z giveawayu.
+msgid "cards.thousand_true_fans.body"
+msgstr "Konto od giveawayów z 50 mln obserwujących chce płatnej polecajki. Twoja prawdziwa społeczność to 340 osób, które odpisują pod każdym postem."
+
+msgid "cards.thousand_true_fans.options.a.label"
+msgstr "Bierz wielką polecajkę"
+
+msgid "cards.thousand_true_fans.options.a.reaction"
+msgstr "Polecajka wrzucona. Zasięg wystrzelił. Trzy stałe osoby spytały, czy wszystko gra."
+
+msgid "cards.thousand_true_fans.options.b.label"
+msgstr "Zostań przy swoich 340"
+
+msgid "cards.thousand_true_fans.options.b.reaction"
+msgstr "Bez polecajki. Ktoś napisał, że właśnie dlatego nadal cię ogląda."
+
+#. Karta: krótki trend kontra kolejny specjalistyczny materiał.
+msgid "cards.deep_dive_or_trend.body"
+msgstr "Trend tygodnia to 15 sekund tańca. Twój ostatni materiał — 47 minut o jednym typie śruby — wciąż zbiera komentarze."
+
+msgid "cards.deep_dive_or_trend.options.a.label"
+msgstr "Goń za trendem"
+
+msgid "cards.deep_dive_or_trend.options.a.reaction"
+msgstr "Taniec wrzucony. Wynik w normie. Tylko ciebie jakoś w nim nie było."
+
+msgid "cards.deep_dive_or_trend.options.b.label"
+msgstr "Nagraj kolejny konkret"
+
+msgid "cards.deep_dive_or_trend.options.b.reaction"
+msgstr "Kolejne 47 minut o śrubach. Dyskusja pod poprzednim filmem nadal trwa."
+
+#. Karta: analityka zaleca ragebait w obojętnym twórcy temacie.
+msgid "cards.engagement_farming.body"
+msgstr "Panel wskazuje format, który zawsze wygrywa: ragebaitowe wojny w komentarzach. Temat nigdy cię nie obchodził, ale wykres jest piękny."
+
+msgid "cards.engagement_farming.options.a.label"
+msgstr "Nie dyskutuj z liczbami"
+
+msgid "cards.engagement_farming.options.a.reaction"
+msgstr "Film wrzucony. Komentarze: 4200. Twoje stanowisko: konkretnie żadne."
+
+msgid "cards.engagement_farming.options.b.label"
+msgstr "Omiń ten format"
+
+msgid "cards.engagement_farming.options.b.reaction"
+msgstr "Format pominięty. Panel zapisał utraconą szansę i już cię osądza po cichu."
+
+#. Karta: proces twórczy zamienił się w arkusz.
+msgid "cards.quarterly_content_review.body"
+msgstr "Twój proces twórczy to już arkusz: godziny publikacji, retencja, testy miniaturek. Działa. Własnego filmu nie oglądasz od trzech tygodni."
+
+msgid "cards.quarterly_content_review.options.a.label"
+msgstr "Zaufaj arkuszowi"
+
+msgid "cards.quarterly_content_review.options.a.reaction"
+msgstr "Film idealny według arkusza poleciał. Retencja: świetna. Twoje uwagi: brak."
+
+msgid "cards.quarterly_content_review.options.b.label"
+msgstr "Raz go zignoruj"
+
+msgid "cards.quarterly_content_review.options.b.reaction"
+msgstr "Miniaturkę wybierasz samodzielnie. Wynik spadł o 2%. Film oglądasz do końca."
+
+#. Karta: sprzedaż ogólników o sukcesie jako drogiego kursu.
+msgid "cards.masterclass_launch.body"
+msgstr "Widzowie pytają, jak udało ci się tu dojść. Możesz odpowiedzieć albo sprzedać kurs „Manifestuj Algorytm” za 999 dolarów."
+
+msgid "cards.masterclass_launch.options.a.label"
+msgstr "Odpal masterclass"
+
+msgid "cards.masterclass_launch.options.a.reaction"
+msgstr "A czy ty mnie kiedyś widziałeś, żebym ja coś czytał?"
+
+msgid "cards.masterclass_launch.options.b.label"
+msgstr "Wrzuć poradnik za darmo"
+
+msgid "cards.masterclass_launch.options.b.reaction"
+msgstr "Poradnik jest darmowy. Ktoś nazwał go jedynym szczerym w branży. Nie trenduje."
+
+#. Karta: transmisja z cyfrowego detoksu.
+msgid "cards.guru_retreat.body"
+msgstr "Planujesz dla fanów wyjazd z „cyfrowym detoksem”. Bilet kosztuje 500 dolarów. Zamierzasz transmitować wszystko na żywo."
+
+msgid "cards.guru_retreat.options.a.label"
+msgstr "Streamuj detoks"
+
+msgid "cards.guru_retreat.options.a.reaction"
+msgstr "Detoks leci w 4K. Uczestnicy medytują przed wysięgnikiem kamery. Zaangażowanie: wzorowe."
+
+msgid "cards.guru_retreat.options.b.label"
+msgstr "Naprawdę się odłącz"
+
+msgid "cards.guru_retreat.options.b.reaction"
+msgstr "Bez transmisji. Dwanaście osób siedzi nad jeziorem. Jedną z nich jesteś ty."
+
+#. Karta: poprawianie wiralowej dezinformacji większego twórcy.
+msgid "cards.wikipedia_correction.body"
+msgstr "Twórca z 4 mln subów pomylił w wiralowym filmie całą twoją dziedzinę. Masz źródła. Zawsze masz źródła."
+
+msgid "cards.wikipedia_correction.options.a.label"
+msgstr "Nagraj sprostowanie"
+
+msgid "cards.wikipedia_correction.options.a.reaction"
+msgstr "Sprostowanie wrzucone. Najpierw przyszli jego fani, dopiero potem twoje przypisy."
+
+msgid "cards.wikipedia_correction.options.b.label"
+msgstr "Napisz prywatnie"
+
+msgid "cards.wikipedia_correction.options.b.reaction"
+msgstr "Poprawka wysłana. Przypiął cichy komentarz z erratą. Nikt go nie wyciął na klip."
+
+#. Karta: sponsor prosi eksperta o podanie nieprawdziwego uproszczenia.
+msgid "cards.sponsored_inaccuracy.body"
+msgstr "Marka uwielbia twój materiał. Trzeba tylko uprościć jeden szczegół. Po uproszczeniu będzie, technicznie rzecz biorąc, nieprawdą."
+
+msgid "cards.sponsored_inaccuracy.options.a.label"
+msgstr "Przeczytaj skrypt"
+
+msgid "cards.sponsored_inaccuracy.options.a.reaction"
+msgstr "Reklama nagrana. 200 000 osób zna teraz złą wersję, ale przejście do lokowania było płynne."
+
+msgid "cards.sponsored_inaccuracy.options.b.label"
+msgstr "Popraw skrypt"
+
+msgid "cards.sponsored_inaccuracy.options.b.reaction"
+msgstr "Marka przyjęła poprawną wersję. Opiekun kampanii nazwał ją „kompromisem”."
+
+#. Karta: klon AI potrafi produkować content bez twórcy.
+msgid "cards.ai_content_farm.body"
+msgstr "Demo pokazuje twoją twarz i głos generujące 40 filmów tygodniowo bez ciebie. Pierwszy film z tobą już się wyrenderował."
+
+msgid "cards.ai_content_farm.options.a.label"
+msgstr "Wypuść klona"
+
+msgid "cards.ai_content_farm.options.a.reaction"
+msgstr "Bardzo jak Kiler, bardzo, tylko lepszy, bo z importu!"
+
+msgid "cards.ai_content_farm.options.b.label"
+msgstr "Zostań przy ręcznej robocie"
+
+msgid "cards.ai_content_farm.options.b.reaction"
+msgstr "Dostawca odprawiony. Nadal powstaje jeden film — zrobiony przez człowieka i celowo."
+
+#. Karta: wyprzedany merch przyjeżdża z wadą nadruku.
+msgid "cards.merch_drop_qa.body"
+msgstr "Merch przyjechał z logo lekko przesuniętym w bok. Ponowny druk zje ćwierć marży. Wszystkie sztuki są już sprzedane."
+
+msgid "cards.merch_drop_qa.options.a.label"
+msgstr "Wyślij tak, jak jest"
+
+msgid "cards.merch_drop_qa.options.a.reaction"
+msgstr "Oczko mu się odlepiło, temu misiu."
+
+msgid "cards.merch_drop_qa.options.b.label"
+msgstr "Zapłać za nowy druk"
+
+msgid "cards.merch_drop_qa.options.b.reaction"
+msgstr "Dodruk zamówiony. Marża zniknęła. Logo jest dokładnie tam, gdzie powinno."
+
+#. Karta: wykorzystywanie tragedii jako trendu.
+msgid "cards.trend_hijack_tragedy.body"
+msgstr "Tragedia jest dziś największym trendem świata. Montażysta przygotował film „ku przestrodze” z twoją najlepiej klikającą miną na miniaturce."
+
+msgid "cards.trend_hijack_tragedy.options.a.label"
+msgstr "Wrzuć film „ku przestrodze”"
+
+msgid "cards.trend_hijack_tragedy.options.a.reaction"
+msgstr "Film już jest. Największy zasięg miesiąca. Komentarze zostały wyłączone."
+
+msgid "cards.trend_hijack_tragedy.options.b.label"
+msgstr "Tym razem odpuść"
+
+msgid "cards.trend_hijack_tragedy.options.b.reaction"
+msgstr "Nic nie wrzucasz. Dzień później trend znika. Razem z twórcami, którzy na niego wskoczyli."
+
+#. Karta: dawny znajomy ze słabym contentem prosi o współpracę.
+msgid "cards.old_friend_collab.body"
+msgstr "Znajomy sprzed czasów zasięgów proponuje collab. Jego content jest, szczerze, słaby. Wiadomość aż podskakuje z ekscytacji."
+
+msgid "cards.old_friend_collab.options.a.label"
+msgstr "Sprzedaj nostalgię"
+
+msgid "cards.old_friend_collab.options.a.reaction"
+msgstr "Collab wrzucony, jego fragmenty wycięte. Wynik dobry. Pisze: „musimy robić to częściej”."
+
+msgid "cards.old_friend_collab.options.b.label"
+msgstr "Pomóż poza kamerą"
+
+msgid "cards.old_friend_collab.options.b.reaction"
+msgstr "Wieczór spędzasz na poprawianiu jego sprzętu. Żaden film z tego nie powstał."
+
+#. Specjalna karta Pato-Streamera na 5. poziomie.
+msgid "cards.viral_moment.body"
+msgstr "Transmisja łapie kłótnię za kulisami, włączony mikrofon i dokładnie jedno zdanie, które internet może źle zrozumieć. Klipy już krążą."
+
+msgid "cards.viral_moment.options.a.label"
+msgstr "Nie wyłączaj kamer"
+
+msgid "cards.viral_moment.options.a.reaction"
+msgstr "Dodajesz miniaturę, zanim ktokolwiek doda kontekst. Do śniadania kontekst jest już oficjalnie zbędny."
+
+msgid "cards.viral_moment.options.b.label"
+msgstr "Przerwij transmisję"
+
+msgid "cards.viral_moment.options.b.reaction"
+msgstr "Klip przeżywa, ale bez twojej pomocy pozostaje jedynie niezręczny."
+
+#. Specjalna karta Guru-Celebryty na 5. poziomie.
+msgid "cards.brand_deal_of_the_century.body"
+msgstr "Globalna marka wellness chce twojej twarzy, głosu i „spontanicznych opinii” przez następne siedem lat. Prawnicy mówią, że to standard."
+
+msgid "cards.brand_deal_of_the_century.options.a.label"
+msgstr "Podpisz wszystko"
+
+msgid "cards.brand_deal_of_the_century.options.a.reaction"
+msgstr "Umowa zamknięta. Twój poranny rytuał wymaga teraz akceptacji marki."
+
+msgid "cards.brand_deal_of_the_century.options.b.label"
+msgstr "Przytnij kontrakt"
+
+msgid "cards.brand_deal_of_the_century.options.b.reaction"
+msgstr "Połowa pieniędzy, ale osobowość nadal należy do ciebie."
+
+#. Specjalna karta Eksperta Niszowego na 5. poziomie.
+msgid "cards.kult_niszowy.body"
+msgstr "Twoje forum ma już własny słownik, test wstępny i trzy konkurencyjne interpretacje najstarszego poradnika. Chyba niechcący zakładasz szkołę myślenia."
+
+msgid "cards.kult_niszowy.options.a.label"
+msgstr "Zejdź głębiej"
+
+msgid "cards.kult_niszowy.options.a.reaction"
+msgstr "Widownia maleje, rozmowy stają się lepsze, a nikt nie pyta, co znaczą skróty."
+
+msgid "cards.kult_niszowy.options.b.label"
+msgstr "Przetłumacz to ludziom"
+
+msgid "cards.kult_niszowy.options.b.reaction"
+msgstr "Liczby rosną. Połowa komentarzy prosi o skrót wersji skróconej."
+
+#. Specjalna karta Biznesmena Contentu na 5. poziomie.
+msgid "cards.ipo_influencera.body"
+msgstr "Bankierzy chcą wprowadzić twoją markę osobistą na giełdę. W prezentacji autentyczność figuruje jako „skalowalne aktywo”."
+
+msgid "cards.ipo_influencera.options.a.label"
+msgstr "Zadzwoń na otwarcie"
+
+msgid "cards.ipo_influencera.options.a.reaction"
+msgstr "Akcje debiutują. Twoja osobowość raportuje teraz wyniki kwartalne."
+
+msgid "cards.ipo_influencera.options.b.label"
+msgstr "Zostań poza giełdą"
+
+msgid "cards.ipo_influencera.options.b.reaction"
+msgstr "Bez kursu i bez akcjonariuszy. Choć raz wzrost może poczekać do poniedziałku."
+
+#. Karta wyzwania: uruchom Feed Sprint albo pomiń bez kary.
+msgid "cards.feed_sprint_challenge.body"
+msgstr "Algorytm otworzył 24-sekundowe okno dystrybucji. Łap trendy. Unikaj ostrzeżeń."
+
+msgid "cards.feed_sprint_challenge.options.a.label"
+msgstr "Zagraj w Feed Sprint"
+
+msgid "cards.feed_sprint_challenge.options.a.reaction"
+msgstr "Feed Sprint ukończony."
+
+msgid "cards.feed_sprint_challenge.options.b.label"
+msgstr "Pomiń wyzwanie"
+
+msgid "cards.feed_sprint_challenge.options.b.reaction"
+msgstr "Wyzwanie pominięte. Bez kary."
+
+#. Karta wyzwania: moderuj kolejkę komentarzy albo pomiń bez kary.
+msgid "cards.comment_moderation_challenge.body"
+msgstr "Kolejka komentarzy płonie. Zostaw społeczność. Wyrzuć śmieci."
+
+msgid "cards.comment_moderation_challenge.options.a.label"
+msgstr "Moderuj kolejkę"
+
+msgid "cards.comment_moderation_challenge.options.a.reaction"
+msgstr "Zmiana moderatorska skończona."
+
+msgid "cards.comment_moderation_challenge.options.b.label"
+msgstr "Ignoruj kolejkę"
+
+msgid "cards.comment_moderation_challenge.options.b.reaction"
+msgstr "Kolejka zignorowana. Bez kary."
+
+#. Polska karta humorystyczna prezentowana w pierwszej sesji.
+msgid "cards.polish_export_disaster.body"
+msgstr "Perfekcyjny materiał jest gotowy. Montażysta wciska „eksportuj”, a laptop odpowiada dźwiękiem startującego odkurzacza."
+
+msgid "cards.polish_export_disaster.options.a.label"
+msgstr "Publikuj bez kopii"
+
+msgid "cards.polish_export_disaster.options.a.reaction"
+msgstr "No i w pizdu, i wylądował. I cały misterny plan też w pizdu."
+
+msgid "cards.polish_export_disaster.options.b.label"
+msgstr "Najpierw zrób kopię"
+
+msgid "cards.polish_export_disaster.options.b.reaction"
+msgstr "Eksport pada. Kopia wstaje. Tym razem puentą okazuje się kompetencja."
+
+#. Kontrakt sponsorski: kryzys kampanii fast fashion.
+msgid "cards.sponsor_contract_mega_fallout.body"
+msgstr "Pierwszy drop kolekcji farbuje skórę na kolor logo. Sponsor pyta, czy można to nazwać „immersyjnym brandingiem”."
+
+msgid "cards.sponsor_contract_mega_fallout.options.spin_crisis.label"
+msgstr "Odpal narrację kryzysową"
+
+msgid "cards.sponsor_contract_mega_fallout.options.spin_crisis.reaction"
+msgstr "Oświadczenie gotowe. Winny: algorytm, pogoda i klienci, którzy źle trzymali produkt."
+
+msgid "cards.sponsor_contract_mega_fallout.options.show_receipts.label"
+msgstr "Pokaż wyniki testów"
+
+msgid "cards.sponsor_contract_mega_fallout.options.show_receipts.reaction"
+msgstr "Tabela trafia do sieci. Sponsor odkrywa, że transparentność nie była w pakiecie."
+
+msgid "cards.sponsor_contract_indie_fallout.body"
+msgstr "Mała marka nie wysyła zamówień z premiery. Komentarze pytają, czy firma istnieje poza jednym moodboardem."
+
+msgid "cards.sponsor_contract_indie_fallout.options.delivery_drama.label"
+msgstr "Odpal dramę dostawczą"
+
+msgid "cards.sponsor_contract_indie_fallout.options.delivery_drama.reaction"
+msgstr "Live rusza. Paczek nadal nie ma, za to są trzy klipy i ekspert od logistyki."
+
+msgid "cards.sponsor_contract_indie_fallout.options.fix_shipping.label"
+msgstr "Pomóż ogarnąć wysyłkę"
+
+msgid "cards.sponsor_contract_indie_fallout.options.fix_shipping.reaction"
+msgstr "Wieczór schodzi na etykietach i taśmie. Zasięg mniejszy, ale paczki naprawdę ruszają."
+
+msgid "cards.sponsor_contract_finale.body"
+msgstr "Kampania się kończy. Sponsor chce „case study sukcesu”. Internet przygotował już własne."
+
+msgid "cards.sponsor_contract_finale.options.honest_report.label"
+msgstr "Pokaż prawdziwe liczby"
+
+msgid "cards.sponsor_contract_finale.options.honest_report.reaction"
+msgstr "Raport opublikowany. Bez dymu i lusterek. Dział prawny pierwszy raz czyta liczby od lewej."
+
+msgid "cards.sponsor_contract_finale.options.sell_legend.label"
+msgstr "Sprzedaj legendę sukcesu"
+
+msgid "cards.sponsor_contract_finale.options.sell_legend.reaction"
+msgstr "Wykres runął, ale slajd dostał napis REKORD. Sponsor zatwierdził prezentację bez otwierania pliku."
+
+#. Późniejsza konsekwencja uczciwego finału, odblokowana po powrocie offline.
+msgid "cards.sponsor_contract_callback_honest.body"
+msgstr "Tydzień później sponsor cytuje twój uczciwy raport na spotkaniu. Slajd nazywa się RADYKALNA TRANSPARENTNOŚĆ (DŹWIGNIA WZROSTU Q3)."
+
+msgid "cards.sponsor_contract_callback_honest.options.claim_credit.label"
+msgstr "Przypisz sobie zasługę"
+
+msgid "cards.sponsor_contract_callback_honest.options.claim_credit.reaction"
+msgstr "Uczciwość staje się markową metodologią. PDF jest darmowy, warsztat kosztuje więcej niż kampania."
+
+msgid "cards.sponsor_contract_callback_honest.options.send_invoice.label"
+msgstr "Wyślij kolejną fakturę"
+
+msgid "cards.sponsor_contract_callback_honest.options.send_invoice.reaction"
+msgstr "Na fakturze: strategiczny consulting transparentności. Księgowość zatwierdza, zanim dowie się, co to znaczy."
+
+#. Późniejsza konsekwencja legendy sukcesu; opcja A uruchamia logiczny brief.
+msgid "cards.sponsor_contract_callback_legend.body"
+msgstr "Agencja wraca z briefem po kampanii, składanym przez cztery działy. Każde polecenie przeczy następnemu."
+
+msgid "cards.sponsor_contract_callback_legend.options.solve_brief.label"
+msgstr "Rozplącz brief"
+
+msgid "cards.sponsor_contract_callback_legend.options.solve_brief.reaction"
+msgstr "Brief rozbrojony. Ostatni punkt brzmi: „użyj własnego osądu”. Prawny usuwa go jako zbyt ryzykowny."
+
+msgid "cards.sponsor_contract_callback_legend.options.forward_brief.label"
+msgstr "Oddaj to agencji"
+
+msgid "cards.sponsor_contract_callback_legend.options.forward_brief.reaction"
+msgstr "Agencja ustala spotkanie, na którym ustali, kto ma ustalić termin spotkania."
+
+#. Finałowe wypalenie: zakończ erę albo odłóż decyzję. Routing używa id opcji.
+msgid "cards.final_burnout.body"
+msgstr "Sześć miesięcy bez dnia wolnego. Ręce nie przestają drżeć przed kamerą, a widownia myśli, że to nowy format."
+
+msgid "cards.final_burnout.options.accept.label"
+msgstr "Pogódź się z wypaleniem"
+
+msgid "cards.final_burnout.options.accept.reaction"
+msgstr "Dzisiaj puszczamy z dymem całą naszą pieprzoną przeszłość."
+
+msgid "cards.final_burnout.options.defer.label"
+msgstr "Odłóż wypalenie"
+
+msgid "cards.final_burnout.options.defer.reaction"
+msgstr "Jeszcze jeden grind na oparach. Widownia nie dowie się, jak mało brakowało."

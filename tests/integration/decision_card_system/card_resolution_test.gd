@@ -86,14 +86,14 @@ func _new_decision_card_system() -> Node:
 
 
 func _synthetic_card(id: String, resource_deltas: Dictionary = {}, counter_increments: Dictionary = {}, milestone: Variant = null) -> Dictionary:
-	var option_a: Dictionary = {"label": "", "resource_deltas": resource_deltas, "counter_increments": counter_increments}
+	var option_a: Dictionary = {"id": "a", "label": "", "resource_deltas": resource_deltas, "counter_increments": counter_increments}
 	if milestone != null:
 		option_a["milestone_to_set"] = milestone
 	return {
 		"id": id,
 		"trigger_condition": "always",
 		"text": "",
-		"options": [option_a, {"label": "", "resource_deltas": {}, "counter_increments": {}}],
+		"options": [option_a, {"id": "b", "label": "", "resource_deltas": {}, "counter_increments": {}}],
 	}
 
 
@@ -210,6 +210,42 @@ func test_resolve_choice_works_against_a_real_card() -> void:
 	assert_int(dcs.state).is_equal(DecisionCardSystemScript.State.COOLDOWN)
 
 
+func test_skill_challenge_score_zero_grants_configured_minimum_only() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var card: Dictionary = CardContentDatabase.get_card("feed_sprint_challenge")
+	var before_reach: float = ResourceManager.get_resource(&"Reach")
+	dcs.present_next_card(_single_card_pool(card))
+
+	dcs.resolve_choice(0, 0.0)
+
+	assert_float(ResourceManager.get_resource(&"Reach") - before_reach).is_equal_approx(30.0, 0.0001)
+	assert_float(dcs.last_spotlight_reward[&"Reach"]).is_equal_approx(30.0, 0.0001)
+
+
+func test_skill_challenge_perfect_score_grants_configured_maximum_only() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var card: Dictionary = CardContentDatabase.get_card("feed_sprint_challenge")
+	var before_reach: float = ResourceManager.get_resource(&"Reach")
+	dcs.present_next_card(_single_card_pool(card))
+
+	dcs.resolve_choice(0, 1.0)
+
+	assert_float(ResourceManager.get_resource(&"Reach") - before_reach).is_equal_approx(220.0, 0.0001)
+	assert_float(dcs.last_spotlight_reward[&"Reach"]).is_equal_approx(220.0, 0.0001)
+
+
+func test_skill_challenge_skip_grants_nothing_and_writes_no_reward() -> void:
+	var dcs: Node = _new_decision_card_system()
+	var card: Dictionary = CardContentDatabase.get_card("feed_sprint_challenge")
+	var before_reach: float = ResourceManager.get_resource(&"Reach")
+	dcs.present_next_card(_single_card_pool(card))
+
+	dcs.resolve_choice(1)
+
+	assert_float(ResourceManager.get_resource(&"Reach")).is_equal_approx(before_reach, 0.0001)
+	assert_bool(dcs.last_spotlight_reward.is_empty()).is_true()
+
+
 ## Not a numbered AC, but a real regression risk flagged by code review:
 ## resolve_choice() must no-op (not crash) when called while state !=
 ## PRESENTING -- guards against a double-tap on touch input before Card UI
@@ -242,7 +278,7 @@ func test_resolve_choice_is_noop_when_no_card_presented() -> void:
 ## Class Path Core AC-1 (TR-cps-002, ADR-0010 §2): resolving a path-tagged
 ## card through the REAL resolve_choice() must (a) increment the path's
 ## `{path_tag}_choices_count` counter in HistoryFlagManager, (b) emit
-## card_resolved with the correct (card_id, path_tag, option_chosen) payload,
+## card_resolved with the correct (card_id, path_tag, option_id) payload,
 ## and (c) have already incremented the counter BY the time the signal fires
 ## — the ordering contract every card_resolved subscriber may rely on.
 func test_resolve_choice_increments_path_counter_and_emits_tagged_card_resolved() -> void:
@@ -254,8 +290,8 @@ func test_resolve_choice_increments_path_counter_and_emits_tagged_card_resolved(
 
 	var payloads: Array = []
 	var counter_at_emit: Array = [-1]
-	var _on_card_resolved := func(card_id: StringName, path_tag: StringName, option_chosen: StringName) -> void:
-		payloads.append([card_id, path_tag, option_chosen])
+	var _on_card_resolved := func(card_id: StringName, path_tag: StringName, option_id: StringName) -> void:
+		payloads.append([card_id, path_tag, option_id])
 		counter_at_emit[0] = HistoryFlagManager.get_counter(&"pato_streamer_choices_count")
 	dcs.card_resolved.connect(_on_card_resolved)
 
@@ -265,7 +301,7 @@ func test_resolve_choice_increments_path_counter_and_emits_tagged_card_resolved(
 	assert_int(payloads.size()).is_equal(1)
 	assert_that(payloads[0][0]).is_equal(&"test_path_tagged_card")
 	assert_that(payloads[0][1]).is_equal(&"pato_streamer")
-	assert_that(payloads[0][2]).is_equal(&"Risky pick")
+	assert_that(payloads[0][2]).is_equal(&"a")
 	# Counter was already incremented when the signal fired (ADR-0010 §2).
 	assert_int(counter_at_emit[0]).is_equal(_pato_counter_snapshot + 1)
 	assert_int(HistoryFlagManager.get_counter(&"pato_streamer_choices_count")).is_equal(_pato_counter_snapshot + 1)
@@ -280,8 +316,8 @@ func test_resolve_choice_neutral_card_emits_empty_tag_no_counter() -> void:
 	dcs.present_next_card(_single_card_pool(card))
 
 	var payloads: Array = []
-	var _on_card_resolved := func(card_id: StringName, path_tag: StringName, option_chosen: StringName) -> void:
-		payloads.append([card_id, path_tag, option_chosen])
+	var _on_card_resolved := func(card_id: StringName, path_tag: StringName, option_id: StringName) -> void:
+		payloads.append([card_id, path_tag, option_id])
 	dcs.card_resolved.connect(_on_card_resolved)
 
 	dcs.resolve_choice(0)

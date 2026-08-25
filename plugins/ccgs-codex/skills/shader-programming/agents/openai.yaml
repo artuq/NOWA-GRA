@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shader Programming"
+  short_description: "Imported game-development capability: Shader Programming."
+  default_prompt: "Use $shader-programming for this game-development task."

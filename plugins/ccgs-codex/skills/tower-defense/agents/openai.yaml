@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tower Defense"
+  short_description: "Imported game-development capability: Tower Defense."
+  default_prompt: "Use $tower-defense for this game-development task."

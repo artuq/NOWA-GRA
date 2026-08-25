@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Stage Detect"
+  short_description: "Run the CCGS Project Stage Detect workflow in Codex."
+  default_prompt: "Use $project-stage-detect to handle this game-development task."

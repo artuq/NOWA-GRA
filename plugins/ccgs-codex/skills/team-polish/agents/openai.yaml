@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Polish"
+  short_description: "Run the CCGS Team Polish workflow in Codex."
+  default_prompt: "Use $team-polish to handle this game-development task."

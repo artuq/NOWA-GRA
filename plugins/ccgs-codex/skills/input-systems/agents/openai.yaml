@@ -1,0 +1,4 @@
+interface:
+  display_name: "Input Systems"
+  short_description: "Imported game-development capability: Input Systems."
+  default_prompt: "Use $input-systems for this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unreal Enhanced Input"
+  short_description: "Imported game-development capability: Unreal Enhanced Input."
+  default_prompt: "Use $unreal-enhanced-input for this game-development task."

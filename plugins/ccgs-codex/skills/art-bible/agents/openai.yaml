@@ -1,0 +1,4 @@
+interface:
+  display_name: "Art Bible"
+  short_description: "Run the CCGS Art Bible workflow in Codex."
+  default_prompt: "Use $art-bible to handle this game-development task."

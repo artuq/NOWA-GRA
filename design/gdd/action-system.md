@@ -91,7 +91,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 
 > *Specialist not consulted — Lean mode (section is not D/H).*
 
-- **If the player tries to choose an action while `running`**: the action is added to the queue (not started immediately). Queue cap is `QUEUE_CAP` (default 10); when the queue is full, action buttons are disabled with a "Queue full" tooltip. See quick-spec `design/quick-specs/action-queue-auto-repeat-2026-06-30.md` for full queue rules.
+- **If the player tries to choose an action while `running`**: the action is added to the queue (not started immediately). Queue cap is `QUEUE_CAP` (default 10); when the queue is full, live action buttons are disabled with a "Queue full" tooltip while locked previews stay tappable. See quick-spec `design/quick-specs/action-queue-auto-repeat-2026-06-30.md` for full queue rules.
 - **If the queue is suspended** (Decision Card visible OR Morale ≤ Critical): the current action runs to completion, but the next queued action does not auto-start until the suspend condition clears.
 - **If the game is closed mid-`running`**: on return, Offline Progress System must resolve whether the action "completed" during offline time (closed duration ≥ remaining action time) — this is a dependency, not resolved here; flagged as an Open Question for Offline Progress System.
 - **If Morale is 0% (Critical) at resolution**: `Mult(M) = 0.50` applies normally — no special penalty beyond what Resource System's Formula C already defines.
@@ -103,7 +103,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 **Upstream (this system depends on):** Resource System (hard) — writes reward deltas, reads Morale multiplier.
 
 **Downstream (depends on this system):**
-- **Action UI** (hard) — displays the running action's progress bar and disables choice during `running`.
+- **Action UI** (hard) — displays the running action's progress/queue and keeps choices available for queueing until `QUEUE_CAP`.
 - **Onboarding/Tutorial** (hard) — sequences the first plays of these 3 actions before Decision Card System is introduced.
 - **Juice/Feedback System** (hard, Vertical Slice) — provides completion-beat feedback (audio/VFX) when an action resolves.
 - **Offline Progress System** (hard, undesigned) — must simulate this reward table across offline time deltas.
@@ -134,7 +134,8 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 ## UI Requirements
 
 - 3 action buttons, always visible on the main screen (per prototype) — large touch areas (standard `Button` node, not `TouchScreenButton` — per ADR-0007), zero hover-only.
-- During `running`: all 3 buttons disabled (not just visually muted — see Acceptance Criteria), visible progress bar labeled with the active action.
+- During `running`: live action buttons remain available for queueing until `QUEUE_CAP`; at cap they disable with `Queue full`. The progress bar stays labeled with the active action and uses its effective duration captured at start.
+- A queue strip mirrors queued actions and exposes Clear Queue without interrupting the running action.
 - Layout must reserve room for 3 future actions (unlocked at milestones, Vertical Slice) without a screen redesign.
 
 > 📌 **UX Flag — Action System**: In Phase 4 (Pre-Production), run `/ux-design` for the main screen (actions + progress bar). UI stories should cite `design/ux/main-screen.md`, not this GDD.
@@ -145,7 +146,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 
 **State transitions:**
 - **GIVEN** `idle`, **WHEN** the player selects `Nagraj vloga`, **THEN** state → `running`, progress tracks toward 6s.
-- **GIVEN** `running`, **WHEN** elapsed time reaches the action's `duration` (6s/9s/4s), **THEN** state → `resolved`, reward deltas written to Resource System.
+- **GIVEN** `running`, **WHEN** elapsed time reaches the effective duration captured at start (base 6s/9s/4s × active modifiers), **THEN** state → `resolved`, reward deltas written to Resource System.
 - **GIVEN** `resolved`, **WHEN** the reward write completes, **THEN** state → `idle` immediately, no player-visible delay.
 - **GIVEN** `idle` with no action ever selected, **WHEN** rendered, **THEN** no progress bar shown, all 3 choices enabled.
 
@@ -154,6 +155,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 - **GIVEN** queue length = `QUEUE_CAP`, **WHEN** the player selects any action, **THEN** rejected (queue full); UI shows "Queue full" tooltip.
 - **GIVEN** `resolved` → `idle` transition, **WHEN** queue is non-empty AND not suspended, **THEN** `queue.pop_front()` starts immediately → `running`.
 - **GIVEN** `resolved` → `idle`, **WHEN** queue is empty, **THEN** state stays `idle`; no auto-start.
+- **GIVEN** a suspend condition clears while an action is still `running`, **THEN** the queue remains untouched in FIFO order; dequeue waits for the active action to resolve.
 - **GIVEN** an action just returned to `idle` with empty queue, **WHEN** the player immediately selects the same action again, **THEN** accepted with no cooldown.
 
 **Queue suspend rules:**
@@ -180,7 +182,7 @@ This is the only formula this system owns — Cringe/Morale deltas are flat stat
 
 **Not testable against this GDD alone:**
 - App-close mid-`running` — deferred to Offline Progress System, which doesn't exist yet. **BLOCKED pending that GDD.**
-- Full UI disablement styling (beyond interaction-level rejection) — this GDD's UI Requirements section must be written first. **PARTIAL pending UI Requirements.**
+- Queue-cap disablement and queue interaction styling are testable against `action-ui.md` and the queue quick-spec; touch-only explanation for a disabled control remains a future UX refinement beyond the desktop tooltip.
 - Resolution-beat visual/audio feedback — owned by Juice/Feedback System (undesigned) and this GDD's own Visual/Audio section. **BLOCKED pending both.**
 - Rounding rule ("round-half-up") is used in examples but not declared as a named, owned rule anywhere — flag as a **documentation gap** to confirm with engineering before treating these AC as locked regression tests.
 

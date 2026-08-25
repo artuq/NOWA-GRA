@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot 3D Essentials"
+  short_description: "Imported game-development capability: Godot 3D Essentials."
+  default_prompt: "Use $godot-3d-essentials for this game-development task."

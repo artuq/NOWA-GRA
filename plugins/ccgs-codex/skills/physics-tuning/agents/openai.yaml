@@ -1,0 +1,4 @@
+interface:
+  display_name: "Physics Tuning"
+  short_description: "Imported game-development capability: Physics Tuning."
+  default_prompt: "Use $physics-tuning for this game-development task."

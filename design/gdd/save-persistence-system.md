@@ -49,6 +49,11 @@ save_file:
 3. Loading happens **once, at app start** — if no file exists (first session), all systems initialize to defaults (Zasięgi=0, Cringe=0, etc. — per Resource System's Edge Cases "fully fair starting state").
 4. `last_saved_at` is stored as a Unix timestamp (seconds) — consumed directly by Offline Progress System to compute `Δt`.
 5. **Mobile lifecycle flush**: if a debounced save is pending (timer running, not yet fired) when the OS signals the app is going to background/being suspended, the save fires immediately, bypassing the remaining debounce window — never lose progress to a backgrounding event, which is routine on mobile (app switching, incoming calls, lock screen).
+6. **Maximum dirty age (2026-08-05):** the first unsaved mutation starts a
+   separate 10-second one-shot deadline. Further mutations restart only the
+   two-second trailing debounce. Whichever schedule saves first cancels both,
+   so continuous one-second live-resource ticks cannot starve persistence or
+   cause a duplicate write.
 
 ### States and Transitions
 
@@ -70,7 +75,7 @@ save_file:
 
 > *Specialist consulted: `systems-designer` — Section D is HIGH-risk, consulted even in Lean mode.*
 
-No formulas required. This system has no probability, curve, or balance math — its complexity lives in save schema, state transitions, and write timing policy (see Detailed Design and Tuning Knobs). The only numeric parameter is `save_debounce_interval_sec`, documented under Tuning Knobs.
+No formulas required. This system has no probability, curve, or balance math — its complexity lives in save schema, state transitions, and write timing policy (see Detailed Design and Tuning Knobs). Its numeric timing parameters are `save_debounce_interval_sec` and `max_dirty_age_sec`.
 
 ## Edge Cases
 
@@ -101,6 +106,7 @@ No formulas required. This system has no probability, curve, or balance math —
 | Knob | Start | Safe Range | What Breaks Outside It |
 |---|---|---|---|
 | `save_debounce_interval_sec` | 2 | 1–5 | Too low: defeats the purpose of coalescing near-simultaneous triggers. Too high: reintroduces real data-loss risk if the app is killed mid-session, conflicting with the Player Fantasy goal ("my progress is safe") |
+| `max_dirty_age_sec` | 10 | 5–30 | Too low: excessive full-snapshot writes during continuous play. Too high: larger progress-loss window when one-second ambient changes never let the trailing edge settle. |
 | `schema_version` | 1 | — | Not a tunable in the traditional sense — increment only when the save schema changes; never decrement |
 
 **Knob interaction:** none — this system's two knobs are independent of each other and of other GDDs' tuning knobs.
@@ -129,6 +135,9 @@ None — this system has no screen and is never directly surfaced to the player 
 - **GIVEN** multiple triggers within one debounce window leave peer systems in different states, **WHEN** the trailing-edge save executes, **THEN** the written file reflects the state at the *last* trigger, not an earlier one.
 - **GIVEN** the debounce timer is at 1.9s, **WHEN** a new trigger fires at that moment, **THEN** the timer resets to 0, save fires 2 full seconds after this newest event.
 - **GIVEN** `ready` with no triggers, **WHEN** any amount of time passes, **THEN** no write occurs, state remains `ready`.
+- **GIVEN** mutations continue at least once per second, **WHEN** the trailing
+  debounce keeps restarting, **THEN** exactly one save fires no later than 10
+  seconds after the first dirty event and cancels the pending trailing write.
 
 **Save/load round-trip correctness:**
 - **GIVEN** a specific resource snapshot, **WHEN** saved then reloaded after restart, **THEN** values match exactly.
@@ -145,7 +154,7 @@ None — this system has no screen and is never directly surfaced to the player 
 - **GIVEN** a save write completes its rename step, **WHEN** inspected, **THEN** the file reflects the full new snapshot, no remnant of the previous save.
 - **GIVEN** a `schema_version` mismatch in an otherwise valid file, **WHEN** load is attempted, **THEN** discarded, defaults initialize, `ready` reached, no partial migration attempted.
 - **GIVEN** a completed save operation, **WHEN** the app restarts, **THEN** only the final renamed file is read — any stray temp file from an interrupted prior operation is never loaded.
-- **GIVEN** a debounced save is pending, **WHEN** the OS signals backgrounding/suspension, **THEN** the save fires immediately, bypassing the remaining debounce window.
+- **GIVEN** either save Timer is pending, **WHEN** the OS signals backgrounding/suspension, **THEN** the save fires immediately and cancels both schedules.
 
 **Not testable against this GDD alone:**
 - Offline progress reconciliation (what happens between `last_saved_at` and next load) — depends on undesigned Offline Progress System.

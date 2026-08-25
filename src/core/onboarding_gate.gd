@@ -27,6 +27,15 @@ enum Phase { PURE_ACTION, FIRST_CARD_PENDING, NORMAL }
 
 var phase: Phase = Phase.PURE_ACTION
 
+## Persisted one-shot showcase flag. Missing on older saves means the player
+## has not seen the newly introduced Skill Challenge tutorial yet.
+var _skill_challenge_intro_seen: bool = false
+var _seen_skill_challenges: Dictionary[StringName, bool] = {}
+## One-time first-session showcase progress. Unlike `_seen_skill_challenges`,
+## this includes ordinary cards deliberately featured by onboarding (the
+## guaranteed Sponsor deal and Polish-humour card).
+var _seen_showcase_cards: Dictionary[StringName, bool] = {}
+
 ## Set semantics (Dictionary-as-set, the established project idiom -- see
 ## HistoryFlagManager._milestones): StringName action_id -> true. Tracks
 ## DISTINCT types seen, never a count -- the variety gate checks set size,
@@ -99,6 +108,39 @@ func is_card_suppressed() -> bool:
 	return phase == Phase.PURE_ACTION
 
 
+func should_show_skill_challenge_intro() -> bool:
+	return not _skill_challenge_intro_seen
+
+
+func has_seen_skill_challenge(card_id: StringName) -> bool:
+	return _seen_skill_challenges.has(card_id)
+
+
+func has_seen_showcase_card(card_id: StringName) -> bool:
+	return _seen_showcase_cards.has(card_id)
+
+
+func has_started_card_showcase() -> bool:
+	return not _seen_showcase_cards.is_empty()
+
+
+func mark_showcase_card_seen(card_id: StringName) -> void:
+	if card_id == &"" or _seen_showcase_cards.has(card_id):
+		return
+	_seen_showcase_cards[card_id] = true
+	SaveSystem.mark_dirty()
+
+
+func mark_skill_challenge_intro_seen(card_id: StringName = &"feed_sprint_challenge") -> void:
+	if card_id == &"" or _seen_skill_challenges.has(card_id):
+		return
+	_seen_skill_challenges[card_id] = true
+	_seen_showcase_cards[card_id] = true
+	if card_id == &"feed_sprint_challenge":
+		_skill_challenge_intro_seen = true
+	SaveSystem.mark_dirty()
+
+
 ## Returns this module's persisted state, per the established sibling
 ## convention (ResourceManager.serialize_state(), HistoryFlagManager.
 ## serialize_state()) -- plain String keys/values only (JSON-serializable;
@@ -110,9 +152,18 @@ func serialize_state() -> Dictionary:
 	var types: Array[String] = []
 	for key: StringName in _completed_types:
 		types.append(String(key))
+	var seen_challenges: Array[String] = []
+	for card_id: StringName in _seen_skill_challenges:
+		seen_challenges.append(String(card_id))
+	var seen_showcase_cards: Array[String] = []
+	for card_id: StringName in _seen_showcase_cards:
+		seen_showcase_cards.append(String(card_id))
 	return {
 		"phase": phase,
 		"completed_types": types,
+		"skill_challenge_intro_seen": _skill_challenge_intro_seen,
+		"seen_skill_challenges": seen_challenges,
+		"seen_showcase_cards": seen_showcase_cards,
 	}
 
 
@@ -135,10 +186,28 @@ func serialize_state() -> Dictionary:
 ##   OnboardingGate.restore_state(data.get("onboarding", {}))
 func restore_state(data: Dictionary) -> void:
 	if data.is_empty():
+		_skill_challenge_intro_seen = false
+		_seen_skill_challenges.clear()
+		_seen_showcase_cards.clear()
 		phase = Phase.FIRST_CARD_PENDING
 		_completed_types.clear()
 		DecisionCardSystem.call_deferred(&"force_cooldown_zero")
 		return
+	_skill_challenge_intro_seen = bool(data.get("skill_challenge_intro_seen", false))
+	_seen_skill_challenges.clear()
+	for card_id: String in data.get("seen_skill_challenges", []):
+		_seen_skill_challenges[StringName(card_id)] = true
+	_seen_showcase_cards.clear()
+	for card_id: String in data.get("seen_showcase_cards", []):
+		_seen_showcase_cards[StringName(card_id)] = true
+	# Older saves tracked only minigames. Preserve those discoveries while
+	# allowing the newly added Sponsor/humour showcase cards to appear once.
+	for card_id: StringName in _seen_skill_challenges:
+		_seen_showcase_cards[card_id] = true
+	# Migration from the first one-boolean prototype schema.
+	if _skill_challenge_intro_seen:
+		_seen_skill_challenges[&"feed_sprint_challenge"] = true
+		_seen_showcase_cards[&"feed_sprint_challenge"] = true
 	# `as Phase` performs no range validation -- a corrupted/hand-edited save
 	# with an out-of-enum value would silently fall through every match arm as
 	# a no-op (code-review note, 2026-06-29). Validate against the enum's real

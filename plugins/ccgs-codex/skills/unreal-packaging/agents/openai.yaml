@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unreal Packaging"
+  short_description: "Imported game-development capability: Unreal Packaging."
+  default_prompt: "Use $unreal-packaging for this game-development task."

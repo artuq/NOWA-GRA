@@ -2,14 +2,14 @@
 
 > **Status**: In Design
 > **Author**: user + ux-designer
-> **Last Updated**: 2026-06-20
+> **Last Updated**: 2026-07-22
 > **Template**: Interaction Pattern Library
 
 ---
 
 ## Overview
 
-This library catalogs the touch-interaction patterns used in "Król Cringe'u," extracted from the 3 GDDs with UI Requirements sections (Action UI, Card UI, Offline Report Screen). The game is touch-only on Android — every pattern assumes large touch areas and zero hover-only interactions, per `technical-preferences.md`. Goal: new screens (Vertical Slice+) reference these patterns by name rather than reinventing them.
+This library catalogs the touch-interaction patterns used in "Król Cringe'u," originally extracted from the 3 GDDs with UI Requirements sections (Action UI, Card UI, Offline Report Screen), and extended by later `/ux-design` sessions (Meta-Bonus Visibility). The game is touch-first (Android + Web with mouse-emulated touch) — every pattern assumes large touch areas and zero hover-only interactions, per `technical-preferences.md`. Goal: new screens (Vertical Slice+) reference these patterns by name rather than reinventing them.
 
 ---
 
@@ -24,6 +24,8 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," e
 | Headline Count-Up Number | Feedback | Offline Report Screen |
 | Locked/Muted Slot | Data Display | Action UI |
 | Tap-Anywhere-or-Button Dismiss | Input | Offline Report Screen |
+| Event-Driven Progress-to-Cap Bar | Feedback | Meta-Bonus Visibility |
+| Disabled-State Tooltip | Feedback | Action System, Class Path System, Wypalenie Card Modal |
 
 ---
 
@@ -61,6 +63,8 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," e
 
 **When to Use**: Any bounded-duration wait the player is meant to perceive as progressing (reinforces the select-and-wait loop's core feel).
 **When NOT to Use**: Indeterminate-duration waits — use a different indicator (spinner) since a progress bar implies a known endpoint.
+
+**Descending variant** (added 2026-07-22, `/ux-review` finding — Burnout Warning HUD Indicator): the same per-frame update discipline applies to real-time countdowns, just inverted — `fill_ratio = clamp(seconds_remaining / window, 0, 1)`, shrinking rather than filling. Same neutral-track rule, same "never bar alone" pairing with text. Used in: Burnout Warning HUD Indicator.
 
 ---
 
@@ -150,6 +154,41 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," e
 
 ---
 
+### Event-Driven Progress-to-Cap Bar
+
+**Category**: Feedback
+**Used In**: Meta-Bonus Visibility
+
+**Description**: A progress bar showing how close a permanent value is to its lifetime ceiling. Unlike Per-Frame Progress Bar, it does not update continuously against elapsed time — it recomputes only when the underlying value changes (a grant event), then holds static until the next change.
+
+**Specification**:
+- `fill_ratio = clamp(current_value / cap_value, 0, 1)` — recomputed on grant/update events only, never per-frame
+- Always paired with the numeric current value as text — the bar alone never carries the information (accessibility, no-color-alone rule)
+- At `fill_ratio == 1.0` (capped), pairs with an explicit textual/iconic "MAX" indicator, not just a visually full bar — a full bar and a capped bar must be distinguishable without inferring from position alone
+
+**When to Use**: Any permanent, slowly-accumulating value with a known ceiling that the player checks periodically, not something they watch tick up in real time.
+**When NOT to Use**: Time-bounded waits with a known duration — use Per-Frame Progress Bar instead, which implies "this is currently running," not "this is where you stand."
+
+---
+
+### Disabled-State Tooltip
+
+**Category**: Feedback
+**Used In**: Action System (Queue full), Class Path System (disabled Invest control), Wypalenie Card Modal (Choice B unavailable)
+
+**Description**: A short text explanation shown on tap of a visibly-present but non-interactable element, explaining *why* it's disabled. Formalizes a pattern already used three times independently before being cataloged here.
+
+**Specification**:
+- Triggered by tap on the disabled element itself (not a separate info icon) — the element remains tappable for this purpose even though its primary action is blocked
+- Disabled state itself is communicated by dimming/greying (never color alone — pairs with the disabled visual treatment, not a replacement for it)
+- Tooltip text is short, states the specific reason (not a generic "unavailable")
+- Dismissed by tapping elsewhere or automatically after a short duration (exact timing not yet pinned — flag as gap if a screen needs it before a future revision sets one)
+
+**When to Use**: Any element that is meaningfully present (per this project's "never hide, show muted" convention — see Locked/Muted Slot) but currently non-actionable for a reason the player would reasonably want to know.
+**When NOT to Use**: Elements that are simply not yet unlocked with no interesting reason beyond "not yet" — use Locked/Muted Slot's generic icon instead, don't invent a tooltip explanation for the obvious.
+
+---
+
 ## Gaps & Patterns Needed
 
 - **Toast/banner pattern** (passive, non-blocking notification) — needed once a system requires a notification that doesn't block play; flagged above as the right tool versus Full-Screen Blocking Modal for low-urgency notices.
@@ -160,5 +199,4 @@ This library catalogs the touch-interaction patterns used in "Król Cringe'u," e
 
 ## Open Questions
 
-- **Accessibility tier not yet defined** — no `design/accessibility-requirements.md` exists. Consider WCAG-AA as a baseline. *Owner: this skill, next file to create. Target: before `/gate-check pre-production`.*
 - **Exact touch-target sizing** — patterns reference "44×44dp Android minimum" as platform guidance, but no per-screen spec has pinned final dimensions yet. *Owner: per-screen `/ux-design` sessions. Target: Pre-Production.*

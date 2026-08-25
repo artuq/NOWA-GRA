@@ -1,0 +1,1 @@
+- [Resource System Sprint 1 (Formulas A-E) architecture](resource-system-sprint1.md) — coherent pure-formula + inline-clamp foundation, approved 2026-06-23

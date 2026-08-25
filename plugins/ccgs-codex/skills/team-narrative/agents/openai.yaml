@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Narrative"
+  short_description: "Run the CCGS Team Narrative workflow in Codex."
+  default_prompt: "Use $team-narrative to handle this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unreal Blueprints"
+  short_description: "Imported game-development capability: Unreal Blueprints."
+  default_prompt: "Use $unreal-blueprints for this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Csharp"
+  short_description: "Imported game-development capability: Godot Csharp."
+  default_prompt: "Use $godot-csharp for this game-development task."

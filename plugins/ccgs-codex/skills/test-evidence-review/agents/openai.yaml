@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Evidence Review"
+  short_description: "Run the CCGS Test Evidence Review workflow in Codex."
+  default_prompt: "Use $test-evidence-review to handle this game-development task."

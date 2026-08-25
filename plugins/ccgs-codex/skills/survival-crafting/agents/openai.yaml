@@ -1,0 +1,4 @@
+interface:
+  display_name: "Survival Crafting"
+  short_description: "Imported game-development capability: Survival Crafting."
+  default_prompt: "Use $survival-crafting for this game-development task."

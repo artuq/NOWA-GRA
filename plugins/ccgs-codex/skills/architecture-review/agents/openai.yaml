@@ -1,0 +1,4 @@
+interface:
+  display_name: "Architecture Review"
+  short_description: "Run the CCGS Architecture Review workflow in Codex."
+  default_prompt: "Use $architecture-review to handle this game-development task."

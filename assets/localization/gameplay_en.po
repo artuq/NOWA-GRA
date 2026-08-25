@@ -1,0 +1,104 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: King of Cringe\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Action names. Keys include the immutable action_id; labels never drive logic.
+msgid "ACTION_NAGRAJ_VLOGA_LABEL"
+msgstr "Record a Vlog"
+
+msgid "ACTION_ZROB_DRAME_LABEL"
+msgstr "Make Drama"
+
+msgid "ACTION_PRZEPROSINY_LABEL"
+msgstr "Apologize Online"
+
+msgid "ACTION_NAGRAJ_KOLABA_LABEL"
+msgstr "Record a Collab"
+
+msgid "ACTION_UDZIEL_WYWIADU_LABEL"
+msgstr "Give an Interview"
+
+msgid "ACTION_WYDAJ_KURS_LABEL"
+msgstr "Launch a Course"
+
+# Action grid and running overlay.
+msgid "ACTION_STATS_FORMAT"
+msgstr "%ds — %sR, %sC, %sM"
+
+msgid "ACTION_REMAINING_SECONDS"
+msgstr "%ds"
+
+msgid "ACTION_UNLOCK_STORY_MOMENT"
+msgstr "Reach a story moment"
+
+msgid "ACTION_UNLOCK_TOAST_STORY"
+msgstr "Unlock at a key story moment"
+
+msgid "ACTION_QUEUE_CLEAR"
+msgstr "Clear queue"
+
+msgid "ACTION_QUEUE_FULL"
+msgstr "Queue full"
+
+msgid "ACTION_UNLOCK_CHOICE_COUNT_ONE"
+msgid_plural "ACTION_UNLOCK_CHOICE_COUNT_MANY"
+msgstr[0] "{current} / {required} choice"
+msgstr[1] "{current} / {required} choices"
+
+msgid "ACTION_UNLOCK_REMAINING_ONE"
+msgid_plural "ACTION_UNLOCK_REMAINING_MANY"
+msgstr[0] "Make {count} more choice to unlock"
+msgstr[1] "Make {count} more choices to unlock"
+
+# Offline report static and dynamic copy.
+msgid "UI_OFFLINE_HEADLINE"
+msgstr "Your empire grinded without you."
+
+msgid "UI_OFFLINE_REACH_EARNED"
+msgstr "Reach earned while you were gone"
+
+msgid "UI_OFFLINE_CAP_NOTE"
+msgstr "Your break was longer than 24h — only the first 24h counted."
+
+msgid "UI_OFFLINE_CONTINUE"
+msgstr "Continue!"
+
+msgid "OFFLINE_HATERS_DELTA"
+msgstr "Haters: %+d"
+
+msgid "OFFLINE_MORALE"
+msgstr "Morale: %s"
+
+msgid "OFFLINE_MORALE_CHANGED"
+msgstr "Morale: %s (was %s)"
+
+msgid "OFFLINE_AWAY_DURATION"
+msgstr "You were away for %s."
+
+msgid "OFFLINE_DURATION_MINUTE_ONE"
+msgid_plural "OFFLINE_DURATION_MINUTE_MANY"
+msgstr[0] "{count} minute"
+msgstr[1] "{count} minutes"
+
+msgid "OFFLINE_DURATION_HOUR_ONE"
+msgid_plural "OFFLINE_DURATION_HOUR_MANY"
+msgstr[0] "{count} hour"
+msgstr[1] "{count} hours"
+
+# Compact Sponsor Contract HUD indicator.
+msgid "SPONSOR_CONTRACT_TITLE_STAGE"
+msgstr "SPONSOR CONTRACT • STAGE %d/%d"
+
+msgid "SPONSOR_CONTRACT_CAMPAIGN_PROGRESS"
+msgstr "Campaign actions: %d / %d"
+
+msgid "SPONSOR_CONTRACT_RECOVERY_PROGRESS"
+msgstr "Recovery actions: %d / %d"
+
+msgid "SPONSOR_CONTRACT_DECISION_READY"
+msgstr "Decision ready — next card"

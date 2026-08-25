@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prototype Fast"
+  short_description: "Imported game-development capability: Prototype Fast."
+  default_prompt: "Use $prototype-fast for this game-development task."

@@ -14,14 +14,18 @@ extends GdUnitTestSuite
 const ResourceHudScript: GDScript = preload("res://src/ui/resource_hud.gd")
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
+var _locale_snapshot: String
 
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_resource_snapshot[&"Reach"] = ResourceManager.get_resource(&"Reach")
 	_resource_snapshot[&"Cringe"] = ResourceManager.get_resource(&"Cringe")
 
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	var restore: Dictionary[StringName, float] = {}
 	for key: StringName in _resource_snapshot:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)
@@ -203,3 +207,32 @@ func test_flash_uses_self_modulate_not_modulate() -> void:
 	assert_that(label.modulate).is_equal(Color.WHITE)
 	assert_that(label.self_modulate).is_equal(Color.WHITE)
 	await get_tree().create_timer(0.9).timeout
+
+
+## Package 2 contract: ambient resource simulation still refreshes the HUD,
+## but its one-second cadence must not create a permanent stream of pop,
+## count-up, or flash juice. apply_ambient_delta() exposes its source only for
+## the synchronous resource_changed notification; ResourceHud consumes that
+## source distinction without owning any gameplay state.
+func test_ambient_delta_updates_label_without_juice() -> void:
+	var hud: Control = _hud()
+	var pill: Control = hud.find_child("ReachPill", true, false) as Control
+	var label: Label = hud.find_child("ReachValueLabel", true, false) as Label
+	var expected_value: float = ResourceManager.get_resource(&"Reach") + 1.25
+	var observed_ambient_flags: Array[bool] = []
+	var observe_source := func(name: StringName, _new_value: float, _old_value: float) -> void:
+		if name == &"Reach":
+			observed_ambient_flags.append(bool(ResourceManager.call("is_applying_ambient_delta")))
+	ResourceManager.resource_changed.connect(observe_source)
+
+	ResourceManager.call("apply_ambient_delta", {&"Reach": 1.25})
+	ResourceManager.resource_changed.disconnect(observe_source)
+	await get_tree().create_timer(0.05).timeout
+
+	assert_float(ResourceManager.get_resource(&"Reach")).is_equal_approx(expected_value, 0.0001)
+	assert_str(label.text).is_equal("Reach: %s" % ActionUIFormatting.format_number(expected_value))
+	assert_array(observed_ambient_flags).contains_exactly([true])
+	assert_bool(bool(ResourceManager.call("is_applying_ambient_delta"))).is_false()
+	assert_that(pill.scale).is_equal(Vector2.ONE)
+	assert_bool(hud._countup_tweens.has(&"Reach")).is_false()
+	assert_bool(hud._flash_tweens.has(&"Reach")).is_false()

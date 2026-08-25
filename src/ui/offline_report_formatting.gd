@@ -12,7 +12,10 @@
 ##
 ## Performance: O(1) per call.
 ##
-## Usage example:
+## Duration nouns resolve through TranslationServer's plural table, including
+## Polish singular/few/many forms. No gameplay value depends on the result.
+##
+## Usage example (English locale):
 ##   OfflineReportFormatting.format_duration(85620)  # -> "23 hours"
 class_name OfflineReportFormatting
 extends RefCounted
@@ -40,6 +43,17 @@ const SECONDS_PER_MINUTE: int = 60
 static func format_duration(elapsed_seconds: int) -> String:
 	if elapsed_seconds >= SECONDS_PER_HOUR:
 		var hours: int = elapsed_seconds / SECONDS_PER_HOUR
-		return "%d %s" % [hours, "hour" if hours == 1 else "hours"]
+		return _duration_unit(
+			&"OFFLINE_DURATION_HOUR_ONE", &"OFFLINE_DURATION_HOUR_MANY", hours
+		)
 	var minutes: int = elapsed_seconds / SECONDS_PER_MINUTE
-	return "%d %s" % [minutes, "minute" if minutes == 1 else "minutes"]
+	return _duration_unit(
+		&"OFFLINE_DURATION_MINUTE_ONE", &"OFFLINE_DURATION_MINUTE_MANY", minutes
+	)
+
+
+static func _duration_unit(singular_key: StringName, plural_key: StringName, count: int) -> String:
+	var template: String = TranslationServer.translate_plural(
+		singular_key, plural_key, count
+	)
+	return template.replace("{count}", str(count))

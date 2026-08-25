@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Optimization"
+  short_description: "Imported game-development capability: Performance Optimization."
+  default_prompt: "Use $performance-optimization for this game-development task."

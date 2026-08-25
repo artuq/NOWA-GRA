@@ -16,7 +16,7 @@ resources:
     display_name_pl: Zasięgi
     type: primary_currency
     source: design/gdd/resource-system.md
-    referenced_by: [design/gdd/card-content-database.md]
+    referenced_by: [design/gdd/card-content-database.md, design/gdd/class-path-system.md, design/gdd/prestige-checkpoint-system.md]
 
   - name: Cringe
     type: risk_buffer
@@ -102,6 +102,26 @@ cards:
     type: neutral_card
     source: design/gdd/card-content-database.md
     referenced_by: []
+  - name: thousand_true_fans
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- ekspert_niszowy path_tag, closes the zero-reachable-cards gap for this path below Tier 5"
+    source: src/core/card_content_database.gd
+    referenced_by: []
+  - name: deep_dive_or_trend
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- ekspert_niszowy path_tag"
+    source: src/core/card_content_database.gd
+    referenced_by: []
+  - name: engagement_farming
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- biznesmen_contentu path_tag, closes the zero-reachable-cards gap for this path below Tier 5"
+    source: src/core/card_content_database.gd
+    referenced_by: []
+  - name: quarterly_content_review
+    type: risky_safe_card
+    note: "Card wave 2 (Sprint 12, 12-6) -- biznesmen_contentu path_tag"
+    source: src/core/card_content_database.gd
+    referenced_by: []
 
 counters:
   - name: risky_choices_count
@@ -184,7 +204,7 @@ formulas:
     variables: ["Δt_seconds", Cringe_fixed, H0, M0]
     output_range: "{final_H, final_M, total_Z_gained, capped}"
     source: design/gdd/offline-progress-system.md
-    referenced_by: []
+    referenced_by: [design/gdd/offline-report-screen.md, design/gdd/prestige-checkpoint-system.md, design/gdd/team-staff-management.md]
 
   - name: magnitude
     expression: "magnitude(deltas) = clamp(max over r in deltas of contribution(r), 0.0, 1.0); contribution(r) = |delta_r|/norm_ref(r) for bounded resources, log(1+|delta_r|)/log(1+Z_norm_ref) for unbounded"
@@ -199,6 +219,162 @@ formulas:
     output_range: "[1.5, 2.5] seconds"
     source: design/gdd/juice-feedback-system.md
     referenced_by: []
+
+  - name: card_contribution
+    expression: "card_contribution[path] = min(choice_count[path] * CARD_AFFILIATION_PER_CHOICE, CARD_CONTRIBUTION_MAX)"
+    variables: [choice_count, CARD_AFFILIATION_PER_CHOICE, CARD_CONTRIBUTION_MAX]
+    output_range: "[0.0, CARD_CONTRIBUTION_MAX] (default [0.0, 60.0])"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: investment_contribution
+    expression: "investment_contribution[path] = resource_spent[path] * INVESTMENT_AFFILIATION_RATE[path]"
+    variables: [resource_spent, INVESTMENT_AFFILIATION_RATE]
+    output_range: "[0.0, investment_cap[path]]; over-cap spends are rejected without deduction"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: affiliation
+    expression: "investment_cap[path] = min(100 - card_contribution[path], 20 + card_contribution[path]); affiliation[path] = clamp(card_contribution[path] + min(investment_contribution[path], investment_cap[path]), 0, 100)"
+    variables: [card_contribution, investment_contribution, investment_cap]
+    output_range: "[0.0, 100.0]"
+    source: design/gdd/class-path-system.md
+    referenced_by: [design/gdd/prestige-checkpoint-system.md, design/gdd/team-staff-management.md]
+
+  - name: class_path_tier
+    expression: "tier[path] = max({t in {0..5} | affiliation[path] >= TIER_THRESHOLDS[t]})"
+    variables: [affiliation, TIER_THRESHOLDS]
+    output_range: "[0, 5] integer"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: class_path_active_resolution
+    expression: "active_path = argmax affiliation among Tier1+ paths if lead over 2nd-place >= PATH_AFFILIATION_TIE_BREAK_MARGIN, else ambiguous (null)"
+    variables: [tier, affiliation, PATH_AFFILIATION_TIE_BREAK_MARGIN]
+    output_range: "{path_id, null}"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: meta_bonus_grant_magnitude
+    expression: "raw_increment[type] = BASE_INCREMENT[type] * tier_factor(tier_at_burnout) * (combined_meta_multiplier)^META_CHALLENGE_SCALING_EXPONENT * first_burnout_factor; bonus_increment = min(raw_increment, FIRST_BURNOUT_GRANT_CAP_FRACTION * META_BONUS_MAX[type]) if first grant else raw_increment"
+    variables: [type, tier_factor, tier_at_burnout, combined_meta_multiplier, BASE_INCREMENT, META_CHALLENGE_SCALING_EXPONENT, first_burnout_factor, FIRST_BURNOUT_GRANT_CAP_FRACTION]
+    output_range: "> 0.0, unbounded pre-cap on raw_increment; first-ever grant per type additionally ceilinged at FIRST_BURNOUT_GRANT_CAP_FRACTION * META_BONUS_MAX[type]"
+    note: "Revised 2026-07-13 per /design-review (2 rounds) — original pure tier_at_burnout scaling penalized path-switching (~5:1 vs mastery) and could overshoot a type's lifetime cap by up to 2.42x on a first-ever grant. tier_factor(tier)=(TIER_FLAT_BASE+tier)*5/(TIER_FLAT_BASE+5), tier_factor(5)=5.0 always (unchanged from original)."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_bonus_variety_completionist
+    expression: "variety_grant[type] = BASE_INCREMENT[type] * VARIETY_BONUS_MULT for all 4 types simultaneously, once per save, when the 4th type first goes nonzero"
+    variables: [BASE_INCREMENT, VARIETY_BONUS_MULT]
+    output_range: "> 0.0 per type, applied via meta_bonus_running_total's normal cap logic"
+    note: "New 2026-07-13 /design-review re-review — one-time additive lever rewarding trying all 4 Class Paths, independent of tier_factor's mastery-favoring math"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_bonus_running_total
+    expression: "META_BONUS_total[type] = min(META_BONUS_total_prev[type] + bonus_increment[type], META_BONUS_MAX[type])"
+    variables: [META_BONUS_total_prev, bonus_increment, META_BONUS_MAX]
+    output_range: "[0.0, META_BONUS_MAX[type]], monotonically non-decreasing across game lifetime"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_reach_final_reward
+    expression: "final_reach(action_id) = base_reach(action_id) * Mult(M) * class_path_multiplier(action_id) * challenge_modifier(action_id) * (1 + META_REACH_MULT_total)"
+    variables: [base_reach, "Mult(M)", class_path_multiplier, challenge_modifier, META_REACH_MULT_total]
+    output_range: "[0, unbounded in principle, practically bounded by each factor's cap]"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: meta_haters_resist
+    expression: "H_rate_final(C) = H_rate(C) * (1 - META_HATERS_RESIST_total)"
+    variables: ["H_rate(C)", META_HATERS_RESIST_total]
+    output_range: "[0.60 * H_rate(C), H_rate(C)] — applies online AND offline (locked scope decision)"
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: staff_multiplier
+    expression: "staff_multiplier(type, n) = 1.0 + (MAX_MULTIPLIER[type] - 1.0) * [n / (n + STAFF_HALF_POINT[type])]"
+    variables: [type, n, MAX_MULTIPLIER, STAFF_HALF_POINT]
+    output_range: "[1.0, MAX_MULTIPLIER[type]) — asymptotic, never reaches cap for any finite n"
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: hire_cost
+    expression: "hire_cost(type, n) = HIRE_BASE_COST[type] * HIRE_COST_GROWTH[type]^n"
+    variables: [type, n, HIRE_BASE_COST, HIRE_COST_GROWTH]
+    output_range: "[HIRE_BASE_COST[type], unbounded) — deliberately uncapped, the sink itself"
+    source: design/gdd/team-staff-management.md
+    referenced_by: [design/gdd/prestige-checkpoint-system.md]
+
+  - name: h_rate_final_with_staff
+    expression: "H_rate_final = H_rate(C) * staff_multiplier(troll, n) * (1 - META_HATERS_RESIST_total)"
+    variables: ["H_rate(C)", "staff_multiplier(troll, n)", META_HATERS_RESIST_total]
+    output_range: "extends meta_haters_resist (above) with Troll's multiplicative factor"
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+meta_bonus_types:
+  - name: META_REACH_MULT
+    active_path: pato_streamer
+    effect: "permanent multiplier on active-play Reach income"
+    cap: 0.50
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: META_SPONSOR_MULT
+    active_path: guru_celebryta
+    effect: "permanent multiplier on Sponsor income"
+    cap: 0.50
+    note: "Lowered from 0.60 (2026-07-13 /design-review) — economy review flagged a permanent never-revocable bonus into a zero-sink resource as riskier than the cap alone can fix; capped at parity with META_REACH_MULT as a Vertical-Slice-scoped mitigation, not a full fix. See prestige-checkpoint-system.md's locked 'Zero-sink Sponsor scope decision' — RESOLVED 2026-07-22 by team-staff-management.md's hire_cost() sink; cap re-examined and left unchanged."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: [design/gdd/team-staff-management.md]
+
+  - name: META_HATERS_RESIST
+    active_path: ekspert_niszowy
+    effect: "permanent reduction on Haters growth rate, online and offline"
+    cap: 0.40
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: [design/gdd/team-staff-management.md]
+
+  - name: META_SPONSOR_FLOOR
+    active_path: biznesmen_contentu
+    effect: "permanent minimum Sponsor income floor at era start (overrides default reset of 0)"
+    cap: 100.0
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: [design/gdd/team-staff-management.md]
+
+class_paths:
+  - name: pato_streamer
+    display_name_pl: "Pato-Streamer Hazardowy"
+    investment_resource: Cringe
+    investment_cost_per_affiliation: 10
+    card_counter: pato_streamer_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
+
+  - name: guru_celebryta
+    display_name_pl: "Guru-Celebryta"
+    investment_resource: Sponsors
+    investment_cost_per_affiliation: 5
+    card_counter: guru_celebryta_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
+
+  - name: ekspert_niszowy
+    display_name_pl: "Ekspert Niszowy"
+    investment_resource: Morale
+    investment_cost_per_affiliation: 8
+    card_counter: ekspert_niszowy_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
+
+  - name: biznesmen_contentu
+    display_name_pl: "Biznesmen Contentu"
+    investment_resource: Reach
+    investment_cost_per_affiliation: 50
+    card_counter: biznesmen_contentu_choices_count
+    source: design/gdd/class-path-system.md
+    referenced_by: [design/gdd/cosmetic-persona-customization.md, design/gdd/prestige-checkpoint-system.md]
 
 constants:
   - name: H_base
@@ -259,7 +435,7 @@ constants:
     referenced_by: [design/gdd/card-content-database.md]
 
   - name: sponsorzy_qualifying_cards
-    value: "sponsor_offer_shady, brand_deal_choice only"
+    value: "sponsor_offer_shady, brand_deal_choice, sponsor_contract_mega_fallout, sponsor_contract_indie_fallout, sponsor_contract_finale"
     note: "Resolves Resource System's open question on what 'qualifying card' means"
     source: design/gdd/card-content-database.md
     referenced_by: []
@@ -286,7 +462,7 @@ constants:
     value: "5 / 10 / 6"
     note: "Base Zasięgi per action, before Morale multiplier"
     source: design/gdd/action-system.md
-    referenced_by: [design/gdd/action-ui.md]
+    referenced_by: [design/gdd/action-ui.md, design/gdd/prestige-checkpoint-system.md]
 
   - name: action_cringe_delta
     value: "+2 / +20 / -15"
@@ -437,4 +613,143 @@ constants:
     safe_range: [20, 40]
     note: "Magnitude normalization for Morale deltas; derived from Resource System band gaps — keep in sync"
     source: design/gdd/juice-feedback-system.md
+    referenced_by: []
+
+  - name: CARD_AFFILIATION_PER_CHOICE
+    value: 4.0
+    safe_range: [2.0, 8.0]
+    note: "Matches shipped src/core/class_path_system.gd MVP constant — load-bearing, do not change without updating live code"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: CARD_CONTRIBUTION_MAX
+    value: 60.0
+    safe_range: [40.0, 75.0]
+    note: "Matches shipped src/core/class_path_system.gd MVP constant — load-bearing, do not change without updating live code"
+    source: design/gdd/class-path-system.md
+    referenced_by: [design/gdd/team-staff-management.md]
+
+  - name: PATH_AFFILIATION_TIE_BREAK_MARGIN
+    value: 5.0
+    safe_range: [2.0, 10.0]
+    note: "Not yet implemented in shipped code — see BUG-003 (no tie-break logic exists yet)"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: TIER_THRESHOLDS
+    value: [0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
+    note: "Matches shipped src/core/class_path_system.gd TIER_THRESHOLDS constant"
+    source: design/gdd/class-path-system.md
+    referenced_by: []
+
+  - name: META_CHALLENGE_SCALING_EXPONENT
+    value: 0.5
+    safe_range: [0.3, 0.5]
+    note: "Square-root dampening on ChallengeSystem's combined_meta_multiplier contribution to META_BONUS grants. Range narrowed 2026-07-13 (was [0.3,1.0]) — /design-review systems-designer pass found values above 0.5 let a single Tier-5/max-challenge grant overshoot a type's lifetime cap by 3-9x; 0.5 is the mathematically safe ceiling."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: TIER_FLAT_BASE
+    value: 2
+    safe_range: [0, 4]
+    note: "New 2026-07-13 /design-review. Flat component blended into tier_factor() so low-tier grants aren't punished relative to Tier-5 mastery. 0 = original pure-tier formula (variety-punishing, do not set without another variety incentive in place)."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: FIRST_BURNOUT_BONUS_MULT
+    value: 2.5
+    safe_range: [1.5, 4.0]
+    note: "New 2026-07-13 /design-review. Multiplies a player's first-ever accepted-burnout grant, per META_BONUS type independently (4 separate flags) — makes the first perceivable payout land instead of a near-invisible 2%."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: FIRST_BURNOUT_GRANT_CAP_FRACTION
+    value: 0.5
+    safe_range: [0.3, 0.6]
+    note: "New 2026-07-13 /design-review second re-review. Ceilings a first-ever grant (only) at this fraction of META_BONUS_MAX[type] — closes an overshoot FIRST_BURNOUT_BONUS_MULT opened when combined with high tier/challenge inputs (uncapped, could hit 2.42x a type's cap in one grant)."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: VARIETY_BONUS_MULT
+    value: 2.0
+    safe_range: [1.0, 4.0]
+    note: "New 2026-07-13 /design-review re-review. Multiplies BASE_INCREMENT[type] for the one-time completionist grant to all 4 types (fires once per save when the 4th type first goes nonzero)."
+    source: design/gdd/prestige-checkpoint-system.md
+    referenced_by: []
+
+  - name: MAX_MULTIPLIER_troll
+    value: 2.5
+    safe_range: [1.0, 3.0]
+    note: "Asymptotic ceiling staff_multiplier(troll, n) approaches as n->inf, never reaches."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: MAX_MULTIPLIER_assistant
+    value: 2.0
+    safe_range: [1.0, 3.0]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: MAX_MULTIPLIER_sponsor_manager
+    value: 2.0
+    safe_range: [1.0, 3.0]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: STAFF_HALF_POINT_troll
+    value: 4
+    safe_range: [1, 20]
+    note: "Hire count at which staff_multiplier reaches half its total bonus range."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: STAFF_HALF_POINT_assistant
+    value: 5
+    safe_range: [1, 20]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: STAFF_HALF_POINT_sponsor_manager
+    value: 4
+    safe_range: [1, 20]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_BASE_COST_troll
+    value: 4
+    safe_range: [3, 10]
+    note: "Cost in Sponsors of the 1st hire (n=0)."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_BASE_COST_assistant
+    value: 5
+    safe_range: [3, 10]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_BASE_COST_sponsor_manager
+    value: 6
+    safe_range: [3, 10]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_COST_GROWTH_troll
+    value: 1.6
+    safe_range: [1.3, 2.0]
+    note: "Per-hire geometric growth rate on hire_cost()."
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_COST_GROWTH_assistant
+    value: 1.6
+    safe_range: [1.3, 2.0]
+    source: design/gdd/team-staff-management.md
+    referenced_by: []
+
+  - name: HIRE_COST_GROWTH_sponsor_manager
+    value: 1.7
+    safe_range: [1.3, 2.0]
+    note: "Faster than troll/assistant — dampens the self-referential Sponsors income feedback loop (Sponsor Manager boosts the same currency that buys more Sponsor Managers)."
+    source: design/gdd/team-staff-management.md
     referenced_by: []

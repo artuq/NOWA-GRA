@@ -315,3 +315,35 @@ func test_stray_temp_file_is_never_loaded() -> void:
 	_new_save_system()
 
 	assert_float(ResourceManager.get_resource(&"Reach")).is_equal_approx(33.0, 0.0001)
+
+
+## CrazyGames Data Module and the local file backend share the exact same
+## parser/schema gate, so a valid cloud payload must preserve nested state.
+func test_shared_parser_accepts_valid_cloud_snapshot() -> void:
+	var raw_json: String = JSON.stringify({
+		"schema_version": SaveSystemScript.SCHEMA_VERSION,
+		"last_saved_at": 123.0,
+		"resources": {"Reach": 42.0},
+	})
+
+	var parsed: Dictionary = SaveSystemScript.parse_save_json(raw_json)
+
+	assert_int(int(parsed["schema_version"])).is_equal(SaveSystemScript.SCHEMA_VERSION)
+	assert_float(float(parsed["resources"]["Reach"])).is_equal_approx(42.0, 0.0001)
+
+
+## A malformed Data Module value follows the existing corruption contract:
+## safe first-session defaults, never a crash or partial restore.
+func test_shared_parser_rejects_malformed_cloud_snapshot() -> void:
+	assert_dict(SaveSystemScript.parse_save_json("not-json")).is_empty()
+
+
+## Data Module values from an incompatible future schema must not be loaded by
+## an older build, matching the local save-file behavior.
+func test_shared_parser_rejects_cloud_schema_mismatch() -> void:
+	var raw_json: String = JSON.stringify({
+		"schema_version": SaveSystemScript.SCHEMA_VERSION + 1,
+		"resources": {"Reach": 999.0},
+	})
+
+	assert_dict(SaveSystemScript.parse_save_json(raw_json)).is_empty()

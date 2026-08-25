@@ -1,7 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://src/ui/card_screen.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/ui/icons/icon_card_category.png" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/card_screen/feed_sprint.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/card_screen/comment_moderation.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/card_screen/brief_puzzle.tscn" id="5"]
 
 [sub_resource type="StyleBoxFlat" id="Backdrop"]
 bg_color = Color(0, 0, 0, 0.66)
@@ -104,8 +107,9 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 30
-text = "«« Option A"
+text = "CARD_OPTION_A"
 horizontal_alignment = 0
+autowrap_mode = 3
 
 [node name="OptionBLabel" type="Label" parent="Card/VBox/Options"]
 unique_name_in_owner = true
@@ -116,5 +120,15 @@ theme_override_colors/font_color = Color(0.831373, 0.831373, 0.858824, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 30
-text = "Option B »»"
+text = "CARD_OPTION_B"
 horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="FeedSprint" parent="." instance=ExtResource("3")]
+unique_name_in_owner = true
+
+[node name="CommentModeration" parent="." instance=ExtResource("4")]
+unique_name_in_owner = true
+
+[node name="BriefPuzzle" parent="." instance=ExtResource("5")]
+unique_name_in_owner = true

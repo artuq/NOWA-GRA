@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unreal Niagara"
+  short_description: "Imported game-development capability: Unreal Niagara."
+  default_prompt: "Use $unreal-niagara for this game-development task."

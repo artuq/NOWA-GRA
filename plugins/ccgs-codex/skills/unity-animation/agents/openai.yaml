@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Animation"
+  short_description: "Imported game-development capability: Unity Animation."
+  default_prompt: "Use $unity-animation for this game-development task."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pygame Core"
+  short_description: "Imported game-development capability: Pygame Core."
+  default_prompt: "Use $pygame-core for this game-development task."

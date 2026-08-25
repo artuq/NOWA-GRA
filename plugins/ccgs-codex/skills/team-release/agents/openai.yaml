@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Release"
+  short_description: "Run the CCGS Team Release workflow in Codex."
+  default_prompt: "Use $team-release to handle this game-development task."

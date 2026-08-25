@@ -4,6 +4,17 @@
 ## ActionUIFormatting / CardSwipeMath.
 extends GdUnitTestSuite
 
+var _locale_snapshot: String
+
+
+func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
+
+func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
+
 ## AC: 300s -> "5 minutes" (threshold floor).
 func test_five_minutes() -> void:
 	assert_str(OfflineReportFormatting.format_duration(300)).is_equal("5 minutes")
@@ -39,3 +50,16 @@ func test_two_minutes_plural() -> void:
 ## AC: pluralisation — 7200s -> "2 hours" (plural hours).
 func test_two_hours_plural() -> void:
 	assert_str(OfflineReportFormatting.format_duration(7200)).is_equal("2 hours")
+
+
+## Polish has three plural categories. Verify representative singular, few,
+## and many forms for both units rather than assuming English's binary rule.
+func test_polish_duration_plural_forms() -> void:
+	TranslationServer.set_locale("pl_PL")
+
+	assert_str(OfflineReportFormatting.format_duration(60)).is_equal("1 minutę")
+	assert_str(OfflineReportFormatting.format_duration(120)).is_equal("2 minuty")
+	assert_str(OfflineReportFormatting.format_duration(300)).is_equal("5 minut")
+	assert_str(OfflineReportFormatting.format_duration(3600)).is_equal("1 godzinę")
+	assert_str(OfflineReportFormatting.format_duration(7200)).is_equal("2 godziny")
+	assert_str(OfflineReportFormatting.format_duration(18000)).is_equal("5 godzin")

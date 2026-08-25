@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox Luau"
+  short_description: "Imported game-development capability: Roblox Luau."
+  default_prompt: "Use $roblox-luau for this game-development task."

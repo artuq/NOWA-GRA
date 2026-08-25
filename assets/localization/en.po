@@ -1,0 +1,302 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: King of Cringe\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Settings
+msgid "UI_SETTINGS_TITLE"
+msgstr "Settings"
+
+msgid "UI_SETTINGS_REDUCE_MOTION"
+msgstr "Reduce motion"
+
+msgid "UI_SETTINGS_LANGUAGE"
+msgstr "Language"
+
+msgid "UI_SETTINGS_CLOSE"
+msgstr "Close"
+
+msgid "LANGUAGE_SYSTEM"
+msgstr "System"
+
+msgid "LANGUAGE_ENGLISH"
+msgstr "English"
+
+msgid "LANGUAGE_POLISH"
+msgstr "Polski"
+
+msgid "UI_SETTINGS_LANGUAGE_SYSTEM"
+msgstr "System"
+
+msgid "UI_SETTINGS_LANGUAGE_ENGLISH"
+msgstr "English"
+
+msgid "UI_SETTINGS_LANGUAGE_POLISH"
+msgstr "Polski"
+
+msgid "UI_SETTINGS_LANGUAGE_HINT"
+msgstr "Choose the language used by the game."
+
+# Start screen
+msgid "UI_START_LANGUAGE_PROMPT"
+msgstr "Choose language / Wybierz język"
+
+msgid "UI_START_PLAY"
+msgstr "Start Game"
+
+msgid "UI_START_CONTINUE"
+msgstr "Continue"
+
+msgid "UI_START_NEW_GAME"
+msgstr "New Game"
+
+msgid "UI_START_DELETE_TITLE"
+msgstr "Delete career?"
+
+msgid "UI_START_DELETE_BODY"
+msgstr "This wipes the whole save — meta-progression included. The previous backup gets replaced."
+
+msgid "UI_START_DELETE_CONFIRM"
+msgstr "Delete career"
+
+msgid "UI_COMMON_CANCEL"
+msgstr "Cancel"
+
+# Main screen and resources
+msgid "UI_NAV_PATH"
+msgstr "Path"
+
+msgid "UI_NAV_BONUSES"
+msgstr "Bonuses"
+
+msgid "UI_NAV_TEAM"
+msgstr "Team"
+
+msgid "RESOURCE_REACH_FORMAT"
+msgstr "Reach: %s"
+
+msgid "RESOURCE_CRINGE_FORMAT"
+msgstr "Cringe: %s"
+
+msgid "RESOURCE_HATERS_FORMAT"
+msgstr "Haters: %s"
+
+msgid "RESOURCE_MORALE_FORMAT"
+msgstr "Morale: %s"
+
+msgid "RESOURCE_SPONSORS_FORMAT"
+msgstr "Sponsors: %s"
+
+msgid "MORALE_HIGH"
+msgstr "High"
+
+msgid "MORALE_NORMAL"
+msgstr "Normal"
+
+msgid "MORALE_LOW"
+msgstr "Low"
+
+msgid "MORALE_CRITICAL"
+msgstr "Critical"
+
+# Cards
+msgid "CARD_OPTION_A"
+msgstr "Option A"
+
+msgid "CARD_OPTION_B"
+msgstr "Option B"
+
+msgid "CARD_REACTION_FALLBACK"
+msgstr "The algorithm notes your choice and moves on."
+
+msgid "CARD_SPOTLIGHT_COMPLETE"
+msgstr "Skill Challenge complete: %s."
+
+msgid "CARD_BURNOUT_NO_PATH"
+msgstr "Accepting banks nothing — no active path this era."
+
+msgid "CARD_BURNOUT_CAP_REACHED"
+msgstr "Accepting banks nothing new — bonus cap reached."
+
+msgid "CARD_BURNOUT_BANK_FLAT"
+msgstr "Accepting banks +%d %s — permanent."
+
+msgid "CARD_BURNOUT_BANK_PERCENT"
+msgstr "Accepting banks +%s%% %s — permanent."
+
+msgid "RESOURCE_REACH"
+msgstr "Reach"
+
+msgid "RESOURCE_SPONSOR_INCOME"
+msgstr "Sponsor income"
+
+msgid "RESOURCE_HATERS_RESISTANCE"
+msgstr "Haters resistance"
+
+msgid "RESOURCE_ERA_START_SPONSORS"
+msgstr "era-start Sponsors"
+
+msgid "RESOURCE_REACH_REWARD"
+msgstr "Reach"
+
+msgid "RESOURCE_CRINGE_REWARD"
+msgstr "Cringe"
+
+msgid "RESOURCE_HATERS_REWARD"
+msgstr "Haters"
+
+msgid "RESOURCE_MORALE_REWARD"
+msgstr "Morale"
+
+msgid "RESOURCE_SPONSORS_REWARD"
+msgstr "Sponsors"
+
+# Feed Sprint
+msgid "MINIGAME_FEED_TITLE"
+msgstr "FEED SPRINT"
+
+msgid "MINIGAME_FEED_INSTRUCTION"
+msgstr "Catch TREND. Avoid STRIKE."
+
+msgid "MINIGAME_FEED_PROGRESS"
+msgstr "Event %d / %d"
+
+msgid "MINIGAME_FEED_SCORE"
+msgstr "Trends: %d / %d"
+
+msgid "MINIGAME_FEED_LEFT"
+msgstr "LEFT"
+
+msgid "MINIGAME_FEED_CENTER"
+msgstr "CENTER"
+
+msgid "MINIGAME_FEED_RIGHT"
+msgstr "RIGHT"
+
+msgid "MINIGAME_FEED_TARGET_TREND"
+msgstr "TARGET: TREND — CATCH"
+
+msgid "MINIGAME_FEED_TARGET_STRIKE"
+msgstr "DANGER: STRIKE — DODGE"
+
+msgid "MINIGAME_FEED_TREND"
+msgstr "TREND"
+
+msgid "MINIGAME_FEED_STRIKE"
+msgstr "STRIKE"
+
+msgid "MINIGAME_FEED_TOOLTIP_TREND"
+msgstr "Collect this trend"
+
+msgid "MINIGAME_FEED_TOOLTIP_STRIKE"
+msgstr "Avoid this strike"
+
+msgid "MINIGAME_FEED_YOU"
+msgstr "YOU"
+
+msgid "MINIGAME_LEFT_BUTTON"
+msgstr "« LEFT"
+
+msgid "MINIGAME_RIGHT_BUTTON"
+msgstr "RIGHT »"
+
+msgid "MINIGAME_SKIP"
+msgstr "Skip — no penalty"
+
+msgid "MINIGAME_BRIEF_TITLE"
+msgstr "BRIEF PUZZLE"
+
+msgid "MINIGAME_BRIEF_INSTRUCTION"
+msgstr "Build the only defensible order: LEGAL comes first, PROOF before CLAIM, and CTA last."
+
+msgid "MINIGAME_BRIEF_SELECTION"
+msgstr "Order: %s"
+
+msgid "MINIGAME_BRIEF_EMPTY"
+msgstr "tap the clauses below"
+
+msgid "MINIGAME_BRIEF_UNDO"
+msgstr "Undo"
+
+msgid "MINIGAME_BRIEF_SUBMIT"
+msgstr "Submit brief"
+
+msgid "MINIGAME_BRIEF_WRONG"
+msgstr "Contradiction detected. Attempt %d/%d."
+
+msgid "MINIGAME_BRIEF_CLAIM"
+msgstr "Promise the impossible"
+
+msgid "MINIGAME_BRIEF_CTA"
+msgstr "Publish the call to action"
+
+msgid "MINIGAME_BRIEF_LEGAL"
+msgstr "Read the legal warning"
+
+msgid "MINIGAME_BRIEF_PROOF"
+msgstr "Check the campaign proof"
+
+# Comment Moderation
+msgid "MINIGAME_MOD_TITLE"
+msgstr "COMMENT MODERATION"
+
+msgid "MINIGAME_MOD_INSTRUCTION"
+msgstr "Keep fans and useful feedback. Remove hate, spam and scams."
+
+msgid "MINIGAME_MOD_PROGRESS"
+msgstr "Comment %d / %d"
+
+msgid "MINIGAME_MOD_SCORE"
+msgstr "Correct: %d"
+
+msgid "MINIGAME_MOD_COMMENT_PLACEHOLDER"
+msgstr "Comment"
+
+msgid "MINIGAME_MOD_REMOVE"
+msgstr "« REMOVE"
+
+msgid "MINIGAME_MOD_KEEP"
+msgstr "KEEP »"
+
+msgid "MINIGAME_MOD_CORRECT"
+msgstr "CORRECT"
+
+msgid "MINIGAME_MOD_WRONG"
+msgstr "WRONG"
+
+msgid "MINIGAME_MOD_MISSED"
+msgstr "MISSED"
+
+msgid "MINIGAME_COMMENT_TUTORIAL_HELPED"
+msgstr "This tutorial actually helped. Thanks!"
+
+msgid "MINIGAME_COMMENT_FREE_FOLLOWERS"
+msgstr "FREE FOLLOWERS — click profile link NOW"
+
+msgid "MINIGAME_COMMENT_AUDIO_FEEDBACK"
+msgstr "Audio is clipping at 01:42, but the topic is solid."
+
+msgid "MINIGAME_COMMENT_DELETE_CHANNEL"
+msgstr "Nobody asked. Delete your channel."
+
+msgid "MINIGAME_COMMENT_JACKET"
+msgstr "Where did you get the jacket?"
+
+msgid "MINIGAME_COMMENT_CRYPTO_SCAM"
+msgstr "I made $9000 today! Message me on CryptoGram."
+
+msgid "MINIGAME_COMMENT_CAPTIONS"
+msgstr "Could you add captions next time?"
+
+msgid "MINIGAME_COMMENT_DISGUSTING"
+msgstr "You look disgusting. Everyone agrees."
+
+msgid "MINIGAME_COMMENT_PART_TWO"
+msgstr "Part two please — the ending got interesting."
+
+msgid "MINIGAME_COMMENT_INVESTMENT_SPAM"
+msgstr "BEST INVESTMENT SIGNALS at totally-real.example"

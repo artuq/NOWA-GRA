@@ -1,0 +1,4 @@
+interface:
+  display_name: "Qa Plan"
+  short_description: "Run the CCGS Qa Plan workflow in Codex."
+  default_prompt: "Use $qa-plan to handle this game-development task."

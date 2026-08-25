@@ -1,0 +1,4 @@
+interface:
+  display_name: "Regression Suite"
+  short_description: "Run the CCGS Regression Suite workflow in Codex."
+  default_prompt: "Use $regression-suite to handle this game-development task."

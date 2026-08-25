@@ -1,0 +1,4 @@
+interface:
+  display_name: "Threejs Scene Setup"
+  short_description: "Imported game-development capability: Threejs Scene Setup."
+  default_prompt: "Use $threejs-scene-setup for this game-development task."

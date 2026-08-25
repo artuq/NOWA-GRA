@@ -49,11 +49,10 @@ deliberately left to this document.
    triggers a tier unlock notification. Affiliation can only increase (monotonically), matching
    the immutability contract of HistoryFlagManager pattern counters.
 
-5. **Path multipliers are active-play only** by default. Offline progress uses the same flat
-   formula as if the player had no path (Pillar 4). Exception: see Tuning Knobs for the
-   `PATH_MULTIPLIER_OFFLINE` flag — it can be enabled after profiling, but must remain simple
-   and transparent (a single global offline efficiency modifier per tier, not a per-action
-   calculation).
+5. **Path action multipliers are active-play only.** Named ambient effects (Haters growth,
+   Morale drain and Morale floor) apply identically in live and offline simulation. Offline
+   never replays actions or applies action reward/speed bonuses (superseded 2026-08-05 by
+   the canonical GDD and ADR-0020).
 
 6. **No explicit moral score** (Anti-Pillar). The UI shows affiliation as a neutral progress
    bar labeled with tier names, not "good" vs "evil" framing. The satire comes from the flavor
@@ -324,10 +323,8 @@ Class Path Panel.
 - Only the **active path** (highest-affiliation path at Tier 1+) contributes multipliers.
   Secondary paths do not stack. This prevents a multi-path-maxing exploit and keeps balance
   tractable.
-- Offline progress: by default, **no multipliers apply offline**. The offline simulation
-  uses the baseline action formula from balance.json. If `PATH_MULTIPLIER_OFFLINE = true`
-  (tuning flag, off by default), a single flat `offline_path_efficiency` modifier per tier
-  is applied to the entire offline delta — never a per-action calculation.
+- Offline progress applies only the active path's named ambient effects. Action reward and
+  speed multipliers never apply because offline simulation does not replay actions.
 - Tier unlock is permanent within an era. Affiliation cannot decrease, so tiers cannot
   be lost during normal play.
 
@@ -399,7 +396,6 @@ All values in `assets/data/balance.json` under the `class_path` key.
 | `CARD_CONTRIBUTION_MAX` | 60.0 | 40.0–75.0 | Too low: active investment feels mandatory (friction); too high: Tier 5 reachable without investing (removes agency) |
 | `INVESTMENT_AFFILIATION_RATE` | 0.1 | 0.05–0.2 | Too low: active investment feels pointless; too high: rich players buy tiers instantly (kills card relevance) |
 | `PATH_AFFILIATION_TIE_BREAK_MARGIN` | 5.0 | 2.0–10.0 | Too low: two-path players get the higher path bonus too easily; too high: players feel "stuck between paths" too long |
-| `PATH_MULTIPLIER_OFFLINE` | false | bool | Enable only after profiling that the added complexity doesn't confuse offline reports |
 | `margin` (HistoryFlagManager tie-break) | 2 | 1–4 | See history-flag-system.md — set globally, affects 4-path resolution |
 | `threshold_min` per path | 5 | 3–10 | See history-flag-system.md — eligibility floor; too low = paths resolve before player has a pattern |
 
@@ -466,8 +462,8 @@ These are deliberately rough — they need a playtest pass before Alpha lock.
   **THEN** no multiplier is applied and UI shows "Ambiguous — keep investing."
 - [ ] **GIVEN** pato_streamer is active at T1, **WHEN** "Zrób dramę" completes, **THEN**
   Reach reward = base * 1.30.
-- [ ] **GIVEN** PATH_MULTIPLIER_OFFLINE is false (default), **THEN** offline simulation
-  produces the same result regardless of active path and tier.
+- [ ] **GIVEN** an active path has a named ambient effect, **THEN** live and offline
+  simulation apply that effect identically, while action reward/speed bonuses remain live-only.
 
 ### UI
 - [ ] All four paths are visible in the Class Path Panel at all times, including paths with 0
@@ -490,8 +486,7 @@ These are deliberately rough — they need a playtest pass before Alpha lock.
   milestone flag is set and NOT cleared by reset.
 
 ### Pillar Compliance
-- [ ] Path multipliers do not apply to offline progress (Pillar 4) unless `PATH_MULTIPLIER_OFFLINE`
-  explicitly enabled.
+- [ ] Named ambient path effects apply offline; action reward and speed multipliers do not.
 - [ ] No UI element uses the words "good," "evil," "moral," or equivalent Polish equivalents
   as path descriptors (Pillar 3 / Anti-Pillar: no explicit moral score).
 - [ ] Path affiliation and tier cannot decrease within an era (Pillar 2: decisions have memory).
@@ -517,7 +512,6 @@ These are deliberately rough — they need a playtest pass before Alpha lock.
 - Signature cards (Tier 5).
 - Expanded card UI with "ways to advance" hints.
 - Era reset with meta-persistent flag writing.
-- `PATH_MULTIPLIER_OFFLINE` flag (evaluate after profiling).
 - Narrative hook on era-start screen.
 
 ---

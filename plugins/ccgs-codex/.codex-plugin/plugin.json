@@ -1,0 +1,40 @@
+{
+  "name": "ccgs-codex",
+  "version": "1.1.0+codex.20260813190328",
+  "description": "Codex-native port of Claude Code Game Studios with 49 roles, 73 production workflows, and 67 portable engine/discipline/genre skills.",
+  "author": {
+    "name": "Donchitos; Codex port adapted locally",
+    "url": "https://github.com/Donchitos/Claude-Code-Game-Studios"
+  },
+  "repository": "https://github.com/Donchitos/Claude-Code-Game-Studios",
+  "license": "MIT AND Apache-2.0",
+  "keywords": [
+    "game-development",
+    "godot",
+    "multi-agent",
+    "quality-gates",
+    "balance",
+    "agent-skills",
+    "gameplay-programming"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "CCGS for Codex",
+    "shortDescription": "A multi-agent game studio adapted for Codex.",
+    "longDescription": "Run CCGS design, engineering, production, QA, release, and balance workflows, then route implementation through 67 portable game-development skills for Godot, Unity, Unreal, web, and other engines.",
+    "developerName": "Donchitos; local Codex port",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills",
+      "Hooks",
+      "Multi-agent workflows",
+      "Engine and genre skill routing"
+    ],
+    "defaultPrompt": [
+      "Use $ccgs-studio to choose the right game-dev workflow.",
+      "Run $balance-check on the current game economy.",
+      "Review the current production stage and recommend next steps.",
+      "Use $gamedev-skill-router inside the selected CCGS workflow for engine-specific implementation."
+    ]
+  }
+}

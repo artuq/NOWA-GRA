@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Story"
+  short_description: "Run the CCGS Dev Story workflow in Codex."
+  default_prompt: "Use $dev-story to handle this game-development task."

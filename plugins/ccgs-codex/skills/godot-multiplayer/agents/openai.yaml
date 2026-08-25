@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Multiplayer"
+  short_description: "Imported game-development capability: Godot Multiplayer."
+  default_prompt: "Use $godot-multiplayer for this game-development task."

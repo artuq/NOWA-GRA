@@ -44,6 +44,17 @@ Accepted (2026-06-20, following independent /architecture-review — verdict CON
 
 Implement `simulate_offline()` as a single synchronous `while` loop over fixed 60-second steps, capped at 1440 iterations (24h), applying the three registered formulas in the fixed order already locked by `offline-progress-system.md`'s Core Rules (H, then M, then Mult, then Z — per that GDD's explicit ordering rule).
 
+**Implementation amendment (2026-08-03):** later Accepted/Designed systems add
+pull-model factors without changing this loop's ownership or order. At the
+start of one simulation, `OfflineProgressSystem` snapshots Class Path ambient
+effects, Staff Troll/Assistant effects, and
+`PrestigeSystem.META_HATERS_RESIST`. Each H step routes the base rate through
+`PrestigeFormulas.haters_rate_final()` before the Class Path/Staff factors are
+applied. This formally sanctions the existing cross-Autoload reads and the
+Prestige F3c dependency; all factors default to `1.0`/`0.0`, preserving the
+original loop exactly for a neutral state. The amendment does not define a
+live-session ticker, which remains a separate lifecycle decision.
+
 ```gdscript
 # OfflineProgressSystem (Autoload)
 const MAX_OFFLINE_CAP_SECONDS := 86400
@@ -157,3 +168,12 @@ N/A — first implementation.
 - ADR-0001 (Autoload singleton architecture) — defines the interface this ADR implements
 - ADR-0003 (Scene management/boot order) — calls `simulate_offline()` as boot step 4
 - `design/gdd/offline-progress-system.md` — source GDD, including the worked example that revealed the "Morale crash to Critical band" satirical hook (Pillar 3), unaffected by this implementation ADR
+
+## Implementation Amendment (2026-08-05): Shared Transition
+
+The 60-second loop and 24-hour cap remain unchanged. Its arithmetic body now
+delegates to the stateless `ResourceSimulationStep.compute()` also used by the
+ActionScreen-scoped live ticker (ADR-0020). Offline snapshots its modifiers once
+and passes Staff Assistant as the passive-income multiplier; live evaluates its
+own allowed modifiers per logical second and passes `1.0`. Both contexts retain
+the fixed H→M→Mult→Reach order without requiring identical integration cadence.

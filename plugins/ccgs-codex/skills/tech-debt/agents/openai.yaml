@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tech Debt"
+  short_description: "Run the CCGS Tech Debt workflow in Codex."
+  default_prompt: "Use $tech-debt to handle this game-development task."

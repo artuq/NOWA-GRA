@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vertical Slice"
+  short_description: "Run the CCGS Vertical Slice workflow in Codex."
+  default_prompt: "Use $vertical-slice to handle this game-development task."

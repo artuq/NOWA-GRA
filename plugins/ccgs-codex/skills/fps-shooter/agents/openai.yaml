@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fps Shooter"
+  short_description: "Imported game-development capability: Fps Shooter."
+  default_prompt: "Use $fps-shooter for this game-development task."

@@ -1,12 +1,22 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/action_screen/resource_hud.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/action_grid.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/running_action_overlay.tscn" id="3"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_avatar.png" id="4"]
-[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_settings.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_system_avatar.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/ui/icons/icon_system_settings.png" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/card_screen/card_screen.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/action_screen/class_path_hud_indicator.tscn" id="7"]
+[ext_resource type="Script" path="res://src/ui/action_screen.gd" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/settings_screen/settings_screen.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/class_path_panel.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/burnout_warning_indicator.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/bonuses_panel.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/staff_panel.tscn" id="13"]
+[ext_resource type="Script" path="res://src/core/live_resource_ticker.gd" id="14"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/sponsor_contract_indicator.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/creator_empire_strip.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/action_screen/away_plan_panel.tscn" id="17"]
 
 [sub_resource type="StyleBoxFlat" id="AppBackground"]
 bg_color = Color(0.082353, 0.082353, 0.101961, 1)
@@ -18,6 +28,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("8")
+
+[node name="LiveResourceTicker" type="Node" parent="."]
+script = ExtResource("14")
 
 [node name="Background" type="Panel" parent="."]
 layout_mode = 1
@@ -63,6 +77,30 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="PathButton" type="Button" parent="MainLayout/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "UI_NAV_PATH"
+
+[node name="BonusesButton" type="Button" parent="MainLayout/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(88, 44)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "UI_NAV_BONUSES"
+
+[node name="StaffButton" type="Button" parent="MainLayout/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 44)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "UI_NAV_TEAM"
+
 [node name="SettingsButton" type="Button" parent="MainLayout/TopBar"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
@@ -73,10 +111,20 @@ icon = ExtResource("5")
 expand_icon = true
 texture_filter = 1
 
+[node name="CreatorEmpireStrip" parent="MainLayout" instance=ExtResource("16")]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="ResourceHud" parent="MainLayout" instance=ExtResource("1")]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 size_flags_vertical = 1
+
+[node name="BurnoutWarningIndicator" parent="MainLayout" instance=ExtResource("11")]
+layout_mode = 2
+
+[node name="SponsorContractIndicator" parent="MainLayout" instance=ExtResource("15")]
+layout_mode = 2
 
 [node name="MiddleSpacer" type="Control" parent="MainLayout"]
 layout_mode = 2
@@ -88,6 +136,26 @@ layout_mode = 2
 size_flags_vertical = 1
 
 [node name="RunningActionOverlay" parent="." instance=ExtResource("3")]
+layout_mode = 1
+
+[node name="SettingsScreen" parent="." instance=ExtResource("9")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="ClassPathPanel" parent="." instance=ExtResource("10")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="BonusesPanel" parent="." instance=ExtResource("12")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="StaffPanel" parent="." instance=ExtResource("13")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="AwayPlanPanel" parent="." instance=ExtResource("17")]
+unique_name_in_owner = true
 layout_mode = 1
 
 [node name="CardScreen" parent="." instance=ExtResource("6")]

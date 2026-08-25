@@ -1,0 +1,267 @@
+version: 1
+phases:
+  - key: concept
+    label: Concept
+    steps:
+      - id: brainstorm
+        name: Define the game concept
+        command: brainstorm
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {glob: design/gdd/game-concept.md, min_count: 1}
+      - id: prototype
+        name: Validate the riskiest concept assumption
+        command: prototype
+        required: false
+        optional: true
+        repeatable: true
+        artifact: {glob: prototypes/*/prototype-report.md, min_count: 1, note: Use when the concept has a material feasibility or fun risk.}
+      - id: concept-gate
+        name: Pass the concept phase gate
+        command: gate-check
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {note: Confirm manually because gate records can use project-specific names.}
+
+  - key: systems-design
+    label: Systems Design
+    steps:
+      - id: art-bible
+        name: Establish the visual identity
+        command: art-bible
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {glob: design/art/art-bible.md, min_count: 1}
+      - id: map-systems
+        name: Map game systems and dependencies
+        command: map-systems
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {glob: design/gdd/systems-index.md, min_count: 1}
+      - id: design-system
+        name: Author system GDDs
+        command: design-system
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: design/gdd/*.md, min_count: 2}
+      - id: review-all-gdds
+        name: Review all GDDs
+        command: review-all-gdds
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: docs/consistency-report-*.md, min_count: 1}
+      - id: systems-gate
+        name: Pass the systems-design phase gate
+        command: gate-check
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {note: Confirm manually from the latest gate verdict.}
+
+  - key: technical-setup
+    label: Technical Setup
+    steps:
+      - id: setup-engine
+        name: Pin engine and technical preferences
+        command: setup-engine
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {glob: docs/engine-reference/*/VERSION.md, min_count: 1}
+      - id: create-architecture
+        name: Create project architecture
+        command: create-architecture
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {glob: docs/architecture/architecture.md, min_count: 1}
+      - id: architecture-decision
+        name: Record architecture decisions
+        command: architecture-decision
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: docs/architecture/adr-*.md, min_count: 1}
+      - id: architecture-review
+        name: Review architecture traceability
+        command: architecture-review
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: docs/architecture/architecture-review-*.md, min_count: 1}
+      - id: create-control-manifest
+        name: Define controlled components
+        command: create-control-manifest
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {glob: docs/architecture/control-manifest.md, min_count: 1}
+      - id: technical-gate
+        name: Pass the technical-setup phase gate
+        command: gate-check
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {note: Confirm manually from the latest gate verdict.}
+
+  - key: pre-production
+    label: Pre-Production
+    steps:
+      - id: ux-design
+        name: Define player journeys and interaction specs
+        command: ux-design
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: design/ux/*.md, min_count: 1}
+      - id: vertical-slice
+        name: Build and validate a vertical slice
+        command: vertical-slice
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {glob: prototypes/*/vertical-slice-report.md, min_count: 1}
+      - id: playtest-report
+        name: Record vertical-slice playtest evidence
+        command: playtest-report
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/playtests/*.md, min_count: 1}
+      - id: create-epics
+        name: Create implementation epics
+        command: create-epics
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/epics/*/EPIC.md, min_count: 1}
+      - id: create-stories
+        name: Break epics into stories
+        command: create-stories
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/epics/*/story-*.md, min_count: 1}
+      - id: story-readiness
+        name: Verify story readiness
+        command: story-readiness
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {note: Readiness is tracked in each story or production/sprint-status.yaml.}
+      - id: sprint-plan
+        name: Plan the first production sprint
+        command: sprint-plan
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/sprints/sprint-*.md, min_count: 1}
+      - id: pre-production-gate
+        name: Pass the pre-production phase gate
+        command: gate-check
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {note: Confirm manually from the latest gate verdict.}
+
+  - key: production
+    label: Production
+    steps:
+      - id: dev-story
+        name: Implement ready stories
+        command: dev-story
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {note: Use production/sprint-status.yaml as the authoritative tracker.}
+      - id: code-review
+        name: Review each implementation
+        command: code-review
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {note: Review evidence belongs to the story or its evidence file.}
+      - id: story-done
+        name: Close stories with evidence
+        command: story-done
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {note: Use production/sprint-status.yaml status values.}
+      - id: team-qa
+        name: Run production QA
+        command: team-qa
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/qa/*.md, min_count: 1}
+      - id: production-gate
+        name: Pass the production phase gate
+        command: gate-check
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {note: Confirm manually from the latest gate verdict.}
+
+  - key: polish
+    label: Polish
+    steps:
+      - id: perf-profile
+        name: Profile performance
+        command: perf-profile
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/qa/performance-*.md, min_count: 1}
+      - id: regression-suite
+        name: Run regression coverage
+        command: regression-suite
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/qa/regression-*.md, min_count: 1}
+      - id: soak-test
+        name: Run stability soak tests
+        command: soak-test
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/qa/soak-*.md, min_count: 1}
+      - id: polish-gate
+        name: Pass the polish phase gate
+        command: gate-check
+        required: true
+        optional: false
+        repeatable: false
+        artifact: {note: Confirm manually from the latest gate verdict.}
+
+  - key: release
+    label: Release
+    steps:
+      - id: release-checklist
+        name: Complete release readiness checklist
+        command: release-checklist
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/releases/release-checklist-*.md, min_count: 1}
+      - id: launch-checklist
+        name: Complete launch operations checklist
+        command: launch-checklist
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {glob: production/releases/launch-checklist-*.md, min_count: 1}
+      - id: team-release
+        name: Run the release team review
+        command: team-release
+        required: true
+        optional: false
+        repeatable: true
+        artifact: {note: Confirm the final release verdict manually.}

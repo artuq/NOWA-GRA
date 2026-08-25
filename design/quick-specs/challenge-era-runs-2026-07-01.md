@@ -9,6 +9,16 @@ screen (owned by a future UX story).
 **Estimated Implementation**: Design anchor only — full build in Alpha, after
 Prestige/Checkpoint System exists and `BurnoutSystem.era_transitioned` is live
 
+> **REVISION (2026-07-17, ADR-0013)**: the trigger signal below is now
+> **`PrestigeSystem.era_transitioned`** (no arguments — ADR-0012, shipped and closed; not
+> `BurnoutSystem.era_transitioned` as this spec predates that ownership decision).
+> `HistoryFlagManager.set_flag(...)` calls below are now **`set_milestone(...)`** (the real
+> shipped method name). `get_combined_meta_multiplier()` is consumed via a direct pull-model
+> call from `PrestigeSystem.on_burnout_accepted()` (replacing the `challenge_mult` stub),
+> matching the `ClassPathSystem.get_active_sponsor_multiplier()` precedent (ADR-0010 §5a) — see
+> ADR-0013 for the full wiring and the `get_modifier(action_id, axis)` pull-model API that
+> replaces this spec's implicit `get_active_modifiers()` assumption.
+
 ## Overview
 
 When a new era begins (immediately after `era_transitioned` fires from BurnoutSystem), the

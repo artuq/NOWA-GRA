@@ -5,8 +5,8 @@
 > gate-check's literal filename check — do not hand-edit requirement entries here;
 > edit `tr-registry.yaml` and regenerate this table, or run `/architecture-review` again.
 
-**Last updated**: 2026-07-06 (from `tr-registry.yaml` v6)
-**Total requirements**: 28 | **Covered**: 24 | **Partial**: 3 | **Gap (deferred by design)**: 1
+**Last updated**: 2026-07-14 (from `tr-registry.yaml`, prestige/checkpoint added)
+**Total requirements**: 35 | **Covered**: 31 | **Partial**: 3 | **Gap**: 1
 
 | TR-ID | System | Requirement | ADR(s) | Status |
 |---|---|---|---|---|
@@ -38,6 +38,13 @@
 | TR-juice-005 | juice-feedback-system | Payoff text duration formula, clamp [1.5, 2.5]s | ADR-0011 | ⚠️ partial (verify existing beat matches GDD bounds in Story 9-2) |
 | TR-juice-006 | juice-feedback-system | Backgrounding leaves clean state, no persisted state | ADR-0011 | ✅ covered |
 | TR-juice-007 | juice-feedback-system | resolution_reaction content per card/option | ADR-0011 | ✅ covered |
+| TR-pcs-001 | prestige-checkpoint-system | PrestigeSystem autoload, synchronous read-then-reset entry point | ADR-0012 | ✅ covered |
+| TR-pcs-002 | prestige-checkpoint-system | F1/F1b/F2/F3a-d META_BONUS formulas, unit-testable | ADR-0012 | ✅ covered |
+| TR-pcs-003 | prestige-checkpoint-system | DecisionCardSystem.inject_priority_card() (Core Rule 6) | ADR-0012 | ✅ covered |
+| TR-pcs-004 | prestige-checkpoint-system | Flag classification sweep — era-local vs meta-persistent (Core Rule 7) | ADR-0012 | ✅ covered |
+| TR-pcs-005 | prestige-checkpoint-system | Save/restore era_count, per-type totals, meta flags | ADR-0012 | ✅ covered |
+| TR-pcs-006 | prestige-checkpoint-system | Autosave suppression window (steps 1-5), resume before era_transitioned | ADR-0002, ADR-0012 | ✅ covered |
+| TR-pcs-007 | prestige-checkpoint-system | BurnoutSystem + ChallengeSystem mechanics | quick-specs (ruled sufficient 2026-07-14) | ✅ covered |
 
 **Foundation layer coverage**: 5/5 Foundation-tier requirements (TR-res-001, TR-hist-001, TR-save-001/002/003) are ✅ covered — **zero Foundation gaps**.
 
@@ -48,6 +55,8 @@ deferrals, not Foundation/Core gaps:
 - TR-cps-006 — Tier-5 signature cards, Alpha scope, needs a follow-up ADR.
 - TR-juice-005 — payoff-duration formula verification against the existing CardScreen
   resolution beat, to confirm during Story 9-2.
+- TR-pcs-007 — RESOLVED 2026-07-14: user ruled the locked Burnout/Challenge quick-specs
+  sufficient as architectural spec; no separate ADR required. Now ✅ covered.
 
 ## Source
 

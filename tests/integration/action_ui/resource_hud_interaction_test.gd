@@ -10,8 +10,11 @@
 extends GdUnitTestSuite
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
+var _locale_snapshot: String
 
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
 	_resource_snapshot[&"Reach"] = ResourceManager.get_resource(&"Reach")
 	_resource_snapshot[&"Cringe"] = ResourceManager.get_resource(&"Cringe")
 	_resource_snapshot[&"Haters"] = ResourceManager.get_resource(&"Haters")
@@ -19,6 +22,7 @@ func before_test() -> void:
 	_resource_snapshot[&"Sponsors"] = ResourceManager.get_resource(&"Sponsors")
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	var restore: Dictionary[StringName, float] = {}
 	for key: StringName in _resource_snapshot:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)

@@ -10,6 +10,17 @@ around.
 **Estimated Implementation**: Design anchor only — full implementation ~3–4 weeks in Alpha
 alongside Prestige/Checkpoint System
 
+> **REVISION (2026-07-17, ADR-0013)**: `era_count`, `_deferred_this_era`, the five-resource
+> reset, and the META_BONUS grant now live on **`PrestigeSystem`** (ADR-0012, shipped and
+> closed), not BurnoutSystem as originally specced below. BurnoutSystem's real scope is now
+> just the trigger detector + forced-card mechanics (Core Rules 1-3) — Choice A/B (Core Rules
+> 4-5) route synchronously into `PrestigeSystem.on_burnout_accepted()`/`on_burnout_deferred()`.
+> The `era_transitioned(new_era, meta_bonus_granted)` signal below is now
+> **`PrestigeSystem.era_transitioned`** (no arguments — read `get_era_count()`/
+> `get_meta_bonus_total()` instead). `HistoryFlagManager.set_flag(...)` calls below are now
+> **`set_milestone(...)`** (the real shipped method name). See ADR-0013's ownership-split table
+> for the authoritative correction before implementing any BurnoutSystem story.
+
 ## Overview
 
 When the player sustains Cringe at 100 for `BURNOUT_THRESHOLD` continuous seconds in active
@@ -27,6 +38,9 @@ consent (Pillar 2).
 ### 1. Trigger
 
 - A new Autoload `BurnoutSystem` tracks `_cringe_sustained_seconds: float` via `_process(delta)`.
+- `ActionScreen` explicitly enables the detector for its lifecycle and disables it on teardown.
+  Boot, Start, Offline Report, and Challenge Selection never enable it. Leaving active play pauses
+  the accumulated live-play time without resetting it or emitting a warning cancellation.
 - Each live-play frame: if Cringe ≥ 100.0 → `_cringe_sustained_seconds += delta`. If Cringe
   < 100.0 → `_cringe_sustained_seconds = 0.0`.
 - When `_cringe_sustained_seconds >= BURNOUT_THRESHOLD` **and** `_card_pending == false`:
@@ -118,11 +132,13 @@ All numeric values must live in `assets/data/balance.json` (or equivalent), not 
 | ActionSystem | Already suspends on `card_presented` — no change | No action |
 | HistoryFlagManager | `set_flag()` — already exists | No action |
 | SaveSystem | BurnoutSystem added to serialize/restore cycle | Add at implementation time |
+| ActionScreen | Owns the ephemeral live-play enable/disable boundary | Lifecycle calls only |
 | Prestige/Checkpoint System | **Designed around this spec** — defines META_BONUS content, flag classification (era-local vs meta-persistent), era-start default values | Full GDD required (Alpha) |
 
 ## Acceptance Criteria
 
 - [ ] `_cringe_sustained_seconds` increments only when Cringe = 100.0; resets to 0.0 when Cringe < 100.0
+- [ ] The timer is paused outside ActionScreen (including Start, Offline Report, and Challenge Selection) and resumes when live play returns
 - [ ] Burnout Card injected exactly once when timer reaches `BURNOUT_THRESHOLD`; not re-injected while `_card_pending`
 - [ ] Warning signal emitted when timer ≥ `BURNOUT_WARNING_THRESHOLD`; cancelled when Cringe drops below 100
 - [ ] Burnout Card cannot be dismissed without A or B; normal card pool suspended while card is active
@@ -150,3 +166,8 @@ of the Prestige/Checkpoint epic, not a standalone tracked system.
 > binary stakes (accept burnout & reset with a meta-bonus, OR defer once at a large Morale
 > cost) so it stays 'a decision with memory,' not something done to the player without consent.
 > Design it now so the Prestige/Checkpoint System (Alpha) is built around it, not retrofitted."
+
+## Open Questions
+
+- **Action-count trigger as an alternative to real-time `BURNOUT_THRESHOLD`** (added 2026-07-22, external designer feedback via user) — current trigger is sustained wall-clock time (300s default) at Cringe=100. Critique: for a mobile session, several real-time minutes staring at a ceiling value risks boredom, and backgrounding the app during the countdown loses the tension entirely. Proposed alternative: gate on a count of decision cards drawn while at Cringe=100 (e.g., "Wypalenie appears after 5 cards pulled at max Cringe") instead of elapsed seconds. This would match the project's existing precedent — Decision Card cooldown is already action-count-based, not time-based (`docs/registry/architecture.yaml` api_decision, ADR-0005) — so a card-count trigger here would be internally consistent with that convention, not a novel mechanic. **Not evaluated for balance/feel yet** — would change `BurnoutSystem`'s `_process(delta)` timer-accumulation model (Core Rule 1) to a card-count listener instead, and would ripple into `wypalenie-card-modal.md`'s Player Context on Arrival (currently assumes a felt real-time countdown) and the HUD warning indicator's display format (seconds remaining vs. cards remaining). *Owner: unassigned — real alternative worth a design pass, not a tuning-knob tweak, before Alpha implementation of BurnoutSystem's trigger.*
+- **In-card stalling minigame ("swipe away hater comments") to buy decision time** (added 2026-07-22, external designer feedback via user) — proposed as a physical, frantic interaction during the Wypalenie card window, distinct from the actual A/B choice. Tension with the just-designed `wypalenie-card-modal.md` (Core Rule 3: "cannot be dismissed without choosing A or B," and DDR-0001 #5's "genuine binary stakes," immediate-weight framing) — adding a delay/busywork layer before the real choice may dilute rather than sharpen the moment's weight, though it isn't strictly forbidden by any anti-pillar (it's new scope, not a rule violation). *Owner: unassigned — needs a Player Fantasy discussion (does stalling serve the "one truly heavy choice" feeling, or undercut it?) before any design work starts.*

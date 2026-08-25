@@ -1,0 +1,4 @@
+interface:
+  display_name: "Godot Export"
+  short_description: "Imported game-development capability: Godot Export."
+  default_prompt: "Use $godot-export for this game-development task."

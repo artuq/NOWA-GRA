@@ -9,7 +9,15 @@ extends GdUnitTestSuite
 
 const REPORT_SCENE: String = "res://scenes/offline_report/offline_report.tscn"
 
+var _locale_snapshot: String
+
+
+func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
 	OfflineProgressSystem.last_simulation_result = {}
 
 func _stub(result: Dictionary) -> void:
@@ -85,6 +93,32 @@ func test_capped_message_shown_when_capped() -> void:
 	var s: Node = runner.scene()
 	assert_bool((s.find_child("CappedLabel") as Label).visible).is_true()
 	assert_str((s.find_child("DurationLabel") as Label).text).is_equal("You were away for 24 hours.")
+
+
+## Switching the same report payload to Polish changes copy and plural forms,
+## while every source number stays untouched.
+func test_polish_report_renders_localized_copy_and_duration() -> void:
+	_stub({
+		"total_Z_gained": 1250.0,
+		"final_H": 12.0, "h0": 7.0,
+		"final_M": 5.0, "m0": 80.0,
+		"capped": false, "elapsed_seconds": 7200,
+	})
+	var runner: GdUnitSceneRunner = scene_runner(REPORT_SCENE)
+	var s: Node = runner.scene()
+	TranslationServer.set_locale("pl_PL")
+	runner.invoke("_on_language_changed", &"pl", &"pl_PL")
+
+	assert_str((s.find_child("HeadlineLabel") as Label).text).is_equal(
+		"Twoje imperium pracowało bez ciebie."
+	)
+	assert_str((s.find_child("HatersLabel") as Label).text).is_equal("Hejterzy: +5")
+	assert_str((s.find_child("MoraleLabel") as Label).text).is_equal(
+		"Morale: Krytyczne (wcześniej Wysokie)"
+	)
+	assert_str((s.find_child("DurationLabel") as Label).text).is_equal(
+		"Nie było cię przez 2 godziny."
+	)
 
 ## AC: single-fire dismiss — the scene swap actually happens exactly once, not
 ## just the guard bool flipping. main_scene_path is retargeted at the report

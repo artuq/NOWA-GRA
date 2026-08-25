@@ -12,7 +12,9 @@ config_version=5
 
 config/name="King of Cringe"
 run/main_scene="res://scenes/boot/boot.tscn"
-config/features=PackedStringArray("4.6")
+config/features=PackedStringArray("4.6", "C#")
+config/quit_on_go_back=false
+config/icon="res://assets/branding/app_icon.png"
 
 [autoload]
 
@@ -24,7 +26,14 @@ ActionSystem="*res://src/core/action_system.gd"
 OfflineProgressSystem="*res://src/core/offline_progress_system.gd"
 OnboardingGate="*res://src/core/onboarding_gate.gd"
 DecisionCardSystem="*res://src/core/decision_card_system.gd"
+SponsorContractSystem="*res://src/core/sponsor_contract_system.gd"
 ClassPathSystem="*res://src/core/class_path_system.gd"
+SettingsSystem="*res://src/core/settings_system.gd"
+PrestigeSystem="*res://src/core/prestige_system.gd"
+BurnoutSystem="*res://src/core/burnout_system.gd"
+ChallengeSystem="*res://src/core/challenge_system.gd"
+StaffSystem="*res://src/core/staff_system.gd"
+AlgorithmContractSystem="*res://src/core/algorithm_contract_system.gd"
 
 [display]
 
@@ -34,9 +43,13 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 
+[dotnet]
+
+project/assembly_name="King of Cringe"
+
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg", "res://addons/godot_mcp/plugin.cfg")
 
 [gui]
 
@@ -46,3 +59,12 @@ theme/default_font_size=20
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true
+
+[internationalization]
+
+locale/fallback="en"
+locale/translations=PackedStringArray("res://assets/localization/en.po", "res://assets/localization/pl.po", "res://assets/localization/cards_en.po", "res://assets/localization/cards_pl.po", "res://assets/localization/gameplay_en.po", "res://assets/localization/gameplay_pl.po", "res://assets/localization/meta_en.po", "res://assets/localization/meta_pl.po")
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true

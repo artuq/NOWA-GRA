@@ -1,0 +1,4 @@
+interface:
+  display_name: "Asset Audit"
+  short_description: "Run the CCGS Asset Audit workflow in Codex."
+  default_prompt: "Use $asset-audit to handle this game-development task."

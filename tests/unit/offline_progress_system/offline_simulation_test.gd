@@ -9,8 +9,11 @@
 extends GdUnitTestSuite
 
 var _resource_snapshot: Dictionary[StringName, float] = {}
+var _prestige_totals_snapshot: Dictionary[StringName, float] = {}
 
 func before_test() -> void:
+	_prestige_totals_snapshot = PrestigeSystem.meta_bonus_totals.duplicate()
+	PrestigeSystem.meta_bonus_totals.erase(&"META_HATERS_RESIST")
 	_resource_snapshot[&"Cringe"] = ResourceManager.get_resource(&"Cringe")
 	_resource_snapshot[&"Haters"] = ResourceManager.get_resource(&"Haters")
 	_resource_snapshot[&"Morale"] = ResourceManager.get_resource(&"Morale")
@@ -24,6 +27,9 @@ func after_test() -> void:
 	for key: StringName in _resource_snapshot:
 		restore[key] = _resource_snapshot[key] - ResourceManager.get_resource(key)
 	ResourceManager.apply_delta(restore)
+	PrestigeSystem.meta_bonus_totals.clear()
+	for bonus_type: StringName in _prestige_totals_snapshot:
+		PrestigeSystem.meta_bonus_totals[bonus_type] = _prestige_totals_snapshot[bonus_type]
 	SaveSystem._debounce_timer.stop()  # the restore above re-arms it
 
 func _set_resources(cringe: float, haters: float, morale: float) -> void:

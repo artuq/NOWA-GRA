@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pixijs Rendering"
+  short_description: "Imported game-development capability: Pixijs Rendering."
+  default_prompt: "Use $pixijs-rendering for this game-development task."

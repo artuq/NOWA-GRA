@@ -6,11 +6,26 @@
 ## idle state, since start_action() is a single-concurrency gate.
 extends GdUnitTestSuite
 
+var _class_path_snapshot: Dictionary
+var _locale_snapshot: String
+
 func before_test() -> void:
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+	_class_path_snapshot = ClassPathSystem.serialize_state()
+	ClassPathSystem.reset_era_state()
+	ActionSystem._timer.stop()
 	ActionSystem.current_action_id = &""
+	ActionSystem.clear_queue()
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
+	ActionSystem._timer.stop()
 	ActionSystem.current_action_id = &""
+	ActionSystem.clear_queue()
+	ClassPathSystem.reset_era_state()
+	ClassPathSystem.restore_state(_class_path_snapshot)
+	SaveSystem._debounce_timer.stop()
 
 ## AC (`_process()` discipline, this story's core architectural requirement):
 ## the overlay must not process while idle, including at scene load --
@@ -34,6 +49,23 @@ func test_overlay_hidden_while_idle() -> void:
 
 	assert_bool(overlay.visible).is_false()
 
+
+## Package 2 regression: this full-screen overlay is presentation-only. Every
+## Control in its subtree must ignore pointer input so the ActionGrid and the
+## Sponsor Shield control remain tappable while an action is running.
+func test_overlay_control_tree_ignores_pointer_input() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/running_action_overlay.tscn")
+	var overlay: Control = runner.scene() as Control
+	var pending: Array[Node] = [overlay]
+
+	while not pending.is_empty():
+		var current: Node = pending.pop_back()
+		if current is Control:
+			assert_int((current as Control).mouse_filter).override_failure_message(
+				"%s may intercept taps below the presentation overlay" % current.get_path()
+			).is_equal(Control.MOUSE_FILTER_IGNORE)
+		pending.append_array(current.get_children())
+
 ## AC: action_started makes the overlay visible, enables _process(), and
 ## shows the action name.
 func test_action_started_shows_overlay_and_enables_process() -> void:
@@ -45,6 +77,20 @@ func test_action_started_shows_overlay_and_enables_process() -> void:
 	assert_bool(overlay.visible).is_true()
 	assert_bool(overlay.is_processing()).is_true()
 	assert_str((overlay.find_child("ActionNameLabel") as Label).text).is_equal("Make Drama")
+
+
+func test_runtime_polish_switch_updates_name_without_changing_running_action_id() -> void:
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/running_action_overlay.tscn")
+	var overlay: Node = runner.scene()
+
+	ActionSystem.start_action(&"zrob_drame")
+	assert_str((overlay.find_child("ActionNameLabel") as Label).text).is_equal("Make Drama")
+
+	TranslationServer.set_locale("pl_PL")
+	runner.invoke("_on_language_changed", &"pl", &"pl_PL")
+
+	assert_str((overlay.find_child("ActionNameLabel") as Label).text).is_equal("Zrób dramę")
+	assert_that(ActionSystem.current_action_id).is_equal(&"zrob_drame")
 
 ## AC: progress bar fill matches ActionSystem.get_progress() while running.
 func test_progress_bar_fill_matches_get_progress_while_running() -> void:
@@ -70,6 +116,21 @@ func test_remaining_time_label_shows_a_value_while_running() -> void:
 	runner.invoke("_process", 0.0)
 
 	assert_str(remaining_label.text).is_equal("9s")
+
+
+## Regression: T4 duration bonuses arm a shorter Timer. Remaining time must
+## use that effective duration rather than the base ACTION_DURATIONS entry.
+func test_remaining_time_uses_effective_duration_after_class_path_bonus() -> void:
+	ClassPathSystem._active_path = &"pato_streamer"
+	ClassPathSystem._current_tier[&"pato_streamer"] = 4
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/running_action_overlay.tscn")
+	var overlay: Node = runner.scene()
+	var remaining_label: Label = overlay.find_child("RemainingTimeLabel") as Label
+
+	ActionSystem.start_action(&"zrob_drame")
+	runner.invoke("_process", 0.0)
+
+	assert_str(remaining_label.text).is_equal("6s")
 
 ## Coverage gap closed (flagged by code review): progress bar correctly
 ## relays near-maximal fill shortly before completion. The exact

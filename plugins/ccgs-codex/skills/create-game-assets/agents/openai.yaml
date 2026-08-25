@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Game Assets"
+  short_description: "Imported game-development capability: Create Game Assets."
+  default_prompt: "Use $create-game-assets for this game-development task."

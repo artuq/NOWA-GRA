@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ux Design"
+  short_description: "Run the CCGS Ux Design workflow in Codex."
+  default_prompt: "Use $ux-design to handle this game-development task."

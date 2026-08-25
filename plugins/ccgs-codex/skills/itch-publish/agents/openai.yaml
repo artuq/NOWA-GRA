@@ -1,0 +1,4 @@
+interface:
+  display_name: "Itch Publish"
+  short_description: "Imported game-development capability: Itch Publish."
+  default_prompt: "Use $itch-publish for this game-development task."

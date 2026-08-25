@@ -113,6 +113,19 @@ func get_active_multiplier(action_id: StringName) -> float:
 
 `_path_multiplier_table` is a `Dictionary` populated from `assets/data/balance.json` under the `class_path` key at `_ready()`. No dependency ClassPathSystem → ActionSystem is introduced.
 
+### 5a. Sponsor multiplier application — pull model, card-resolution scoped *(added 2026-07-13, `/propagate-design-change` on `prestige-checkpoint-system.md`'s `/design-review`)*
+
+`guru_celebryta`/`biznesmen_contentu`'s Sponsor tier bonuses (per the quick-spec's Tier Bonuses table) have no resolution hook, since Sponsors are granted at Decision Card resolution (`sponsorzy_per_qualifying_card` roll), not via §5's `action_id`-keyed reward path. Same pull-model precedent as §5, additive:
+
+```gdscript
+func get_active_sponsor_multiplier() -> float:
+    if _active_path.is_empty():
+        return 1.0
+    return _sponsor_multiplier_table.get(_active_path, 1.0)
+```
+
+`_sponsor_multiplier_table` is a `Dictionary` populated from `assets/data/balance.json` under the same `class_path` key as `_path_multiplier_table` (§5), keyed by path only (no `action_id` — Sponsor grants aren't per-action). Called by `DecisionCardSystem` at the point it resolves a qualifying card's Sponsor roll, immediately before writing the delta via `ResourceManager.apply_delta()` — mirrors §5's "immediately after Morale multiplier, before `apply_delta()`" ordering, adapted to the card-resolution call site instead of action-completion. No new dependency direction: `DecisionCardSystem` already depends on `ClassPathSystem` indirectly via the `card_resolved` signal chain (§2/§4); this adds one pull-query call, same shape as ActionSystem's existing one.
+
 ### 6. Era reset — deferred wiring
 
 `ClassPathSystem.reset_era_state() -> void` is the public API. For MVP (no BurnoutSystem): called manually via debug console or test helper. For Alpha: BurnoutSystem registers ClassPathSystem as a listener to its `era_transitioned` signal in BurnoutSystem's `_ready()` — not here. This ADR defines the API contract only.
@@ -122,6 +135,79 @@ Meta flags (`class_path.{path_id}.best_tier.{N}`, `class_path.{path_id}.era_comp
 ### 7. Save / Load
 
 `ClassPathSystem.restore_state(data: Dictionary) -> void` — called by BootController in ADR-0003's init sequence, below DecisionCardSystem's restore_state. Persists and restores: `affiliation` Dictionary, `current_tier` Dictionary. Meta flags are the canonical long-term record; ClassPathSystem's transient copy is reconstructed from the save on restore.
+
+### 8. Investment Contribution — gated command, replacing the `invest()` stub *(added 2026-07-13, `/architecture-decision` extension for class-path-system.md's VS/Alpha delta)*
+
+Per GDD Core Rule 4a and F2, `invest()` becomes a live command gated on prior card-choice history: investment is only accepted when the path's F1 card-contribution term is `> 0`. The current stub's unconditional `return false` becomes the defensive rejection branch for a gate violation, not a permanent no-op.
+
+```gdscript
+func invest(path_id: StringName, resource_id: StringName, amount: float) -> bool:
+    if _card_contribution.get(path_id, 0.0) <= 0.0:  # gate — Core Rule 4a
+        return false
+    if not ResourceManager.can_afford(resource_id, amount):
+        return false
+    var rate: float = _investment_rate_table.get(path_id, 0.0)
+    ResourceManager.apply_delta(resource_id, -amount)
+    _investment_contribution[path_id] = _investment_contribution.get(path_id, 0.0) + amount * rate
+    _recalculate_total_affiliation(path_id)  # F3 clamp, then _check_tier_progression + _update_active_path
+    return true
+```
+
+**Required internal refactor**: `_recalculate_affiliation()` currently conflates F1 (card) and F2 (investment) into one `_affiliation[path_id]` float. Core Rule 4a's gate reads the F1 term alone, so the two contributions must be tracked separately (`_card_contribution`, `_investment_contribution`) and summed+clamped into `_affiliation` by a new `_recalculate_total_affiliation()` (F3), called from both the `card_resolved` handler and `invest()`. This is a structural change to existing MVP code, not a purely additive one — flag as MEDIUM implementation risk in the story (see Risks below).
+
+`_investment_rate_table` is per-path (`INVESTMENT_AFFILIATION_RATE[path]` per GDD F2), sourced from `assets/data/balance.json` under `class_path.investment_rate`, same data-source pattern as `_path_multiplier_table` (§5).
+
+### 9. Tie-Break Resolution (F5) — fixes BUG-003 *(added 2026-07-13)*
+
+Shipped `_update_active_path()` uses a strict `>` comparison with no margin check — this is BUG-003 (`production/qa/bugs/BUG-003-class-path-no-tiebreak-logic.md`, S3): two paths within `PATH_AFFILIATION_TIE_BREAK_MARGIN` of each other silently resolve to whichever iterates first in the `_affiliation` Dictionary, instead of GDD F5's "no active path, Ambiguous" state.
+
+Fix — track the top two candidates and compare their gap:
+
+```gdscript
+func _update_active_path() -> void:
+    var best_path: StringName = &""
+    var best_affil: float = -1.0
+    var second_affil: float = -1.0
+    for path_id: StringName in _affiliation:
+        if _current_tier.get(path_id, 0) >= 1:
+            var a: float = _affiliation[path_id]
+            if a > best_affil:
+                second_affil = best_affil
+                best_affil = a
+                best_path = path_id
+            elif a > second_affil:
+                second_affil = a
+    var resolved: StringName = best_path
+    if second_affil >= 0.0 and (best_affil - second_affil) < PATH_AFFILIATION_TIE_BREAK_MARGIN:
+        resolved = &""  # ambiguous — GDD F5
+    if resolved != _active_path:
+        _active_path = resolved
+        active_path_changed.emit(_active_path)
+```
+
+`PATH_AFFILIATION_TIE_BREAK_MARGIN` (5.0 default) stays a GDScript `const` in `class_path_system.gd`, matching where `CARD_AFFILIATION_PER_CHOICE`/`CARD_CONTRIBUTION_MAX` already live — not `balance.json` (those two are also file consts, not data-file values). GDD UI Requirements needs the numeric gap surfaced when ambiguous — new query `get_ambiguous_gap() -> float` returns `best_affil - second_affil` when ambiguous, `-1.0` otherwise.
+
+**Behavioural change**: `active_path_changed("")` can now fire when it previously wouldn't have (any two paths landing within the margin after previously having a resolved winner). This is intentional per F5, but is a new emission case for existing subscribers (HUD) to handle — already covered by GDD UI Requirements' "Ambiguous" state, not a new UI requirement.
+
+### 10. Signature Card Wiring (Tier 5) — pull-model trigger condition, not pool mutation *(added 2026-07-13)*
+
+`DecisionCardSystem._trigger_condition_met(condition: String)` is presently a single-case switch (`"always"` only — the GDD Open Question on trigger-condition grammar was explicitly deferred to VS+, per its own code comment). Rather than adding a push-based pool-mutation API to DecisionCardSystem (which would require a new dependency direction, contradicting §5/§5a's established pull-model precedent), signature cards use an additive trigger-condition grammar entry:
+
+```gdscript
+func _trigger_condition_met(condition: String) -> bool:
+    if condition == "always":
+        return true
+    if condition.begins_with("class_path_tier:"):
+        var parts := condition.split(":")  # "class_path_tier:{path_id}:{min_tier}"
+        return ClassPathSystem.get_tier(StringName(parts[1])) >= int(parts[2])
+    return false
+```
+
+Each path's Tier-5 signature card (`design/gdd/class-path-system.md` Tier Bonuses table: `viral_moment` / `brand_deal_of_the_century` / `kult_niszowy` / `ipo_influencera`) is added to `CardContentDatabase` with `trigger_condition = "class_path_tier:{path_id}:5"`. No pool-mutation call, no new signal consumer — `_build_eligible_pool()` already re-evaluates `trigger_condition` on every pool build (§`_build_eligible_pool`, existing code), so the card becomes eligible the moment tier 5 is reached and ineligible again after era reset drops the tier back to 0, with zero new wiring. `signature_card_unlocked`/`signature_card_removed` (GDD Signals table) remain UI-only notification signals — DecisionCardSystem does not subscribe to them.
+
+### 11. 4-Path Registration Expansion (Tiers 3-5) *(added 2026-07-13)*
+
+`_MULTIPLIER_TABLE` and the path-registration dictionaries currently cover 2 paths × Tiers 1-2 only (`class_path_system.gd`'s MVP-scope header comment). Expansion to 4 paths × Tiers 1-5 is pure data growth within the existing `_MULTIPLIER_TABLE` / `balance.json` structure (§5) — no new API surface. `TIER_THRESHOLDS` is already a 6-element array (`_check_tier_progression()`'s `range(old_tier + 1, TIER_THRESHOLDS.size())` already generalizes past 2 tiers) and needs no structural change, only its 5 real threshold values populated per GDD Tuning Knobs if not already present.
 
 ### Architecture Diagram
 
@@ -139,6 +225,9 @@ BootController._ready()         ─────────→ ClassPathSystem.r
 BurnoutSystem (Alpha only)      ─────────→ ClassPathSystem.reset_era_state()  [deferred]
 
 ClassPathUI / HUD               ──(reads)→ ClassPathSystem signals + query methods
+
+ClassPathUI (Invest button)     ─────────→ ClassPathSystem.invest(path, resource, amount)  [§8]
+DecisionCardSystem._build_eligible_pool() ─────────→ ClassPathSystem.get_tier(path_id)  [§10, pull, trigger_condition]
 ```
 
 ### Key Interfaces
@@ -156,12 +245,46 @@ func get_affiliation(path_id: StringName) -> float
 func get_tier(path_id: StringName) -> int
 func get_active_path() -> StringName
 func get_active_multiplier(action_id: StringName) -> float  # 1.0 when no active path
+func get_active_sponsor_multiplier() -> float  # 1.0 when no active path (added 2026-07-13, §5a)
+func get_ambiguous_gap() -> float  # best - second when ambiguous, -1.0 otherwise (added 2026-07-13, §9)
 
 # Commands
 func invest(path_id: StringName, resource_id: StringName, amount: float) -> bool
+# ^ gated on card_contribution[path] > 0 (Core Rule 4a) — implemented 2026-07-13, §8
 func restore_state(data: Dictionary) -> void
 func reset_era_state() -> void  # MVP: debug-only; Alpha: wired to BurnoutSystem.era_transitioned
+
+# DecisionCardSystem — additive trigger_condition grammar entry (§10)
+# _trigger_condition_met() gains: "class_path_tier:{path_id}:{min_tier}"
 ```
+
+### §12 — Tier Effect Table + pull-model effect getters (2026-07-28, tier-bonus fill)
+
+Extends §5/§11 for the non-Reach tier bonuses (the playtest-12-3 "hollow ladder"
+fix, `design/reference/class-path-tier-bonus-table-draft.md`). Same architecture,
+more getters — no new Autoload, no new signal, no push:
+
+- `_TIER_EFFECT_TABLE` (const, same in-file sourcing as `_MULTIPLIER_TABLE`):
+  path → tier → {secondary_yield, duration_mult, reach_all_mult,
+  cringe_gain_mult, sponsor_income_mult, morale_cost_mult, morale_drain_mult,
+  haters_growth_mult, morale_floor}. **Resolution is cumulative**: highest
+  defining tier ≤ current wins per key — and `get_active_multiplier()` itself
+  now resolves cumulatively too (fixing the latent hollow-tier-drops-T2 bug).
+- New pure-read getters, all active-path-gated with neutral defaults:
+  `get_secondary_yield(action_id)`, `get_action_duration_multiplier(action_id)`,
+  `get_cringe_gain_multiplier()`, `get_sponsor_income_multiplier()`,
+  `get_morale_cost_multiplier()`, `get_morale_drain_multiplier()`,
+  `get_haters_growth_multiplier()`, `get_morale_floor()`, plus the
+  presentation feed `get_tier_effect_data(path_id, tier)` (raw, per-tier,
+  not active-gated — ClassPathPanel legibility).
+- Consumers (pull model, §5's direction): ActionSystem (timer arming ×
+  duration mult; resolution: cringe/morale scaling + secondary-yield merge),
+  DecisionCardSystem (positive Sponsors card deltas × sponsor income),
+  OfflineProgressSystem (drain/haters mults + Morale floor, snapshotted once
+  at sim start like the shield). **ResourceManager deliberately NOT a
+  consumer**: a live Morale-floor clamp in `apply_delta()` would make Morale
+  spends (ekspert's own invest resource) free at the floor — the floor is an
+  ambient-drain shield only (documented on both sides).
 
 ## Alternatives Considered
 
@@ -199,6 +322,8 @@ All action rewards flow through a ClassPathSystem-aware `apply_delta_with_path_b
 ### Risks
 - **BurnoutSystem wiring deferred**: BurnoutSystem must explicitly connect to `ClassPathSystem.reset_era_state` when implemented. Mitigation: BurnoutSystem's epic file will document this dependency when created.
 - **`card_resolved` signal order**: signal fires after HistoryFlagManager.increment_counter but within the same frame as `resolve_choice()`. If any future subscriber expects counter-not-yet-incremented state, ordering will matter. Mitigation: document that ClassPathSystem and all future `card_resolved` subscribers must assume the counter IS already incremented.
+- **§8 `_recalculate_affiliation()` refactor**: splitting the F1/F2-conflated float into two tracked terms touches existing MVP code (not purely additive) — regression risk against the 2-path MVP's existing behaviour. Mitigation: story requires the existing `class_path_core_test.gd` suite (25 tests) to stay green after the split, plus new F1/F2-isolation test cases.
+- **§9 tie-break behavioural change**: `active_path_changed("")` can now fire in a case it never did before (see §9). Mitigation: already covered by GDD F5 / UI Requirements' Ambiguous state — flag in the story as a "new emission path for an existing signal," not a new signal.
 
 ## GDD Requirements Addressed
 
@@ -209,6 +334,10 @@ All action rewards flow through a ClassPathSystem-aware `apply_delta_with_path_b
 | `class-path-system-2026-07-01.md` | ActionSystem queries `get_active_multiplier(action_id)` on action completion | Pull model: ActionSystem calls ClassPathSystem.get_active_multiplier(); ClassPathSystem never touches ActionSystem |
 | `class-path-system-2026-07-01.md` | BurnoutSystem emits `era_transitioned` → ClassPathSystem.reset_era_state() | API defined; BurnoutSystem wiring deferred to BurnoutSystem's ADR (Alpha) |
 | `class-path-system-2026-07-01.md` | SaveSystem: ClassPathSystem state added to serialize/restore cycle | restore_state(data: Dictionary) per ADR-0003 pattern |
+| `class-path-system.md` | F2 Investment Contribution, gated by Core Rule 4a | §8 — `invest()` implemented with card-contribution gate |
+| `class-path-system.md` | F5 Active Path Resolution and Tie-Break; BUG-003 regression coverage | §9 — `_update_active_path()` fixed to track top-two-candidate margin |
+| `class-path-system.md` | Tier 5 signature cards added/removed from Decision Card pool | §10 — pull-model `trigger_condition` grammar entry, no pool-mutation API |
+| `class-path-system.md` | 4 paths, Tiers 1-5 (vs. MVP's 2 paths, Tiers 1-2) | §11 — data-only expansion of `_MULTIPLIER_TABLE` |
 
 ## Performance Implications
 - **CPU**: O(1) per action completion (Dictionary lookup for multiplier). O(4 paths) per card resolution (tier check). Negligible on any mobile hardware.
@@ -229,6 +358,11 @@ All action rewards flow through a ClassPathSystem-aware `apply_delta_with_path_b
 - Unit test: `get_active_multiplier("zrob_drame")` returns 1.30 when pato_streamer at Tier 1, 1.0 otherwise
 - Integration test: card resolution → counter increment → `card_resolved` signal → affiliation change → tier unlock chain
 - Integration test: `restore_state()` after `reset_era_state()` produces correct zero state
+- Unit test: `invest()` returns `false` and applies no state change when `card_contribution[path] == 0` (§8 gate)
+- Unit test: `invest()` succeeds and increments `investment_contribution[path]` when the gate condition holds
+- Unit test: two paths within `PATH_AFFILIATION_TIE_BREAK_MARGIN` resolve to `""` (BUG-003 regression, §9)
+- Unit test: `get_ambiguous_gap()` returns the correct positive gap when not ambiguous, `-1.0` when never computed
+- Integration test: path reaches Tier 5 → signature card appears in `_build_eligible_pool()` output; era reset → card disappears again (§10)
 
 ## Related Decisions
 - ADR-0001: Autoload singleton architecture (pattern basis for this decision)

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sprint Status"
+  short_description: "Run the CCGS Sprint Status workflow in Codex."
+  default_prompt: "Use $sprint-status to handle this game-development task."

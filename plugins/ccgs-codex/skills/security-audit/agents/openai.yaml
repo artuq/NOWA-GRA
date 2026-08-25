@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Audit"
+  short_description: "Run the CCGS Security Audit workflow in Codex."
+  default_prompt: "Use $security-audit to handle this game-development task."

@@ -154,4 +154,6 @@ func test_multi_key_delta_clamps_cringe_independently_of_other_keys() -> void:
 
 	assert_float(_rm.get_resource(&"Cringe")).is_equal_approx(100.0, 0.0001)
 	assert_float(_rm.get_resource(&"Reach")).is_equal_approx(50.0, 0.0001)
-	assert_float(_rm.get_resource(&"Morale")).is_equal_approx(5.0, 0.0001)
+	# Morale starts FULL (100.0) since the 2026-07-28 default fix, so a +5
+	# delta clamps at the 100 ceiling rather than landing on a 0 baseline.
+	assert_float(_rm.get_resource(&"Morale")).is_equal_approx(100.0, 0.0001)

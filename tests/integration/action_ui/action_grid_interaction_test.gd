@@ -6,19 +6,21 @@
 ## 002 entry).
 ##
 ## ActionSystem state is reset per before_test()/after_test() to guarantee
-## idle state at the start of each test, since start_action() is a
-## single-concurrency gate.
+## an idle action and empty queue at the start of each test.
 extends GdUnitTestSuite
 
 var _risky_snapshot: int
 var _safe_snapshot: int
+var _locale_snapshot: String
 
 func before_test() -> void:
-	# Force idle: if a prior test left an action running, resolve it before
-	# this test begins. ActionSystem has no public "force idle" seam, so
-	# directly clear current_action_id -- acceptable here since this is test
-	# setup, not production code touching another system's internals.
+	_locale_snapshot = TranslationServer.get_locale()
+	TranslationServer.set_locale("en")
+	# Force idle and clear the ephemeral queue. Direct state access is limited
+	# to test isolation; production callers still use ActionSystem's API.
+	ActionSystem._timer.stop()
 	ActionSystem.current_action_id = &""
+	ActionSystem.clear_queue()
 	# The grid now gates slots 4-6 on the real HistoryFlagManager (DDR-0001 #3).
 	# Reset the two gating counters to 0 so these "3 locked" assertions are not
 	# polluted by counters another suite left set. The slot-6 milestones
@@ -30,7 +32,10 @@ func before_test() -> void:
 	HistoryFlagManager.restore_state({"counters": {"risky_choices_count": 0, "safe_choices_count": 0}})
 
 func after_test() -> void:
+	TranslationServer.set_locale(_locale_snapshot)
+	ActionSystem._timer.stop()
 	ActionSystem.current_action_id = &""
+	ActionSystem.clear_queue()
 	HistoryFlagManager.restore_state({"counters": {
 		"risky_choices_count": _risky_snapshot, "safe_choices_count": _safe_snapshot,
 	}})
@@ -129,17 +134,41 @@ func test_tapping_locked_slot_is_a_noop() -> void:
 
 	assert_str(String(ActionSystem.current_action_id)).is_equal("")
 
-## AC: running state -- starting an action disables all 6 buttons immediately.
-func test_starting_an_action_disables_all_six_buttons() -> void:
+## Queue quick-spec AC: running state keeps choices available so a second tap
+## can enqueue without interrupting the active action.
+func test_starting_action_keeps_choices_enabled_and_second_tap_queues() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 	var slot1: Button = grid.find_child("Slot1Button") as Button
+	var slot2: Button = grid.find_child("Slot2Button") as Button
 
 	slot1.pressed.emit()
 
 	for i in range(1, 7):
 		var button: Button = grid.find_child("Slot%dButton" % i) as Button
-		assert_bool(button.disabled).is_true()
+		assert_bool(button.disabled).is_false()
+
+	slot2.pressed.emit()
+
+	assert_that(ActionSystem.current_action_id).is_equal(&"nagraj_vloga")
+	assert_int(ActionSystem.get_queue_size()).is_equal(1)
+	assert_bool(grid._queue_bar.visible).is_true()
+
+
+## Regression: ActionGrid may be recreated while ActionSystem still owns an
+## ephemeral queue. Its first frame must reconstruct the icons and Clear button
+## from current state instead of waiting for a future queue_changed signal.
+func test_recreated_grid_rebuilds_preexisting_queue_immediately() -> void:
+	ActionSystem.start_action(&"nagraj_vloga")
+	ActionSystem.start_action(&"zrob_drame")
+	ActionSystem.start_action(&"przeprosiny")
+
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
+	var grid: Node = runner.scene()
+
+	assert_bool(grid._queue_bar.visible).is_true()
+	assert_int(grid._queue_bar.get_child_count()).is_equal(3)  # two icons + Clear
+	assert_object(grid._queue_bar.get_child(2)).is_same(grid._clear_btn)
 
 ## AC (revised by Story 005): running->resolved->idle transition re-enables
 ## ALL six buttons -- the base 3 for starting actions, and the still-locked
@@ -169,6 +198,29 @@ func test_button_shows_title_and_stats_as_separate_labels() -> void:
 	# zrob_drame: 9s, Reach +10, Cringe +20, Morale -3 (per ActionSystem.ACTION_REWARDS)
 	assert_str((grid.find_child("Slot2Title") as Label).text).is_equal("Make Drama")
 	assert_str((grid.find_child("Slot2Stats") as Label).text).is_equal("9s — +10R, +20C, -3M")
+
+
+## Locale changes re-render player-facing action names and lock requirements;
+## immutable action ids and the action reward/timing tables remain identical.
+func test_polish_locale_refreshes_dynamic_action_copy_only() -> void:
+	var durations_before: Dictionary = ActionSystem.ACTION_DURATIONS.duplicate(true)
+	var rewards_before: Dictionary = ActionSystem.ACTION_REWARDS.duplicate(true)
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
+	var grid: Node = runner.scene()
+
+	TranslationServer.set_locale("pl_PL")
+	runner.invoke("_on_language_changed", &"pl", &"pl_PL")
+
+	assert_str((grid.find_child("Slot2Title") as Label).text).is_equal("Zrób dramę")
+	assert_str((grid.find_child("Slot2Stats") as Label).text).is_equal("9s — +10Z, +20C, -3M")
+	assert_str((grid.find_child("Slot4Stats") as Label).text).is_equal("0 / 3 wybory")
+	assert_str((grid.find_child("Slot5Stats") as Label).text).is_equal("0 / 6 wyborów")
+	assert_str((grid.find_child("Slot6Stats") as Label).text).is_equal("Odkryj ważny moment")
+	assert_str(runner.invoke("_remaining_choices_text", 1)).is_equal("Podejmij jeszcze 1 decyzję")
+	assert_str(runner.invoke("_remaining_choices_text", 3)).is_equal("Podejmij jeszcze 3 decyzje")
+	assert_str(runner.invoke("_remaining_choices_text", 5)).is_equal("Podejmij jeszcze 5 decyzji")
+	assert_that(ActionSystem.ACTION_DURATIONS).is_equal(durations_before)
+	assert_that(ActionSystem.ACTION_REWARDS).is_equal(rewards_before)
 
 ## ActionScreen root scene instantiates ActionGrid as a sibling of ResourceHud.
 func test_action_screen_root_instantiates_action_grid_zone() -> void:
@@ -201,22 +253,58 @@ func test_title_labels_wrap_text_and_buttons_have_minimum_size() -> void:
 			assert_int(title.autowrap_mode).is_equal(TextServer.AUTOWRAP_OFF)
 		assert_vector(button.custom_minimum_size).is_equal(Vector2(100, 160))
 
-## AC (coverage gap closed, flagged by code review): start_action() returning
-## false (e.g. an action already running) must not disable buttons a second
-## time or error -- the pressed handler's `if started:` guard must hold.
-func test_pressed_handler_does_not_disable_buttons_when_start_action_rejects() -> void:
+## Queue quick-spec AC: live action choices disable only at QUEUE_CAP, reject
+## a stale extra request without growing the queue, then re-enable on clear.
+## Locked preview slots stay tappable because they cannot enqueue anything.
+func test_action_choices_disable_only_at_queue_cap_and_reenable_after_clear() -> void:
 	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
 	var grid: Node = runner.scene()
 	var slot1: Button = grid.find_child("Slot1Button") as Button
-	var slot2: Button = grid.find_child("Slot2Button") as Button
 
-	slot1.pressed.emit()  # starts nagraj_vloga, current_action_id now non-empty
-	assert_bool(slot2.disabled).is_true()  # already disabled by the first start
+	slot1.pressed.emit()
+	for i in ActionSystem.QUEUE_CAP:
+		assert_bool(ActionSystem.start_action(&"przeprosiny")).is_true()
 
-	# Directly invoke the handler again (simulating a stale/race button press)
-	# while an action is already running -- start_action() must return false,
-	# and the handler must not error or change state further.
+	assert_int(ActionSystem.get_queue_size()).is_equal(ActionSystem.QUEUE_CAP)
+	for i in range(1, 4):
+		var button: Button = grid.find_child("Slot%dButton" % i) as Button
+		assert_bool(button.disabled).is_true()
+		assert_str(button.tooltip_text).is_equal("Queue full")
+	for i in range(4, 7):
+		assert_bool((grid.find_child("Slot%dButton" % i) as Button).disabled).is_false()
+
+	# Simulate a stale/racing callback that arrived despite the cap-disable.
 	runner.invoke("_on_unlocked_button_pressed", &"zrob_drame")
+	assert_int(ActionSystem.get_queue_size()).is_equal(ActionSystem.QUEUE_CAP)
 
-	assert_str(String(ActionSystem.current_action_id)).is_equal("nagraj_vloga")
-	assert_bool(slot2.disabled).is_true()
+	ActionSystem.clear_queue()
+	for i in range(1, 4):
+		var button: Button = grid.find_child("Slot%dButton" % i) as Button
+		assert_bool(button.disabled).is_false()
+		assert_str(button.tooltip_text).is_empty()
+
+
+## Coverage for the live side of gated slots: an unlocked slot 4 is a real
+## queueing action, so it follows the same cap-disable and clear-reenable rules
+## as the three base actions (unlike a still-locked preview).
+func test_unlocked_gated_action_disables_at_cap_and_reenables_after_clear() -> void:
+	HistoryFlagManager.restore_state({"counters": {
+		"risky_choices_count": ActionUnlocks.SLOT_4_COUNTER_THRESHOLD,
+		"safe_choices_count": 0,
+	}})
+	var runner: GdUnitSceneRunner = scene_runner("res://scenes/action_screen/action_grid.tscn")
+	var grid: Node = runner.scene()
+	var slot4: Button = grid.find_child("Slot4Button") as Button
+	assert_bool(grid._gated_live[0]).is_true()
+
+	ActionSystem.start_action(&"nagraj_vloga")
+	for _i in ActionSystem.QUEUE_CAP:
+		ActionSystem.start_action(&"przeprosiny")
+
+	assert_bool(slot4.disabled).is_true()
+	assert_str(slot4.tooltip_text).is_equal("Queue full")
+
+	ActionSystem.clear_queue()
+
+	assert_bool(slot4.disabled).is_false()
+	assert_str(slot4.tooltip_text).is_empty()

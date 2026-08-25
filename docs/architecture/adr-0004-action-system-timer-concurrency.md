@@ -1,7 +1,7 @@
 # ADR-0004: Action System Timer and Single-Concurrency Enforcement
 
 ## Status
-Accepted (2026-06-20, following independent /architecture-review — verdict CONCERNS overall but no conflicts or blockers against this ADR specifically)
+Accepted (2026-06-20; amended for the approved action queue and effective-duration read API, documentation sync 2026-08-05)
 
 ## Date
 2026-06-19
@@ -37,8 +37,9 @@ Accepted (2026-06-20, following independent /architecture-review — verdict CON
 - Must integrate with ADR-0001's `start_action(action_id) -> bool` / `action_completed` signal contract
 
 ### Requirements
-- Starting a second action while one is running must fail cleanly (return `false`), never queue or interrupt the running one
+- Only one action may run at once. A request while one is running must enqueue up to `QUEUE_CAP`, never interrupt or restart the running Timer; only an unknown id or full queue returns `false`.
 - Progress must be queryable every frame for UI display without polling overhead
+- The effective duration captured when the Timer is armed must be readable without exposing the private Timer or recalculating modifiers mid-action.
 
 ## Decision
 
@@ -47,6 +48,8 @@ Use a **single `Timer` node** (not `Autoload`-attached as a child, since Autoloa
 ```gdscript
 # ActionSystem (Autoload)
 var current_action_id: StringName = &""
+const QUEUE_CAP: int = 10
+var _queue: Array[StringName] = []
 var _timer: Timer
 
 func _ready() -> void:
@@ -56,17 +59,30 @@ func _ready() -> void:
     add_child(_timer)
 
 func start_action(action_id: StringName) -> bool:
+    if not ACTION_DURATIONS.has(action_id):
+        return false
     if current_action_id != &"":
-        return false  # single-concurrency: reject if one is already running
+        if _queue.size() >= QUEUE_CAP:
+            return false
+        _queue.append(action_id)
+        queue_changed.emit(_queue.duplicate())
+        return true
     current_action_id = action_id
-    _timer.wait_time = ACTION_DURATIONS[action_id]
+    _timer.wait_time = ACTION_DURATIONS[action_id] * ClassPathSystem.get_action_duration_multiplier(action_id)
     _timer.start()
+    action_started.emit(action_id)  # Timer is armed before synchronous listeners run
     return true
 
 func get_progress() -> float:
     if current_action_id == &"" or _timer.wait_time <= 0.0:
-        return 0.0  # guards divide-by-zero; wait_time is always set before current_action_id in start_action()
+        return 0.0  # guards idle/divide-by-zero; start_action arms before notifying or returning
     return 1.0 - (_timer.time_left / _timer.wait_time)
+
+func get_current_duration() -> float:
+    return 0.0 if current_action_id == &"" else _timer.wait_time
+
+func get_queue_snapshot() -> Array[StringName]:
+    return _queue.duplicate()  # ordered read-only snapshot for recreated UI
 
 func _on_action_timeout() -> void:
     var completed_id := current_action_id
@@ -87,21 +103,22 @@ func _on_action_timeout() -> void:
     ResourceManager.apply_delta(deltas)  # direct call, ownership-clear write — ADR-0001 pattern; ResourceManager clamps Cringe/Morale to [0,100]
 
     action_completed.emit(completed_id, deltas)  # notification only, per ADR-0001; carries the FINAL applied deltas, not raw base rewards
+    _try_dequeue()  # starts queue front only when idle and no suspension is active
 ```
 
-> **Correction (2026-06-23):** The original code sample above (pre-Resource-System-implementation) emitted `ACTION_REWARDS[completed_id]` raw as `action_completed`'s payload and showed no write to `ResourceManager` and no Morale-multiplier scaling. This was flagged by `qa-lead` during `/create-stories` for the Action System and confirmed against `action-system.md` (Action System must scale Reach by the Formula C multiplier and write deltas before notifying) and ADR-0001 (resource mutation is a direct call from the owning module, signals are notification-only). The sample is corrected above to call the real, now-built `ResourceFormulas.action_effectiveness_multiplier()` and `ResourceManager.apply_delta()` APIs and to emit the final applied deltas. This is a code-sample correction within the existing Accepted decision — the Timer/`current_action_id` concurrency mechanism this ADR decides is unaffected and unchanged.
+> **Corrections:** On 2026-06-23 the reward sample was updated to apply the Morale multiplier and write through ResourceManager before notification. The approved `design/quick-specs/action-queue-auto-repeat-2026-06-30.md` subsequently superseded only the busy-request rejection rule: `current_action_id` still enforces one running action, while additional accepted requests wait in a bounded queue. The 2026-08-05 sync also records `get_current_duration()` so presentation reads the exact Timer duration after Class Path modifiers.
 
 `get_progress()` is polled by Action UI every frame via `_process()` — this is cheap (a single division) and matches the existing requirement that the progress bar update every frame without a dedicated signal-per-frame mechanism, which `Timer` doesn't offer natively anyway.
 
 ### Architecture Diagram
 ```
-ActionUI._process() -> ActionSystem.get_progress() [poll, every frame]
-Button.pressed -> ActionSystem.start_action(id) -> Timer.start() (or rejected if busy)   # Button, not TouchScreenButton — per ADR-0007
-Timer.timeout -> ActionSystem._on_action_timeout() -> emits action_completed
+ActionUI._process() -> ActionSystem.get_progress() + get_current_duration() [poll while active]
+Button.pressed -> ActionSystem.start_action(id) -> Timer.start() if idle OR queue append if running
+Timer.timeout -> ActionSystem._on_action_timeout() -> emits action_completed -> dequeues when unsuspended
 ```
 
 ### Key Interfaces
-`start_action(action_id: StringName) -> bool` is unchanged from ADR-0001. `signal action_completed(action_id: StringName, rewards: Dictionary)` keeps its ADR-0001 signature, but as of the 2026-06-23 correction the `rewards` payload it carries is the **final applied deltas** (post-Morale-scaling, the same `Dictionary[StringName, float]` passed to `ResourceManager.apply_delta()`), not the raw `ACTION_REWARDS` base values — subscribers (`OnboardingGate`, `DecisionCardSystem`) only need `action_id` per their documented use, so this payload change does not affect them. This ADR adds `get_progress() -> float` (new, not previously specified) and `current_action_id: StringName` as the persisted-state field for `restore_state()` (per ADR-0003) — though resuming a mid-flight action across app restarts is explicitly out of scope (see Edge Cases below).
+`start_action(action_id: StringName) -> bool` means “accepted,” either started or queued. `signal action_completed(action_id: StringName, rewards: Dictionary)` carries final applied deltas. `get_progress() -> float` and `get_current_duration() -> float` are the timing reads; the latter returns the effective Timer duration captured at start and `0.0` while idle. `get_queue_snapshot() -> Array[StringName]` returns an ordered typed copy for presentation reconstruction without exposing mutation. `current_action_id` and the queue remain ephemeral across app restarts. `_try_dequeue()` is valid only while idle; lifting a card/Morale suspend during an active action must not pop-and-reappend the head or rotate FIFO order.
 
 ## Alternatives Considered
 
@@ -124,7 +141,8 @@ Described above. Minimal code, uses Godot's built-in timer correctly, matches `a
 
 ### Positive
 - Minimal code — `Timer` node handles all the actual countdown logic
-- Single-concurrency enforcement is a one-line guard, impossible to accidentally bypass since `start_action()` is the only entry point (per ADR-0001, no other module writes to `current_action_id`)
+- Single-concurrency remains explicit: one Timer/current id runs while a bounded list stores future work.
+- Queueing supports idle-session planning without restarting or partially rewarding the active action.
 
 ### Negative
 - None significant at this scale
@@ -152,9 +170,11 @@ Described above. Minimal code, uses Godot's built-in timer correctly, matches `a
 N/A — first implementation of this system.
 
 ## Validation Criteria
-- Attempt `start_action()` while an action is running: confirm it returns `false` and the running action is unaffected
+- Attempt `start_action()` while running: confirm it enqueues until `QUEUE_CAP`, never restarts the Timer, and rejects only the request beyond cap.
 - Let an action complete: confirm `action_completed` fires with the correct `action_id` and `rewards`, and `current_action_id` resets to `&""`
 - Poll `get_progress()` at the start, middle, and end of an action: confirm values are 0.0, ~0.5, and 1.0 respectively (just before completion)
+- Confirm `get_current_duration()` returns the modifier-adjusted Timer duration and a synchronous `action_started` listener sees it already armed.
+- Lift card suspension before the active action ends: confirm the ordered queue snapshot is unchanged; recreate ActionGrid with a pre-populated queue and confirm its strip appears immediately.
 - Kill the app mid-action and relaunch: confirm the system resets to idle, not an error state
 
 ## Related Decisions
