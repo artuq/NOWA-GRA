@@ -187,3 +187,28 @@ past ten seconds from the first unsaved mutation. Any `save_now()`, reset, or
 application-pause flush stops both Timers, preventing a duplicate trailing
 write. Autosave suppression gates both routine timeout handlers; an OS pause
 still takes priority and flushes either pending schedule.
+
+## Implementation Amendment (2026-08-25): CrazyGames Data Module Backend
+
+The Web/CrazyGames port keeps the existing JSON schema and `SaveSystem` public
+API, but changes the persistence backend after the CrazyGames SDK initializes:
+
+1. `BootController` waits for `SaveSystem.prepare_web_data()` before restoring
+   progression or reporting `loadingStop`.
+2. On an initialized CrazyGames host, `CrazyGames.SDK.data` is authoritative.
+   Its single `king_of_cringe_save_v1` value stores the same complete JSON
+   snapshot used by the native file backend.
+3. A successful Data Module write is followed by a best-effort local atomic
+   write. That local file is only a cache; it is never used instead of an
+   available account-aware Data Module snapshot.
+4. If the SDK is disabled, unavailable, or times out, standalone Web retains
+   the original local `user://save.json` behavior.
+5. Android never enters this path (`OS.has_feature("web")` gate) and continues
+   to use the original temp-file-then-rename implementation unchanged.
+
+The cloud value is loaded before offline elapsed time is calculated, preventing
+the temporary local Autoload state from generating rewards against the wrong
+account snapshot. No migration from a browser-local Web save is performed for
+this first public CrazyGames release because no previous public CrazyGames save
+population exists; avoiding migration also prevents one browser user's cache
+from being copied into another CrazyGames account.

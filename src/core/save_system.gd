@@ -1,6 +1,9 @@
 ## SaveSystem owns all save-file I/O: a full-snapshot JSON save written
 ## atomically (temp-file write, then rename), with a `schema_version` field
-## and corruption/mismatch fallback to first-session defaults.
+## and corruption/mismatch fallback to first-session defaults. On CrazyGames
+## Web builds the same JSON snapshot is persisted through the SDK Data Module;
+## the local file remains the native/standalone-Web backend and a best-effort
+## cache, never the authority for an initialized CrazyGames session.
 ##
 ## Implements TR-save-001/002/003 / ADR-0002: `save_now()` serializes peer
 ## modules' state to `user://save.tmp` via `JSON.stringify()`, then atomically
@@ -50,6 +53,7 @@ static var TEMP_PATH: String = "user://save.tmp"
 ## for the same test-isolation repointing as SAVE_PATH/TEMP_PATH.
 static var BACKUP_PATH: String = "user://save.backup.json"
 const SCHEMA_VERSION: int = 1
+const _WEB_DATA_READY_TIMEOUT_MSEC: int = 10_000
 
 ## Once per PROCESS, not per instance: test suites instantiate fresh
 ## SaveSystem instances constantly — a per-instance delete would wipe the
@@ -100,6 +104,9 @@ var state: State = State.UNINITIALIZED
 
 var _debounce_timer: Timer
 var _max_dirty_timer: Timer
+var _web_data_prepared: bool = false
+var _web_data_enabled: bool = false
+var _web_loaded_data: Dictionary = {}
 
 ## Autosave suppression window (ADR-0002 §"Autosave suppression window",
 ## added 2026-07-13 for Prestige/Checkpoint System's era-transition atomicity
@@ -115,15 +122,19 @@ var _last_saved_at_floor: float = 0.0
 
 func _ready() -> void:
 	state = State.LOADING
-	var data: Dictionary = load_save()
-	ResourceManager.restore_state(data.get("resources", {}))
-	HistoryFlagManager.restore_state(data.get("history_flags", {}))
-	OnboardingGate.restore_state(data.get("onboarding", {}))
-	SponsorContractSystem.restore_state(data.get("sponsor_contract", {}))
-	ClassPathSystem.restore_state(data.get("class_path", {}))
-	SettingsSystem.restore_state(data.get("settings", {}))
-	PrestigeSystem.restore_state(data.get("prestige", {}))
-	StaffSystem.restore_state(data.get("staff", {}))
+	# Web boot is deferred to BootController so the CrazyGames SDK can finish
+	# initializing its account-aware Data Module before any progression is
+	# restored. Native platforms keep the established synchronous Autoload path.
+	if not OS.has_feature("web"):
+		var data: Dictionary = load_save()
+		ResourceManager.restore_state(data.get("resources", {}))
+		HistoryFlagManager.restore_state(data.get("history_flags", {}))
+		OnboardingGate.restore_state(data.get("onboarding", {}))
+		SponsorContractSystem.restore_state(data.get("sponsor_contract", {}))
+		ClassPathSystem.restore_state(data.get("class_path", {}))
+		SettingsSystem.restore_state(data.get("settings", {}))
+		PrestigeSystem.restore_state(data.get("prestige", {}))
+		StaffSystem.restore_state(data.get("staff", {}))
 	state = State.READY
 
 	_debounce_timer = Timer.new()
@@ -137,6 +148,51 @@ func _ready() -> void:
 	_max_dirty_timer.wait_time = _MAX_DIRTY_AGE_SEC
 	_max_dirty_timer.timeout.connect(_on_max_dirty_timeout)
 	add_child(_max_dirty_timer)
+
+
+## Waits for the page-level CrazyGames adapter and loads the account-aware
+## Data Module snapshot before BootController restores progression. Returns
+## `true` only when the Data Module is active; disabled/failed SDK hosts fall
+## back to the unchanged local `user://` save path without blocking startup.
+## Repeated calls in the same process are idempotent (Start Screen routes back
+## through BootController once per launch).
+func prepare_web_data() -> bool:
+	if not OS.has_feature("web"):
+		return false
+	if _web_data_prepared:
+		return _web_data_enabled
+
+	var deadline_msec: int = Time.get_ticks_msec() + _WEB_DATA_READY_TIMEOUT_MSEC
+	while Time.get_ticks_msec() < deadline_msec:
+		var status_value: Variant = JavaScriptBridge.eval(
+			"window.kocSDK ? window.kocSDK.dataStatus : 'pending';",
+			true,
+		)
+		var data_status: String = str(status_value)
+		if data_status == "enabled":
+			_web_data_enabled = true
+			_web_data_prepared = true
+			var raw_value: Variant = JavaScriptBridge.eval(
+				"window.kocSDK.getSave();",
+				true,
+			)
+			if raw_value is String and not raw_value.is_empty():
+				_web_loaded_data = parse_save_json(raw_value)
+				if _web_loaded_data.is_empty():
+					push_error("CrazyGames Data Module returned an invalid save; starting with safe defaults")
+			else:
+				_web_loaded_data = {}
+			return true
+		if data_status == "disabled":
+			_web_data_prepared = true
+			_web_data_enabled = false
+			return false
+		await get_tree().process_frame
+
+	_web_data_prepared = true
+	_web_data_enabled = false
+	push_warning("CrazyGames Data Module initialization timed out; using local Web save")
+	return false
 
 
 ## Marks game state dirty, starting (or restarting) the [constant
@@ -274,16 +330,35 @@ func save_settings_only() -> bool:
 	return success
 
 
-## The shared atomic-write tail of [method save_now] and [method reset_save]:
-## JSON to [constant TEMP_PATH], then rename onto [constant SAVE_PATH]. Failure
-## modes and logging unchanged from the original save_now() body -- a failed
-## rename retains the `.tmp` for retry, never silently discards.
+## The shared write tail of [method save_now] and [method reset_save]. An
+## initialized CrazyGames session writes the JSON snapshot to the SDK Data
+## Module first, then refreshes the local file as a best-effort cache. Native
+## platforms and standalone Web hosts retain the original atomic local write.
 func _write_atomic(data: Dictionary) -> bool:
+	var json_text: String = JSON.stringify(data)
+	if OS.has_feature("web") and _web_data_enabled:
+		var escaped_json: String = JSON.stringify(json_text)
+		var cloud_result: Variant = JavaScriptBridge.eval(
+			"window.kocSDK && window.kocSDK.setSave(%s);" % escaped_json,
+			true,
+		)
+		if not bool(cloud_result):
+			push_error("CrazyGames Data Module rejected the save snapshot")
+			return false
+		_web_loaded_data = data.duplicate(true)
+		if not _write_local_atomic(json_text):
+			push_warning("CrazyGames save succeeded, but the local Web cache could not be refreshed")
+		return true
+	return _write_local_atomic(json_text)
+
+
+## Native/standalone-Web atomic file backend retained unchanged from ADR-0002.
+func _write_local_atomic(json_text: String) -> bool:
 	var file: FileAccess = FileAccess.open(TEMP_PATH, FileAccess.WRITE)
 	if file == null:
 		push_error("Save write failed: could not open %s (%s)" % [TEMP_PATH, FileAccess.get_open_error()])
 		return false
-	file.store_string(JSON.stringify(data))
+	file.store_string(json_text)
 	file.close()
 	var err: Error = DirAccess.rename_absolute(TEMP_PATH, SAVE_PATH)
 	if err != OK:
@@ -379,26 +454,39 @@ func _reset_runtime_for_new_game() -> void:
 	OnboardingGate.restore_state({})
 
 
-## Reads and parses [constant SAVE_PATH]. Returns `{}` (triggering
+## Reads the prepared CrazyGames Data Module snapshot when that backend is
+## active; otherwise reads [constant SAVE_PATH]. Returns `{}` (triggering
 ## first-session defaults in every peer module's `restore_state()`) if the
-## file is missing, fails to parse as JSON, or its `schema_version` does not
-## match [constant SCHEMA_VERSION] — never crashes, never attempts a partial
-## migration. A stray leftover `.tmp` file is never read by this method.
+## snapshot is missing, fails to parse as JSON, or its `schema_version` does
+## not match [constant SCHEMA_VERSION] — never crashes, never attempts a
+## partial migration. A stray leftover `.tmp` file is never read.
 ## Return type is intentionally the untyped `Dictionary` (heterogeneous shape:
 ## `schema_version: int`, nested per-module dicts) — not an oversight.
 ##
 ## Example:
 ##   var data: Dictionary = SaveSystem.load_save()
 func load_save() -> Dictionary:
+	if OS.has_feature("web") and _web_data_prepared and _web_data_enabled:
+		return _web_loaded_data.duplicate(true)
 	if not FileAccess.file_exists(SAVE_PATH):
 		return {}
 	var file: FileAccess = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	if file == null:
 		push_error("Save read failed: could not open %s (%s) — falling back to defaults" % [SAVE_PATH, FileAccess.get_open_error()])
 		return {}
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	var raw_json: String = file.get_as_text()
 	file.close()
-	if parsed == null or typeof(parsed) != TYPE_DICTIONARY or parsed.get("schema_version") != SCHEMA_VERSION:
-		return {}
+	var parsed: Dictionary = parse_save_json(raw_json)
 	_last_saved_at_floor = maxf(_last_saved_at_floor, float(parsed.get("last_saved_at", 0.0)))
+	return parsed
+
+
+## Parses and validates one serialized snapshot. Kept argument-driven so the
+## same schema gate is shared by local files, CrazyGames cloud data, and tests.
+static func parse_save_json(raw_json: String) -> Dictionary:
+	var parsed: Variant = JSON.parse_string(raw_json)
+	if parsed == null or typeof(parsed) != TYPE_DICTIONARY:
+		return {}
+	if int(parsed.get("schema_version", -1)) != SCHEMA_VERSION:
+		return {}
 	return parsed

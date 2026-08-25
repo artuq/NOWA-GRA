@@ -79,6 +79,7 @@ func _ready() -> void:
 	PrestigeSystem.era_transitioned.connect(_on_era_transitioned)
 	if OS.has_feature("web"):
 		_web_arm_back_trap()
+		_web_set_gameplay_active(not AlgorithmContractSystem.open_away_plan_on_main)
 	# Enable only after all child presentation nodes (including CardScreen)
 	# have completed their own _ready() lifecycle.
 	BurnoutSystem.set_live_play_active(true)
@@ -89,6 +90,8 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	BurnoutSystem.set_live_play_active(false)
+	if OS.has_feature("web"):
+		_web_set_gameplay_active(false)
 
 
 # --- Entry points (each a thin wrapper over the one resolver) -------------
@@ -177,8 +180,10 @@ func _apply_state_change(new_state: CoordinationState, panel: Control) -> void:
 	# Web: keep the history trap primed while anything consumable is up —
 	# synchronously, inside the resolver (ADR-0014 Risks: the pushState trap
 	# must be armed before the next possible back gesture).
-	if OS.has_feature("web") and new_state != CoordinationState.NO_OVERLAY:
-		_web_push_history_state()
+	if OS.has_feature("web"):
+		_web_set_gameplay_active(new_state != CoordinationState.PANEL_OPEN)
+		if new_state != CoordinationState.NO_OVERLAY:
+			_web_push_history_state()
 
 
 # --- Platform back-gesture glue -------------------------------------------
@@ -232,6 +237,17 @@ func _web_arm_back_trap() -> void:
 
 func _web_push_history_state() -> void:
 	JavaScriptBridge.eval("history.pushState({koc_trap: 1}, '');", true)
+
+
+## CrazyGames gameplay analytics: live ActionScreen and decision cards count
+## as gameplay; coordinated menu panels are breaks. The page-level adapter
+## remembers this state across asynchronous SDK initialization and scene swaps.
+func _web_set_gameplay_active(active: bool) -> void:
+	var js_value: String = "true" if active else "false"
+	JavaScriptBridge.eval(
+		"window.kocSDK && window.kocSDK.setGameplay(%s);" % js_value,
+		true,
+	)
 
 
 # --- ADR-0018 -------------------------------------------------------------

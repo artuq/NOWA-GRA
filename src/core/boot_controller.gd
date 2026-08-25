@@ -36,11 +36,13 @@ static var _start_screen_shown: bool = false
 
 func _ready() -> void:
 	# CrazyGames portal glue (web only, no-op everywhere else): the engine is
-	# up and about to route to a real screen — tell the portal loading is
-	# done. kocSDK itself no-ops when the SDK is absent (see export_presets
-	# head_include), so this is safe on any host.
+	# held on the loading screen until the account-aware Data Module snapshot
+	# has been prepared. Gameplay itself begins only when ActionScreen becomes
+	# interactive; boot/start/offline-report scenes must not inflate analytics.
+	# kocSDK and SaveSystem both fall back cleanly when the SDK is unavailable.
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.kocSDK && window.kocSDK.gameReady();", true)
+		await SaveSystem.prepare_web_data()
+		JavaScriptBridge.eval("window.kocSDK && window.kocSDK.loadingComplete();", true)
 	var data: Dictionary = SaveSystem.load_save()
 	if should_show_start_screen(data, _start_screen_shown):
 		_start_screen_shown = true

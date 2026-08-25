@@ -181,8 +181,8 @@ func test_card_without_milestone_remains_eligible() -> void:
 
 ## AC-8: all "always"-gated real cards pass trigger_condition -> filtering is
 ## a no-op (assuming no milestones are set, which this suite never does
-## against real card IDs -- see header note). Count is 25 after the standalone
-## Feed Sprint skill challenge: 12 MVP + 4 wave-2 + 8 wave-3 + 1 challenge.
+## against real card IDs -- see header note). Count is 27:
+## 12 MVP + 4 wave-2 + 8 wave-3 + 2 skill challenges + 1 cultural-humor card.
 ## The 4 Tier-5 signatures (tier-gated) and Wypalenie
 ## (trigger_condition=="never") are correctly excluded from this pool.
 func test_all_always_gated_real_cards_pass_trigger_condition() -> void:
@@ -190,4 +190,4 @@ func test_all_always_gated_real_cards_pass_trigger_condition() -> void:
 
 	var pool: Array[Dictionary] = dcs._build_eligible_pool()
 
-	assert_int(pool.size()).is_equal(26)
+	assert_int(pool.size()).is_equal(27)
